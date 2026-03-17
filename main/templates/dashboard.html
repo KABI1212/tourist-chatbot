@@ -1,0 +1,210 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        /* RESET & BASE STYLES */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            /* Fullscreen background image */
+            background: url("{% static 'main/dash.jpg' %}") no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .overlay {
+            /* Dark overlay for better text visibility */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 0;
+        }
+
+        .dashboard-container {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 700px;
+            width: 90%;
+            animation: fadeIn 1s ease-out forwards;
+            transform: translateY(40px);
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dashboard-container h1 {
+            font-size: 48px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            animation: slideDown 1.2s ease forwards;
+            transform: translateY(-30px);
+            opacity: 0;
+        }
+
+        @keyframes slideDown {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dashboard-container p {
+            color: #555;
+            font-size: 18px;
+            margin-bottom: 40px;
+            line-height: 1.8;
+        }
+
+        .links-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .links-container a {
+            display: inline-block;
+            color: #fff;
+            background: linear-gradient(135deg, #3498db, #9b59b6);
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 26px;
+            font-size: 18px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .links-container a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .features-section {
+            margin-top: 40px;
+            text-align: left;
+        }
+
+        .features-section h2 {
+            font-size: 32px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            animation: fadeIn 1.5s ease;
+        }
+
+        .features-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .features-section ul li {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            animation: fadeIn 1.5s ease;
+        }
+
+        .features-section ul li i {
+            color: #3498db;
+            margin-right: 10px;
+        }
+
+        .cta-container {
+            margin-top: 50px;
+        }
+
+        .cta-container a {
+            display: inline-block;
+            color: white;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 30px;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .cta-container a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-container {
+                padding: 20px;
+            }
+
+            .dashboard-container h1 {
+                font-size: 32px;
+            }
+
+            .links-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .features-section ul li {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+
+    <div class="dashboard-container">
+        <h1>Welcome to Tourist Chatbot!</h1>
+        <p class="subtitle">Plan your travels with ease and excitement!</p>
+        <p>Login or Register to start exploring the world with our AI-powered travel assistant.</p>
+
+        <div class="links-container">
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}">Register</a>
+        </div>
+
+        <div class="features-section">
+            <h2>Why Choose Us?</h2>
+            <ul>
+                <li><i class="fas fa-map-marked-alt"></i> Personalized travel recommendations tailored just for you.</li>
+                <li><i class="fas fa-comments"></i> 24/7 AI-powered chatbot for all your travel queries.</li>
+                <li><i class="fas fa-plane"></i> Explore destinations with ease and confidence.</li>
+                <li><i class="fas fa-clock"></i> Save time with seamless trip planning.</li>
+            </ul>
+        </div>
+
+        <div class="cta-container">
+            <a href="{% url 'home' %}">Explore Now</a>
+        </div>
+    </div>
+</body>
+</html>

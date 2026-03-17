@@ -1,0 +1,169 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home — Tourist Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --terracotta:#c0623a; --deep:#1a1410; --gold:#d4a843; --cream:#faf6f0; --sand:#f0e6d3; --slate:#4a4540; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'DM Sans',sans-serif; background:var(--deep); color:var(--cream); }
+
+        .navbar { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(26,20,16,.85); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,255,255,.06); transition:all .3s; }
+        .navbar.scrolled { background:rgba(14,10,8,.97); }
+        .nav-inner { max-width:1200px; margin:0 auto; padding:0 40px; height:68px; display:flex; align-items:center; justify-content:space-between; }
+        .nav-logo { font-family:'Playfair Display',serif; font-size:22px; color:var(--gold); text-decoration:none; }
+        .nav-links { display:flex; align-items:center; gap:6px; }
+        .nav-links a { color:rgba(255,255,255,.7); text-decoration:none; padding:8px 14px; border-radius:6px; font-size:14px; transition:all .3s; }
+        .nav-links a:hover { color:white; background:rgba(255,255,255,.07); }
+        .nav-links .cta { background:var(--terracotta); color:white; }
+        .nav-links .cta:hover { background:#a8522f; }
+
+        .hero { min-height:92vh; background:url("{% static 'main/back.jpg' %}") center/cover no-repeat fixed; position:relative; display:flex; align-items:center; padding:100px 40px 60px; }
+        .hero::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(26,20,16,.88) 0%,rgba(26,20,16,.5) 60%,rgba(26,20,16,.7) 100%); }
+        .hero-content { position:relative; z-index:2; max-width:640px; animation:fadeUp .9s ease both; }
+        .tag { display:inline-flex; align-items:center; gap:8px; background:rgba(212,168,67,.15); border:1px solid rgba(212,168,67,.3); color:var(--gold); padding:7px 16px; border-radius:30px; font-size:12px; letter-spacing:2px; text-transform:uppercase; font-weight:500; margin-bottom:28px; }
+        .hero-content h1 { font-family:'Playfair Display',serif; font-size:clamp(44px,5.5vw,76px); line-height:1.06; margin-bottom:24px; }
+        .hero-content h1 em { font-style:italic; color:var(--gold); }
+        .hero-content p { font-size:17px; color:#c0b8b0; line-height:1.7; font-weight:300; max-width:500px; margin-bottom:40px; }
+        .hero-btns { display:flex; gap:14px; flex-wrap:wrap; }
+        .btn-p { background:var(--terracotta); color:white; padding:15px 32px; border-radius:6px; text-decoration:none; font-size:15px; font-weight:500; transition:all .3s; display:flex; align-items:center; gap:10px; }
+        .btn-p:hover { background:#a8522f; transform:translateY(-2px); box-shadow:0 12px 28px rgba(192,98,58,.4); }
+        .btn-g { border:1px solid rgba(255,255,255,.2); color:white; padding:15px 32px; border-radius:6px; text-decoration:none; font-size:15px; transition:all .3s; }
+        .btn-g:hover { border-color:white; background:rgba(255,255,255,.06); }
+
+        .stats-bar { background:var(--terracotta); padding:32px 40px; }
+        .stats-inner { max-width:1200px; margin:0 auto; display:flex; justify-content:space-around; gap:24px; flex-wrap:wrap; }
+        .stat strong { display:block; font-family:'Playfair Display',serif; font-size:34px; color:white; }
+        .stat span { font-size:12px; color:rgba(255,255,255,.7); letter-spacing:1px; text-transform:uppercase; }
+
+        .section { max-width:1200px; margin:0 auto; padding:90px 40px; }
+        .s-label { font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--terracotta); font-weight:500; margin-bottom:14px; }
+        .s-title { font-family:'Playfair Display',serif; font-size:clamp(28px,3vw,46px); margin-bottom:56px; }
+        .s-title em { font-style:italic; color:var(--gold); }
+
+        .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+        .card { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:34px 28px; transition:all .4s; }
+        .card:hover { background:rgba(255,255,255,.06); border-color:rgba(212,168,67,.25); transform:translateY(-6px); box-shadow:0 20px 50px rgba(0,0,0,.3); }
+        .c-icon { width:46px; height:46px; border-radius:10px; background:rgba(192,98,58,.15); color:var(--terracotta); display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:18px; transition:all .4s; }
+        .card:hover .c-icon { background:var(--terracotta); color:white; }
+        .card h3 { font-family:'Playfair Display',serif; font-size:19px; margin-bottom:10px; }
+        .card p { font-size:14px; color:#7a706a; line-height:1.7; }
+
+        .about-wrap { background:var(--sand); }
+        .about-inner { max-width:1200px; margin:0 auto; padding:90px 40px; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+        .about-text .s-title { color:var(--deep); }
+        .about-text p { font-size:15px; color:var(--slate); line-height:1.8; margin-bottom:18px; }
+        .about-text a { display:inline-flex; align-items:center; gap:8px; color:var(--terracotta); text-decoration:none; font-weight:500; font-size:15px; transition:gap .3s; }
+        .about-text a:hover { gap:14px; }
+        .about-vid { border-radius:14px; overflow:hidden; box-shadow:0 30px 60px rgba(0,0,0,.15); }
+        .about-vid video { display:block; width:100%; height:310px; object-fit:cover; }
+
+        .cta-band { padding:90px 40px; text-align:center; }
+        .cta-band h2 { font-family:'Playfair Display',serif; font-size:clamp(30px,3.5vw,54px); margin-bottom:16px; }
+        .cta-band h2 em { font-style:italic; color:var(--gold); }
+        .cta-band p { font-size:16px; color:#7a706a; margin-bottom:36px; }
+
+        footer { background:#0e0a08; padding:28px 40px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,.06); }
+        footer p { font-size:13px; color:#5a5250; }
+        .f-brand { font-family:'Playfair Display',serif; font-size:20px; color:var(--gold); }
+
+        @keyframes fadeUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+
+        @media(max-width:900px){
+            .cards { grid-template-columns:1fr; }
+            .about-inner { grid-template-columns:1fr; gap:40px; }
+            .nav-inner,.section,.cta-band { padding-left:24px; padding-right:24px; }
+            footer { flex-direction:column; gap:10px; text-align:center; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+    <div class="nav-inner">
+        <a href="{% url 'home' %}" class="nav-logo">Tourist Guide</a>
+        <div class="nav-links">
+            <a href="{% url 'home' %}"><i class="fas fa-house" style="font-size:12px"></i> Home</a>
+            <a href="{% url 'chat' %}" class="cta"><i class="fas fa-comments" style="font-size:12px"></i> Chat Assistant</a>
+            <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt" style="font-size:12px"></i> Logout</a>
+        </div>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="hero-content">
+        <div class="tag"><i class="fas fa-robot"></i> Gemini AI Powered</div>
+        <h1>Your Journey<br>Begins <em>Here</em></h1>
+        <p>Discover extraordinary destinations with our AI travel companion. Get real-time recommendations, itineraries, and local insights — instantly.</p>
+        <div class="hero-btns">
+            <a href="{% url 'chat' %}" class="btn-p"><i class="fas fa-comments"></i> Start Planning</a>
+            <a href="#features" class="btn-g">Explore Features</a>
+        </div>
+    </div>
+</section>
+
+<div class="stats-bar">
+    <div class="stats-inner">
+        <div class="stat"><strong>50+</strong><span>Languages</span></div>
+        <div class="stat"><strong>24/7</strong><span>AI Available</span></div>
+        <div class="stat"><strong>3</strong><span>Budget Tiers</span></div>
+        <div class="stat"><strong>∞</strong><span>Destinations</span></div>
+    </div>
+</div>
+
+<div id="features">
+<div class="section">
+    <div class="s-label">Features</div>
+    <h2 class="s-title">Everything you need to <em>travel smarter</em></h2>
+    <div class="cards">
+        <div class="card"><div class="c-icon"><i class="fas fa-robot"></i></div><h3>AI Travel Assistant</h3><p>Powered by Google Gemini — ask anything about routes, culture, food, and accommodation.</p></div>
+        <div class="card"><div class="c-icon"><i class="fas fa-map-marked-alt"></i></div><h3>Smart Itineraries</h3><p>Structured plans with transport modes, Google Maps links, timing, and booking sites.</p></div>
+        <div class="card"><div class="c-icon"><i class="fas fa-coins"></i></div><h3>Budget Planning</h3><p>Cost breakdowns for budget, mid-range, and luxury travelers. No financial surprises.</p></div>
+        <div class="card"><div class="c-icon"><i class="fas fa-utensils"></i></div><h3>Local Food Guide</h3><p>Discover local dishes, street food, and regional specialties with prices and context.</p></div>
+        <div class="card"><div class="c-icon"><i class="fas fa-language"></i></div><h3>Multi-Language</h3><p>Google Translate built in — Hindi, Tamil, French, Japanese & 20+ more languages.</p></div>
+        <div class="card"><div class="c-icon"><i class="fas fa-hotel"></i></div><h3>Hotel Finder</h3><p>Curated hotels across all budgets with addresses, ratings, and direct booking links.</p></div>
+    </div>
+</div>
+</div>
+
+<div class="about-wrap">
+    <div class="about-inner">
+        <div class="about-text">
+            <div class="s-label">About Us</div>
+            <h2 class="s-title">Smart travel for the <em>modern explorer</em></h2>
+            <p>We're revolutionizing trip planning by combining Google Gemini AI with real-world expertise. Whether a weekend getaway or month-long adventure, our assistant is 24/7.</p>
+            <p>From hidden gems to real-time transport comparisons — we handle the research so you enjoy the journey.</p>
+            <a href="{% url 'chat' %}">Open Chat Assistant <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="about-vid">
+            <video autoplay loop muted playsinline>
+                <source src="{% static 'main/video1.mp4' %}" type="video/mp4">
+                Your browser does not support video.
+            </video>
+        </div>
+    </div>
+</div>
+
+<div class="cta-band">
+    <h2>Ready for your next <em>adventure?</em></h2>
+    <p>Let our AI assistant plan your perfect trip in seconds.</p>
+    <a href="{% url 'chat' %}" class="btn-p" style="display:inline-flex;"><i class="fas fa-comments"></i> Chat Now — It's Free</a>
+</div>
+
+<footer>
+    <span class="f-brand">Tourist Guide</span>
+    <p>Powered by Google Gemini AI · Built with Django</p>
+    <p>© 2025 Tourist Guide</p>
+</footer>
+
+<script>
+    window.addEventListener('scroll',()=>{
+        document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>50);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account — Tourist Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --terracotta: #c0623a;
+            --deep: #1a1410;
+            --gold: #d4a843;
+            --cream: #faf6f0;
+            --sand: #f0e6d3;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--deep); color: var(--cream); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+
+        /* background decoration */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(192,98,58,.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(212,168,67,.06) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        .page-wrap { display: grid; grid-template-columns: 1fr 1.4fr; max-width: 960px; width: 100%; background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.07); border-radius: 20px; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,.5); animation: fadeUp .8s ease both; }
+
+        /* LEFT SIDE INFO */
+        .info-panel { padding: 60px 48px; background: var(--terracotta); display: flex; flex-direction: column; justify-content: space-between; }
+        .info-logo { font-family: 'Playfair Display', serif; font-size: 24px; color: white; margin-bottom: 60px; }
+        .info-panel h2 { font-family: 'Playfair Display', serif; font-size: 32px; line-height: 1.25; color: white; margin-bottom: 24px; }
+        .info-panel h2 em { font-style: italic; color: rgba(255,255,255,.7); }
+        .perks { list-style: none; }
+        .perks li { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: rgba(255,255,255,.85); line-height: 1.6; margin-bottom: 16px; }
+        .perks li i { color: rgba(255,255,255,.5); font-size: 14px; margin-top: 2px; flex-shrink: 0; }
+        .info-footer { font-size: 12px; color: rgba(255,255,255,.4); margin-top: 48px; }
+
+        /* RIGHT SIDE FORM */
+        .form-panel { padding: 52px 48px; }
+        .form-tag { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--terracotta); margin-bottom: 10px; font-weight: 500; }
+        .form-title { font-family: 'Playfair Display', serif; font-size: 32px; margin-bottom: 6px; }
+        .form-sub { font-size: 14px; color: #7a706a; margin-bottom: 32px; }
+        .form-sub a { color: var(--gold); text-decoration: none; }
+
+        .error-box { background: rgba(192,98,58,.15); border: 1px solid rgba(192,98,58,.35); color: #e8886a; padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; animation: shake .4s ease; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .field-group { display: flex; flex-direction: column; }
+        .field-group.full { grid-column: 1 / -1; }
+        label { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #7a706a; margin-bottom: 7px; font-weight: 500; }
+        .field-wrap { position: relative; }
+        .field-wrap i.icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #4a4540; font-size: 14px; pointer-events: none; transition: color .3s; }
+        input, textarea { width: 100%; padding: 12px 12px 12px 40px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09); border-radius: 8px; color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: all .3s; }
+        input::placeholder, textarea::placeholder { color: #4a4540; }
+        input:focus, textarea:focus { border-color: rgba(212,168,67,.5); background: rgba(255,255,255,.07); }
+        input:focus ~ i.icon, textarea:focus ~ i.icon { color: var(--gold); }
+        textarea { resize: none; min-height: 72px; padding-top: 12px; }
+
+        /* password strength */
+        .strength-bar { display: flex; gap: 4px; margin-top: 8px; }
+        .strength-seg { height: 3px; flex: 1; border-radius: 2px; background: rgba(255,255,255,.1); transition: background .4s; }
+
+        .toggle-pass { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #4a4540; cursor: pointer; font-size: 14px; background: none; border: none; outline: none; transition: color .3s; }
+        .toggle-pass:hover { color: var(--gold); }
+
+        .submit-btn { width: 100%; padding: 15px; background: var(--terracotta); border: none; border-radius: 8px; color: white; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 24px; transition: all .3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .submit-btn:hover { background: #a8522f; transform: translateY(-2px); box-shadow: 0 10px 28px rgba(192,98,58,.35); }
+
+        @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+        @media (max-width: 768px) {
+            .page-wrap { grid-template-columns: 1fr; }
+            .info-panel { display: none; }
+            .form-panel { padding: 40px 24px; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrap">
+
+    <!-- INFO -->
+    <div class="info-panel">
+        <div>
+            <div class="info-logo">Tourist Guide</div>
+            <h2>Join thousands of <em>smart travelers</em></h2>
+        </div>
+        <ul class="perks">
+            <li><i class="fas fa-check"></i> AI-powered trip planning with Google Gemini</li>
+            <li><i class="fas fa-check"></i> Real-time cost estimates & budget breakdowns</li>
+            <li><i class="fas fa-check"></i> Local food, culture, and accommodation guides</li>
+            <li><i class="fas fa-check"></i> Google Maps integration & booking links</li>
+            <li><i class="fas fa-check"></i> 50+ language translation built in</li>
+        </ul>
+        <p class="info-footer">Free forever · No credit card required</p>
+    </div>
+
+    <!-- FORM -->
+    <div class="form-panel">
+        <p class="form-tag">Get started</p>
+        <h1 class="form-title">Create Account</h1>
+        <p class="form-sub">Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
+
+        {% if error %}
+        <div class="error-box"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+        {% endif %}
+
+        <form method="POST" id="registerForm">
+            {% csrf_token %}
+            <div class="form-grid">
+
+                <div class="field-group">
+                    <label for="username">Username</label>
+                    <div class="field-wrap">
+                        <input type="text" id="username" name="username" placeholder="your_username" required autocomplete="username">
+                        <i class="icon fas fa-at"></i>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="email">Email</label>
+                    <div class="field-wrap">
+                        <input type="email" id="email" name="email" placeholder="you@email.com" required autocomplete="email">
+                        <i class="icon fas fa-envelope"></i>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="password">Password</label>
+                    <div class="field-wrap">
+                        <input type="password" id="password" name="password" placeholder="Create password" required oninput="checkStrength(this.value)">
+                        <i class="icon fas fa-lock"></i>
+                        <button type="button" class="toggle-pass" onclick="toggleField('password','eyeP')"><i id="eyeP" class="fas fa-eye"></i></button>
+                    </div>
+                    <div class="strength-bar">
+                        <div class="strength-seg" id="s1"></div>
+                        <div class="strength-seg" id="s2"></div>
+                        <div class="strength-seg" id="s3"></div>
+                        <div class="strength-seg" id="s4"></div>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <div class="field-wrap">
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Repeat password" required>
+                        <i class="icon fas fa-lock"></i>
+                        <button type="button" class="toggle-pass" onclick="toggleField('confirm_password','eyeC')"><i id="eyeC" class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="full_name">Full Name</label>
+                    <div class="field-wrap">
+                        <input type="text" id="full_name" name="full_name" placeholder="Your full name">
+                        <i class="icon fas fa-user"></i>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="phone">Phone</label>
+                    <div class="field-wrap">
+                        <input type="tel" id="phone" name="phone" placeholder="+91 00000 00000">
+                        <i class="icon fas fa-phone"></i>
+                    </div>
+                </div>
+
+                <div class="field-group full">
+                    <label for="address">Address</label>
+                    <div class="field-wrap">
+                        <textarea id="address" name="address" placeholder="Your address (optional)"></textarea>
+                        <i class="icon fas fa-home" style="top:14px;transform:none;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-rocket"></i> Create My Account
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleField(id, iconId) {
+        const inp = document.getElementById(id);
+        const icon = document.getElementById(iconId);
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+        icon.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+    }
+
+    function checkStrength(val) {
+        const segs = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3'), document.getElementById('s4')];
+        const colors = ['#c0623a', '#d4a843', '#8BC34A', '#2ecc71'];
+        let score = 0;
+        if (val.length >= 6) score++;
+        if (val.length >= 10) score++;
+        if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+        segs.forEach((s, i) => s.style.background = i < score ? colors[score - 1] : 'rgba(255,255,255,.1)');
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        const p = document.getElementById('password').value;
+        const c = document.getElementById('confirm_password').value;
+        if (p !== c) {
+            e.preventDefault();
+            const existing = document.querySelector('.error-box');
+            if (existing) existing.remove();
+            const err = document.createElement('div');
+            err.className = 'error-box';
+            err.innerHTML = '<i class="fas fa-exclamation-circle"></i> Passwords do not match';
+            this.before(err);
+            setTimeout(() => err.remove(), 3500);
+        }
+    });
+</script>
+</body>
+</html>
