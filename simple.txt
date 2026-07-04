@@ -1,0 +1,233 @@
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from .models import UserProfile
+import google.generativeai as genai
+from dotenv import load_dotenv
+import os
+import json
+
+# Load environment variables
+load_dotenv()
+
+# Configure Gemini API key
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+# Create the model
+generation_config = {
+    "temperature": 0,
+    "top_p": 0.95,
+    "top_k": 64,
+    "max_output_tokens": 8192,
+    "response_mime_type": "text/plain",
+}
+
+# Safety settings for content moderation
+safety_settings = [
+    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+]
+
+# Initialize the model with safety and generation configurations
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-pro",    
+    safety_settings=safety_settings,
+    generation_config=generation_config,
+    system_instruction=[
+        "You are a travel planning chatbot. Follow these instructions carefully:",
+    "1. Provide travel details, cultural insights, food recommendations, popular snacks, and cost breakdowns concisely.",
+    "2. Use bold headings and proper spacing for clear readability.",
+    "3. Include cultural experiences, traditions, and festivals of the destination.",
+    "4. Highlight transportation options with costs, travel times, and tips for personal vehicles, public transport, and flights.",
+    "5. Recommend famous foods and popular snacks unique to the destination.",
+    "6. Provide accommodation options categorized as budget, mid-range, and luxury, with approximate costs.",
+    "7. Break down costs into budget, mid-range, and luxury for food, transport, and activities.",
+    "8. Include a clickable Google Maps link in a single line at the end of the response under 'Google Maps Link'.",
+    "<link>\n",
+    "The format should be:\n 'https://www.google.com/maps/dir/starting_point/destination'\n, replacing 'starting_point' and 'destination' with actual locations",
+    "Full link in the new line and full link and clickable link ok",
+    "9. Ensure the Google Maps link redirects correctly when clicked and appears on a single line.",
+    "10. Generate the response quickly, ensuring accuracy and completeness."
+
+    ]
+)
+
+
+@csrf_exempt
+def chat_view(request):
+    """
+    Handles POST requests for chatbot responses.
+    If GET, just render 'chat.html'.
+    """
+    if request.method == "POST":
+        try:
+            # Parse the incoming JSON data
+            data = json.loads(request.body)
+            user_input = data.get("message", "")
+
+            if not user_input:
+                return JsonResponse({"error": "No message provided"}, status=400)
+
+            # Extract travel locations from the user input
+            locations = extract_locations(user_input)
+            if "error" not in locations:
+                print("Travel locations extracted successfully.")
+            else:
+                print("No travel locations detected in the input.")
+
+            # Start a new chat session with the model
+            chat_session = model.start_chat(history=[])
+            response = chat_session.send_message(user_input)
+            model_response = response.text
+
+            # Split the response into lines and format them
+            response_lines = model_response.split("\n")
+            formatted_response = []
+
+            for line in response_lines:
+                if line.strip():  # Skip empty lines
+                    topic_details = line.split(":")
+                    if len(topic_details) > 1:
+                        topic = topic_details[0].strip()
+                        details = ":".join(topic_details[1:]).strip()
+                        formatted_response.append({"topic": topic, "details": details})
+                    else:
+                        formatted_response.append({"topic": line.strip(), "details": ""})
+
+            return JsonResponse({"response": formatted_response, "locations": locations})
+
+        except Exception as e:
+            # Return error message for any exception during processing
+            return JsonResponse({"error": str(e)}, status=500)
+
+    # If GET request, render the chat.html page
+    return render(request, 'chat.html')
+
+
+
+
+
+def register_view(request):
+    """
+    Handles user registration by saving details to the database and a UserProfile model.
+    """
+    if request.method == 'POST':
+        # Get form data
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        full_name = request.POST.get('full_name')
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
+
+        # Validate passwords match
+        if password != confirm_password:
+            return render(request, 'register.html', {'error': 'Passwords do not match'})
+
+        # Check if username already exists
+        if User.objects.filter(username=username).exists():
+            return render(request, 'register.html', {'error': 'Username already exists'})
+
+        # Check if email already exists
+        if User.objects.filter(email=email).exists():
+            return render(request, 'register.html', {'error': 'Email already exists'})
+
+        try:
+            # Create user and profile
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            profile = UserProfile.objects.create(
+                user=user,
+                full_name=full_name,
+                phone=phone,
+                address=address
+            )
+
+            # Log the user in
+            login(request, user)
+            return redirect('home')
+
+        except Exception as e:
+            # If user was partially created and an error occurs, clean up
+            if 'user' in locals():
+                user.delete()
+            return render(request, 'register.html', {'error': str(e)})
+
+    return render(request, 'register.html')
+
+def login_view(request):
+    """
+    Handles user login.
+    """
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        if not username or not password:
+            return render(request, 'login.html', {'error': 'Please fill in all fields'})
+
+        # Authenticate user
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            return render(request, 'login.html', {'error': 'Invalid username or password'})
+
+    return render(request, 'login.html')
+
+def logout_view(request):
+    """
+    Logs out the user and redirects to the dashboard page.
+    """
+    logout(request)
+    return redirect('dashboard')
+
+def dashboard_view(request):
+    """
+    Renders the dashboard page.
+    """
+    return render(request, 'dashboard.html')
+
+def home_view(request):
+    """
+    Renders the home page. Requires login.
+    """
+    if not request.user.is_authenticated:
+        return redirect('login')
+    return render(request, 'home.html')
+
+
+def extract_locations(user_input):
+    """
+    Extracts travel locations (starting point and destination) from the user's query.
+    Prints the specific place names directly to the terminal.
+    """
+    import re
+
+    # Regex to match patterns like "from <starting point> to <destination>"
+    match = re.search(r"from\s+([\w\s]+)\s+to\s+([\w\s]+)", user_input, re.IGNORECASE)
+    if match:
+        # Extract specific place names
+        starting_point = match.group(1).strip()
+        destination = match.group(2).strip()
+
+        # Print the extracted locations to the terminal
+        print(f"Starting Point: {starting_point}")
+        print(f"Destination: {destination}")
+
+        # Return the extracted locations
+        return starting_point, destination
+    else:
+        print("Could not extract travel locations. Please specify starting point and destination clearly.")
+        return None, None
+
