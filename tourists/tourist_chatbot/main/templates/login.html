@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login — Tourist Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'DM Sans',sans-serif;
+            background: url("{% static 'main/login.jpg' %}") no-repeat center center fixed;
+            background-size: cover;
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            position:relative;
+        }
+        .overlay { position:absolute; inset:0; background:rgba(0,0,0,0.4); z-index:0; }
+        .login-container {
+            position:relative; z-index:1;
+            width:380px;
+            background:rgba(255,255,255,0.95);
+            backdrop-filter:blur(6px);
+            border-radius:12px;
+            box-shadow:0 10px 25px rgba(0,0,0,0.3);
+            padding:40px 30px;
+            text-align:center;
+            opacity:0;
+            transform:translateY(40px);
+            animation:fadeInUp 1s forwards ease;
+        }
+        @keyframes fadeInUp { to { opacity:1; transform:translateY(0); } }
+        .login-container h2 {
+            font-family:'Playfair Display',serif;
+            font-size:28px;
+            margin-bottom:25px;
+            color:#333;
+        }
+        .error-message {
+            margin-bottom:15px;
+            color:#e74c3c;
+            background:#ffe6e6;
+            padding:10px;
+            border-radius:6px;
+        }
+        form label {
+            display:block;
+            text-align:left;
+            color:#555;
+            margin-bottom:5px;
+            margin-top:15px;
+            font-size:14px;
+        }
+        form input[type="text"],
+        form input[type="password"] {
+            width:100%;
+            padding:10px 15px;
+            font-size:16px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            outline:none;
+            transition:border-color 0.3s;
+            font-family:'DM Sans',sans-serif;
+        }
+        form input:focus { border-color:#3498db; }
+        .checkbox-group {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            margin-top:12px;
+        }
+        .checkbox-group label {
+            display:flex;
+            align-items:center;
+            gap:6px;
+            color:#666;
+            font-size:13px;
+            margin:0;
+            cursor:pointer;
+        }
+        .checkbox-group input[type="checkbox"] { width:auto; }
+        .checkbox-group a {
+            color:#3498db;
+            text-decoration:none;
+            font-size:13px;
+        }
+        .checkbox-group a:hover { text-decoration:underline; }
+        .submit-button {
+            margin-top:20px;
+            width:100%;
+            padding:12px;
+            font-size:16px;
+            border:none;
+            border-radius:8px;
+            background:#c0623a;
+            color:#fff;
+            cursor:pointer;
+            transition:background 0.3s, transform 0.3s;
+            font-family:'DM Sans',sans-serif;
+            font-weight:500;
+        }
+        .submit-button:hover {
+            background:#a8522f;
+            transform:translateY(-2px);
+            box-shadow:0 5px 15px rgba(0,0,0,0.2);
+        }
+        .register-link {
+            margin-top:16px;
+            font-size:14px;
+            color:#666;
+        }
+        .register-link a {
+            color:#c0623a;
+            text-decoration:none;
+            font-weight:500;
+        }
+        .register-link a:hover { text-decoration:underline; }
+        @media (max-width:400px) {
+            .login-container { width:90%; padding:30px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="login-container">
+        <h2>Welcome Back</h2>
+        {% if error %}<div class="error-message">{{ error }}</div>{% endif %}
+        <form method="POST">
+            {% csrf_token %}
+            <label>Username</label>
+            <input type="text" name="username" placeholder="Enter your username" required>
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Enter your password" required>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="remember_me"> Remember Me</label>
+                <a href="{% url 'forgot_password' %}">Forgot Password?</a>
+            </div>
+            <button type="submit" class="submit-button"><i class="fas fa-sign-in-alt"></i> Login</button>
+        </form>
+        <div class="register-link">
+            Don't have an account? <a href="{% url 'register' %}">Register</a>
+        </div>
+    </div>
+</body>
+</html>

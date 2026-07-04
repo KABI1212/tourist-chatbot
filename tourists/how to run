@@ -1,0 +1,12 @@
+python manage.py runserver
+pip install -r requirements.txt 
+
+
+
+i need the plan between coimbatore to chennai by filght
+
+
+python manage.py migrate
+python manage.py runserver
+
+django

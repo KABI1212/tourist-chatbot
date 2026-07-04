@@ -1,0 +1,254 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourist Guide — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'DM Sans',sans-serif;
+            background: url("{% static 'main/dash.jpg' %}") no-repeat center center fixed;
+            background-size: cover;
+            min-height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            position:relative;
+        }
+
+        .overlay {
+            position:absolute; inset:0;
+            background:rgba(0,0,0,0.6);
+            z-index:0;
+        }
+
+        .dashboard-container {
+            position:relative; z-index:1;
+            background:rgba(255,255,255,0.95);
+            backdrop-filter:blur(10px);
+            padding:40px;
+            border-radius:16px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.2);
+            text-align:center;
+            max-width:700px;
+            width:90%;
+            animation:fadeIn 1s ease-out forwards;
+            transform:translateY(40px);
+            opacity:0;
+        }
+
+        @keyframes fadeIn { to { opacity:1; transform:translateY(0); } }
+
+        .dashboard-container h1 {
+            font-family:'Playfair Display',serif;
+            font-size:48px;
+            color:#2c3e50;
+            margin-bottom:20px;
+            animation:slideDown 1.2s ease forwards;
+            transform:translateY(-30px);
+            opacity:0;
+        }
+
+        @keyframes slideDown { to { opacity:1; transform:translateY(0); } }
+
+        .dashboard-container p {
+            color:#555;
+            font-size:18px;
+            margin-bottom:30px;
+            line-height:1.8;
+        }
+
+        .links-container {
+            display:flex;
+            justify-content:center;
+            gap:15px;
+            flex-wrap:wrap;
+            margin-bottom:20px;
+        }
+
+        .links-container a, .guest-btn {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            padding:14px 28px;
+            text-decoration:none;
+            border-radius:26px;
+            font-size:16px;
+            font-weight:600;
+            border:none;
+            cursor:pointer;
+            transition:transform 0.3s, box-shadow 0.3s;
+            font-family:'DM Sans',sans-serif;
+        }
+
+        .btn-login {
+            color:#fff;
+            background:linear-gradient(135deg,#3498db,#9b59b6);
+            box-shadow:0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-register {
+            color:#fff;
+            background:linear-gradient(135deg,#e74c3c,#c0392b);
+            box-shadow:0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-guest {
+            color:#2c3e50;
+            background:rgba(52,152,219,0.1);
+            border:2px dashed #3498db;
+            box-shadow:0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .links-container a:hover, .guest-btn:hover {
+            transform:translateY(-3px);
+            box-shadow:0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .divider {
+            display:flex;
+            align-items:center;
+            gap:15px;
+            margin:25px 0;
+            color:#999;
+            font-size:14px;
+        }
+        .divider::before, .divider::after {
+            content:'';
+            flex:1;
+            height:1px;
+            background:#ddd;
+        }
+
+        .features-section {
+            margin-top:30px;
+            text-align:left;
+        }
+
+        .features-section h2 {
+            font-family:'Playfair Display',serif;
+            font-size:28px;
+            color:#2c3e50;
+            margin-bottom:16px;
+            text-align:center;
+        }
+
+        .features-section ul {
+            list-style:none;
+            padding-left:0;
+        }
+
+        .features-section ul li {
+            font-size:16px;
+            color:#555;
+            margin-bottom:10px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+        }
+
+        .features-section ul li i { color:#3498db; width:20px; }
+
+        .cta-container {
+            margin-top:30px;
+        }
+
+        .cta-container a {
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            color:white;
+            background:linear-gradient(135deg,#e74c3c,#c0392b);
+            padding:15px 40px;
+            font-size:18px;
+            font-weight:bold;
+            border-radius:30px;
+            text-decoration:none;
+            transition:transform 0.3s, box-shadow 0.3s;
+        }
+
+        .cta-container a:hover {
+            transform:translateY(-3px);
+            box-shadow:0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .user-info {
+            position:absolute;
+            top:20px;
+            right:20px;
+            background:rgba(0,0,0,0.05);
+            padding:8px 16px;
+            border-radius:20px;
+            font-size:14px;
+            color:#666;
+        }
+
+        @media (max-width:480px) {
+            .dashboard-container { padding:20px; }
+            .dashboard-container h1 { font-size:32px; }
+            .links-container { flex-direction:column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+
+    <div class="dashboard-container">
+        {% if is_authenticated and not is_guest %}
+            <div class="user-info"><i class="fas fa-user"></i> {{ username }}</div>
+            <h1>Welcome Back, {{ full_name|default:username }}!</h1>
+            <p>Continue exploring the world with your AI travel assistant.</p>
+            <div class="links-container" style="flex-direction:column;align-items:center;">
+                <a href="{% url 'home' %}" class="btn-login"><i class="fas fa-house"></i> Go to Dashboard</a>
+                <a href="{% url 'chat' %}" class="btn-register"><i class="fas fa-comments"></i> Open Chat</a>
+                <a href="{% url 'logout' %}" style="color:#999;font-size:14px;text-decoration:none;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        {% else %}
+            <h1>Welcome to Tourist Guide!</h1>
+            <p>Plan your travels with ease using our AI-powered travel assistant.</p>
+
+            <div class="links-container">
+                <a href="{% url 'login' %}" class="btn-login"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <a href="{% url 'register' %}" class="btn-register"><i class="fas fa-user-plus"></i> Register</a>
+            </div>
+
+            <div class="divider">OR</div>
+
+            <button onclick="continueAsGuest()" class="guest-btn"><i class="fas fa-user-secret"></i> Continue as Guest</button>
+
+            <div class="features-section">
+                <h2>Why Choose Us?</h2>
+                <ul>
+                    <li><i class="fas fa-robot"></i> AI-powered travel recommendations</li>
+                    <li><i class="fas fa-comments"></i> 24/7 travel assistant chatbot</li>
+                    <li><i class="fas fa-map-marked-alt"></i> Smart itineraries with budgets</li>
+                    <li><i class="fas fa-language"></i> Multi-language support</li>
+                </ul>
+            </div>
+
+            <div class="cta-container">
+                <a href="{% url 'register' %}"><i class="fas fa-rocket"></i> Get Started</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function continueAsGuest() {
+            // Set guest session via AJAX
+            fetch("{% url 'chat' %}", {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(() => {
+                window.location.href = "{% url 'home' %}";
+            }).catch(() => {
+                window.location.href = "{% url 'home' %}";
+            });
+        }
+    </script>
+</body>
+</html>

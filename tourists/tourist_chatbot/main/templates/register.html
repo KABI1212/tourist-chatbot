@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register — Tourist Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'DM Sans',sans-serif;
+            background: url("{% static 'main/login.jpg' %}") no-repeat center center fixed;
+            background-size: cover;
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            position:relative;
+        }
+        .overlay { position:absolute; inset:0; background:rgba(0,0,0,0.4); z-index:0; }
+        .register-container {
+            position:relative; z-index:1;
+            width:420px;
+            background:rgba(255,255,255,0.95);
+            backdrop-filter:blur(6px);
+            border-radius:12px;
+            box-shadow:0 10px 25px rgba(0,0,0,0.3);
+            padding:40px 30px;
+            text-align:center;
+            opacity:0;
+            transform:translateY(40px);
+            animation:fadeInUp 1s forwards ease;
+        }
+        @keyframes fadeInUp { to { opacity:1; transform:translateY(0); } }
+        .register-container h2 {
+            font-family:'Playfair Display',serif;
+            font-size:28px;
+            margin-bottom:25px;
+            color:#333;
+        }
+        .error-message {
+            margin-bottom:15px;
+            color:#e74c3c;
+            background:#ffe6e6;
+            padding:10px;
+            border-radius:6px;
+            font-size:14px;
+        }
+        form label {
+            display:block;
+            text-align:left;
+            color:#555;
+            margin-bottom:5px;
+            margin-top:12px;
+            font-size:13px;
+        }
+        form input, form textarea {
+            width:100%;
+            padding:10px 15px;
+            font-size:15px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            outline:none;
+            transition:border-color 0.3s;
+            font-family:'DM Sans',sans-serif;
+        }
+        form input:focus, form textarea:focus { border-color:#c0623a; }
+        form textarea { resize:vertical; min-height:60px; }
+        .submit-button {
+            margin-top:20px;
+            width:100%;
+            padding:12px;
+            font-size:16px;
+            border:none;
+            border-radius:8px;
+            background:#c0623a;
+            color:#fff;
+            cursor:pointer;
+            transition:background 0.3s, transform 0.3s;
+            font-family:'DM Sans',sans-serif;
+            font-weight:500;
+        }
+        .submit-button:hover {
+            background:#a8522f;
+            transform:translateY(-2px);
+            box-shadow:0 5px 15px rgba(0,0,0,0.2);
+        }
+        .login-link {
+            margin-top:16px;
+            font-size:14px;
+            color:#666;
+        }
+        .login-link a {
+            color:#c0623a;
+            text-decoration:none;
+            font-weight:500;
+        }
+        .login-link a:hover { text-decoration:underline; }
+        .row { display:flex; gap:12px; }
+        .row .form-group { flex:1; }
+        @media (max-width:480px) {
+            .register-container { width:90%; padding:30px 20px; }
+            .row { flex-direction:column; gap:0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="register-container">
+        <h2>Create Account</h2>
+        {% if error %}<div class="error-message">{{ error }}</div>{% endif %}
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row">
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" name="username" placeholder="Choose a username" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" name="email" placeholder="Your email" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" name="password" placeholder="Min 8 characters" required>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password *</label>
+                    <input type="password" name="confirm_password" placeholder="Re-enter password" required>
+                </div>
+            </div>
+            <label>Full Name *</label>
+            <input type="text" name="full_name" placeholder="Your full name" required>
+            <label>Phone *</label>
+            <input type="tel" name="phone" placeholder="Phone number" required>
+            <label>Address *</label>
+            <textarea name="address" placeholder="Your address" required></textarea>
+            <button type="submit" class="submit-button"><i class="fas fa-user-plus"></i> Register</button>
+        </form>
+        <div class="login-link">
+            Already have an account? <a href="{% url 'login' %}">Login</a>
+        </div>
+    </div>
+</body>
+</html>
