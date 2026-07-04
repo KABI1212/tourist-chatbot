@@ -1,29 +1,30 @@
 """
 Gemini AI Service for Smart Tourism Platform
 Handles all Google Gemini API interactions with enhanced tourism knowledge.
+Uses the google-genai SDK (google.genai) — the successor to google.generativeai.
 """
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from django.conf import settings
 import logging
 
 logger = logging.getLogger(__name__)
 
 # Generation configuration
-_generation_config = {
-    "temperature": 0.3,
-    "top_p": 0.95,
-    "top_k": 64,
-    "max_output_tokens": 8192,
-    "response_mime_type": "text/plain",
-}
+_generation_config = types.GenerateContentConfig(
+    temperature=0.3,
+    top_p=0.95,
+    top_k=64,
+    max_output_tokens=8192,
+)
 
 # Safety settings
 _safety_settings = [
-    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+    types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="BLOCK_NONE"),
+    types.SafetySetting(category="HARM_CATEGORY_HATE_SPEECH", threshold="BLOCK_MEDIUM_AND_ABOVE"),
+    types.SafetySetting(category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="BLOCK_MEDIUM_AND_ABOVE"),
+    types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="BLOCK_MEDIUM_AND_ABOVE"),
 ]
 
 # Comprehensive system instruction for the Smart Tourism Platform
@@ -173,22 +174,16 @@ _SYSTEM_INSTRUCTION = [
     "12. Always prioritize safety information for solo travelers, women, and families.",
 ]
 
-# Initialize the model (lazy - will be created on first use)
-_model = None
+# Cached client (lazy — created on first use)
+_client = None
 
 
-def _get_model():
-    """Get or create the Gemini model instance."""
-    global _model
-    if _model is None:
-        genai.configure(api_key=settings.GOOGLE_API_KEY)
-        _model = genai.GenerativeModel(
-            model_name="gemini-2.5-flash-lite",
-            safety_settings=_safety_settings,
-            generation_config=_generation_config,
-            system_instruction=_SYSTEM_INSTRUCTION,
-        )
-    return _model
+def _get_client():
+    """Get or create the Gemini client instance."""
+    global _client
+    if _client is None:
+        _client = genai.Client(api_key=settings.GOOGLE_API_KEY)
+    return _client
 
 
 def ask_gemini(prompt: str, context_data: str = "") -> str:
@@ -205,7 +200,7 @@ def ask_gemini(prompt: str, context_data: str = "") -> str:
     Raises:
         Exception: If the Gemini API call fails.
     """
-    model = _get_model()
+    client = _get_client()
 
     # Build enhanced prompt with context data if available
     enhanced_prompt = prompt
@@ -216,6 +211,16 @@ def ask_gemini(prompt: str, context_data: str = "") -> str:
             f"[USER QUERY]\n{prompt}"
         )
 
-    chat_session = model.start_chat(history=[])
-    response = chat_session.send_message(enhanced_prompt)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash-lite",
+        contents=enhanced_prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=_SYSTEM_INSTRUCTION,
+            safety_settings=_safety_settings,
+            temperature=0.3,
+            top_p=0.95,
+            top_k=64,
+            max_output_tokens=8192,
+        ),
+    )
     return response.text

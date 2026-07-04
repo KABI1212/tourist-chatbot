@@ -5,7 +5,7 @@ Uses environment variables for the API key.
 
 import os
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
 
 # Load environment variables
 load_dotenv()
@@ -16,24 +16,11 @@ if not api_key:
     print("ERROR: GOOGLE_API_KEY not found in .env file")
     exit(1)
 
-genai.configure(api_key=api_key)
+client = genai.Client(api_key=api_key)
 
-# Create the model
-generation_config = {
-    "temperature": 1,
-    "top_p": 0.95,
-    "top_k": 40,
-    "max_output_tokens": 8192,
-    "response_mime_type": "text/plain",
-}
-
-model = genai.GenerativeModel(
-    model_name="gemini-2.0-flash-exp",
-    generation_config=generation_config,
+response = client.models.generate_content(
+    model="gemini-2.0-flash-exp",
+    contents="tell me about yourself",
 )
-
-chat_session = model.start_chat(history=[])
-
-response = chat_session.send_message("tell me about yourself")
 
 print(response.text)

@@ -5,12 +5,13 @@ Uses connection pooling and graceful error handling.
 """
 
 import os
+import sys
 import logging
 from datetime import datetime, timezone
 from typing import Optional, Any, List, Dict
 from pymongo import MongoClient
 from pymongo.collection import Collection
-from pymongo.errors import ConnectionFailure, OperationFailure, ServerSelectionTimeoutError
+from pymongo.errors import ConnectionFailure, OperationFailure, ServerSelectionTimeoutError, ConfigurationError
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 
@@ -69,6 +70,64 @@ def ping() -> bool:
     except (ConnectionFailure, ServerSelectionTimeoutError) as e:
         logger.error(f"MongoDB ping failed: {e}")
         return False
+
+
+def check_connection_startup():
+    """
+    Startup health check — runs once when Django boots.
+    Attempts a MongoDB connection and exits cleanly on failure with a
+    clear diagnostic message instead of letting every request fail with 500.
+    """
+    mongodb_uri = os.getenv("MONGODB_URI")
+    if not mongodb_uri:
+        logger.critical(
+            "STARTUP FAILED: MONGODB_URI environment variable is not set. "
+            "Copy .env.example to .env and fill in your MongoDB Atlas credentials."
+        )
+        sys.exit(1)
+
+    try:
+        test_client = MongoClient(
+            mongodb_uri,
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=5000,
+        )
+        # Force a connection attempt by pinging the admin database
+        test_client.admin.command("ping")
+        test_client.close()
+        logger.info("STARTUP OK: MongoDB Atlas connection verified successfully.")
+    except ConfigurationError as e:
+        error_str = str(e)
+        if "DNS" in error_str or "dns" in error_str or "SRV" in error_str:
+            logger.critical(
+                "STARTUP FAILED: MongoDB DNS resolution error — the cluster hostname "
+                "could not be resolved. Check your network connection and verify the "
+                "MONGODB_URI in .env is correct.\n  Detail: %s", error_str
+            )
+        else:
+            logger.critical(
+                "STARTUP FAILED: MongoDB configuration error.\n  Detail: %s", error_str
+            )
+        sys.exit(1)
+    except OperationFailure as e:
+        logger.critical(
+            "STARTUP FAILED: MongoDB authentication rejected — check .env credentials "
+            "match Atlas Database Access settings (Security → Database Access).\n"
+            "  Detail: %s", e
+        )
+        sys.exit(1)
+    except (ConnectionFailure, ServerSelectionTimeoutError) as e:
+        logger.critical(
+            "STARTUP FAILED: Cannot reach MongoDB Atlas — connection timed out. "
+            "Check your network / firewall and verify the cluster is running in Atlas.\n"
+            "  Detail: %s", e
+        )
+        sys.exit(1)
+    except Exception as e:
+        logger.critical(
+            "STARTUP FAILED: Unexpected MongoDB error.\n  Detail: %s", e
+        )
+        sys.exit(1)
 
 
 def close_connection():
