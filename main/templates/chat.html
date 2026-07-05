@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Assistant — Tourist Guide</title>
     <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --terracotta:#c0623a; --deep:#1a1410; --gold:#d4a843; --cream:#faf6f0; --mid:#241c18; --border:rgba(255,255,255,.07); }
+        :root { --terracotta:#c0623a; --deep:#1a1410; --gold:#d4a843; --cream:#faf6f0; --mid:#241c18; --border:rgba(255,255,255,.07); --card-bg:rgba(255,255,255,.03); }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'DM Sans',sans-serif; background:var(--deep); color:var(--cream); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
 
@@ -30,20 +30,17 @@
         .sidebar-head { padding:20px 18px 16px; border-bottom:1px solid var(--border); }
         .sidebar-head h3 { font-family:'Playfair Display',serif; font-size:16px; color:var(--cream); margin-bottom:4px; }
         .sidebar-head p { font-size:12px; color:#5a5250; }
-
         .quick-prompts-title { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#5a5250; padding:14px 18px 10px; font-weight:500; }
         .quick-list { flex:1; overflow-y:auto; padding:0 10px 10px; }
         .quick-btn { width:100%; text-align:left; padding:11px 14px; background:transparent; border:1px solid transparent; border-radius:8px; color:rgba(255,255,255,.65); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; transition:all .3s; display:flex; align-items:center; gap:10px; line-height:1.4; margin-bottom:4px; }
         .quick-btn:hover { background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.08); color:white; }
         .quick-btn i { color:var(--terracotta); font-size:13px; flex-shrink:0; }
-
         .sidebar-footer { padding:16px 18px; border-top:1px solid var(--border); }
         .new-chat-btn { width:100%; padding:10px; background:rgba(192,98,58,.15); border:1px solid rgba(192,98,58,.3); border-radius:8px; color:var(--terracotta); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; transition:all .3s; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:500; }
         .new-chat-btn:hover { background:var(--terracotta); color:white; }
 
         /* ── MAIN CHAT AREA ── */
         .chat-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-
         .chat-topbar { background:rgba(26,20,16,.8); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
         .assistant-info { display:flex; align-items:center; gap:12px; }
         .avatar { width:40px; height:40px; background:var(--terracotta); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
@@ -51,12 +48,9 @@
         .assistant-status { font-size:12px; color:#5a5250; display:flex; align-items:center; gap:5px; }
         .online-dot { width:7px; height:7px; background:#2ecc71; border-radius:50%; animation:pulseDot 2s infinite; }
         @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:.4} }
-
         .topbar-actions { display:flex; gap:8px; }
         .topbar-btn { background:transparent; border:1px solid var(--border); border-radius:6px; color:rgba(255,255,255,.5); padding:7px 12px; font-size:12px; cursor:pointer; transition:all .3s; font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:6px; }
         .topbar-btn:hover { border-color:rgba(255,255,255,.2); color:white; background:rgba(255,255,255,.04); }
-
-        /* Google Translate in topbar */
         #google_translate_element { display:inline-block; }
         #google_translate_element .goog-te-gadget-simple { background:transparent; border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:12px; }
 
@@ -75,22 +69,16 @@
         .msg-row { display:flex; gap:12px; margin-bottom:20px; animation:fadeUp .4s ease both; }
         .msg-row.user { justify-content:flex-end; }
         .msg-row.bot { justify-content:flex-start; align-items:flex-start; }
-
         .msg-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
         .msg-avatar.bot-av { background:var(--terracotta); }
         .msg-avatar.user-av { background:rgba(212,168,67,.2); color:var(--gold); }
-
         .bubble { padding:13px 18px; border-radius:16px; max-width:72%; word-wrap:break-word; font-size:14px; line-height:1.7; }
         .bubble.bot { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.07); border-radius:4px 16px 16px 16px; color:var(--cream); }
         .bubble.user { background:var(--terracotta); border-radius:16px 4px 16px 16px; color:white; }
         .bubble a { color:var(--gold); text-decoration:underline; word-break:break-all; }
         .bubble a:hover { color:#e8c86a; }
-
-        /* timestamp */
         .msg-time { font-size:11px; color:#3a3530; margin-top:5px; text-align:right; }
         .msg-row.bot .msg-time { text-align:left; padding-left:48px; }
-
-        /* copy btn */
         .copy-btn { background:transparent; border:none; color:#3a3530; cursor:pointer; font-size:11px; transition:color .2s; padding:2px 6px; border-radius:4px; }
         .copy-btn:hover { color:var(--gold); background:rgba(255,255,255,.04); }
 
@@ -112,14 +100,10 @@
         .send-btn { width:48px; height:48px; background:var(--terracotta); border:none; border-radius:12px; color:white; cursor:pointer; font-size:17px; transition:all .3s; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .send-btn:hover { background:#a8522f; transform:scale(1.05); }
         .send-btn:disabled { background:#3a3530; cursor:not-allowed; transform:none; }
-
-        /* char count */
         .input-meta { display:flex; justify-content:space-between; align-items:center; padding:6px 0 0 0; max-width:900px; margin:0 auto; }
         .char-count { font-size:11px; color:#3a3530; }
         .char-count.warn { color:var(--terracotta); }
         .hint { font-size:11px; color:#3a3530; }
-
-        /* ── MOBILE SIDEBAR TOGGLE ── */
         .sidebar-toggle { display:none; background:transparent; border:none; color:white; font-size:18px; cursor:pointer; padding:8px; }
 
         @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
@@ -129,6 +113,59 @@
             .sidebar.open { transform:translateX(0); }
             .sidebar-toggle { display:flex; }
             .topbar-actions .topbar-btn span { display:none; }
+        }
+
+        /* ════════════════════════════════════════ */
+        /* DESTINATION INFO CARD STYLES            */
+        /* ════════════════════════════════════════ */
+        .dest-card { background:var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:24px; margin-bottom:16px; animation:fadeUp .5s ease both; width:100%; max-width:100%; }
+        .dest-card .card-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+        .dest-card .card-header i { font-size:20px; color:var(--gold); width:32px; text-align:center; }
+        .dest-card .card-header h3 { font-family:'Playfair Display',serif; font-size:18px; color:var(--cream); }
+        .dest-card .card-body { font-size:14px; line-height:1.8; color:rgba(255,255,255,.8); }
+        .dest-card .card-body p { margin-bottom:8px; }
+        .dest-card .card-body .label { color:var(--gold); font-weight:500; }
+        .dest-card .card-body .value { color:var(--cream); }
+
+        /* Grid layout for info cards */
+        .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .info-grid .info-item { display:flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(255,255,255,.03); border-radius:8px; }
+        .info-grid .info-item i { color:var(--gold); font-size:14px; width:20px; text-align:center; }
+        .info-grid .info-item .label { font-size:12px; color:#7a706a; }
+        .info-grid .info-item .value { font-size:13px; color:var(--cream); font-weight:500; }
+
+        /* Image gallery */
+        .image-gallery { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px; margin-top:12px; }
+        .image-gallery img { width:100%; height:160px; object-fit:cover; border-radius:10px; cursor:pointer; transition:transform .3s, box-shadow .3s; }
+        .image-gallery img:hover { transform:scale(1.03); box-shadow:0 8px 30px rgba(0,0,0,.4); }
+
+        /* Collapsible sections */
+        .collapsible { cursor:pointer; user-select:none; }
+        .collapsible .collapse-icon { transition:transform .3s; display:inline-block; margin-left:8px; }
+        .collapsible.active .collapse-icon { transform:rotate(180deg); }
+        .collapse-content { overflow:hidden; max-height:0; transition:max-height .4s ease; }
+        .collapse-content.open { max-height:5000px; }
+
+        /* Map embed */
+        .map-container { width:100%; height:300px; border-radius:12px; overflow:hidden; margin-top:12px; border:1px solid var(--border); }
+        .map-container iframe { width:100%; height:100%; border:none; }
+
+        /* Loading shimmer */
+        .shimmer { background:linear-gradient(90deg, rgba(255,255,255,.03) 25%, rgba(255,255,255,.06) 50%, rgba(255,255,255,.03) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        /* Badge */
+        .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:500; }
+        .badge-gold { background:rgba(212,168,67,.15); color:var(--gold); border:1px solid rgba(212,168,67,.3); }
+        .badge-green { background:rgba(46,204,113,.15); color:#2ecc71; border:1px solid rgba(46,204,113,.3); }
+        .badge-red { background:rgba(231,76,60,.15); color:#e74c3c; border:1px solid rgba(231,76,60,.3); }
+
+        /* Responsive */
+        @media(max-width:768px){
+            .info-grid { grid-template-columns:1fr; }
+            .image-gallery { grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); }
+            .image-gallery img { height:120px; }
+            .dest-card { padding:16px; }
         }
     </style>
 </head>
@@ -155,18 +192,18 @@
             <h3>Quick Prompts</h3>
             <p>Tap any suggestion to start</p>
         </div>
-        <div class="quick-prompts-title">Popular Topics</div>
+        <div class="quick-prompts-title">Popular Destinations</div>
         <div class="quick-list">
-            <button class="quick-btn" onclick="usePrompt('Plan a 3-day trip from Chennai to Ooty with budget details')"><i class="fas fa-route"></i> Chennai to Ooty (3 Days)</button>
-            <button class="quick-btn" onclick="usePrompt('What are the best foods to try in Rajasthan?')"><i class="fas fa-utensils"></i> Rajasthan Food Guide</button>
-            <button class="quick-btn" onclick="usePrompt('Budget travel options from Delhi to Manali by bus and train')"><i class="fas fa-bus"></i> Delhi → Manali Budget</button>
-            <button class="quick-btn" onclick="usePrompt('Best luxury hotels in Goa under ₹5000 per night')"><i class="fas fa-hotel"></i> Goa Hotels Under ₹5000</button>
-            <button class="quick-btn" onclick="usePrompt('Cultural tips and things to avoid when visiting Japan')"><i class="fas fa-torii-gate"></i> Japan Cultural Tips</button>
-            <button class="quick-btn" onclick="usePrompt('Weekend getaway destinations near Bangalore within 200km')"><i class="fas fa-map-pin"></i> Bangalore Getaways</button>
-            <button class="quick-btn" onclick="usePrompt('Compare flight vs train from Mumbai to Hyderabad with cost')"><i class="fas fa-plane-departure"></i> Mumbai → Hyderabad</button>
-            <button class="quick-btn" onclick="usePrompt('Best time to visit Kerala and top 5 attractions')"><i class="fas fa-umbrella-beach"></i> Kerala Travel Guide</button>
-            <button class="quick-btn" onclick="usePrompt('Solo travel safety tips for women in India')"><i class="fas fa-shield-halved"></i> Solo Travel Safety</button>
-            <button class="quick-btn" onclick="usePrompt('What documents do I need for international travel from India?')"><i class="fas fa-passport"></i> Travel Documents</button>
+            <button class="quick-btn" onclick="usePrompt('Taj Mahal')"><i class="fas fa-monument"></i> Taj Mahal</button>
+            <button class="quick-btn" onclick="usePrompt('Goa')"><i class="fas fa-umbrella-beach"></i> Goa</button>
+            <button class="quick-btn" onclick="usePrompt('Paris')"><i class="fas fa-city"></i> Paris</button>
+            <button class="quick-btn" onclick="usePrompt('Kerala')"><i class="fas fa-tree"></i> Kerala</button>
+            <button class="quick-btn" onclick="usePrompt('Manali')"><i class="fas fa-mountain"></i> Manali</button>
+            <button class="quick-btn" onclick="usePrompt('Rome')"><i class="fas fa-landmark"></i> Rome</button>
+            <button class="quick-btn" onclick="usePrompt('Tokyo')"><i class="fas fa-torii-gate"></i> Tokyo</button>
+            <button class="quick-btn" onclick="usePrompt('London')"><i class="fas fa-bridge"></i> London</button>
+            <button class="quick-btn" onclick="usePrompt('Dubai')"><i class="fas fa-building"></i> Dubai</button>
+            <button class="quick-btn" onclick="usePrompt('Bali')"><i class="fas fa-palmtree"></i> Bali</button>
         </div>
         <div class="sidebar-footer">
             <button class="new-chat-btn" onclick="clearChat()"><i class="fas fa-plus"></i> New Conversation</button>
@@ -182,7 +219,7 @@
                 <div class="avatar"><i class="fas fa-robot"></i></div>
                 <div>
                     <div class="assistant-name">Travel AI Assistant</div>
-                    <div class="assistant-status"><div class="online-dot"></div> Powered by Gemini</div>
+                    <div class="assistant-status"><div class="online-dot"></div> Powered by Wikipedia & Gemini</div>
                 </div>
             </div>
             <div class="topbar-actions">
@@ -196,24 +233,16 @@
         <div class="messages-wrap" id="messagesWrap">
             <div class="welcome-card">
                 <h2>Hello, <em>Traveller!</em> 👋</h2>
-                <p>I'm your AI travel guide powered by Google Gemini. Ask me about destinations, budgets, transport, local food, hotels, and more. Use the quick prompts on the left to get started instantly.</p>
+                <p>I'm your AI travel guide. Ask me about <strong>any destination</strong> in the world — cities, temples, beaches, monuments, hill stations, museums, and more! I'll show you detailed information with images, maps, and travel tips.</p>
+                <p style="margin-top:12px;font-size:13px;color:#5a5250;">💡 Try typing a place name like <strong>"Taj Mahal"</strong>, <strong>"Paris"</strong>, or <strong>"Goa"</strong></p>
             </div>
         </div>
 
         <!-- INPUT -->
         <div class="input-bar">
             <div class="input-row">
-                <textarea
-                    class="input-field"
-                    id="messageInput"
-                    placeholder="Ask about any destination, route, food, hotel..."
-                    onkeydown="handleKey(event)"
-                    oninput="handleInput(this)"
-                    rows="1"
-                ></textarea>
-                <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send (Enter)">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+                <textarea class="input-field" id="messageInput" placeholder="Ask about any destination in the world..." onkeydown="handleKey(event)" oninput="handleInput(this)" rows="1"></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send (Enter)"><i class="fas fa-paper-plane"></i></button>
             </div>
             <div class="input-meta">
                 <span class="hint"><i class="fas fa-keyboard" style="font-size:10px;"></i> Enter to send &nbsp;·&nbsp; Shift+Enter for new line</span>
@@ -263,10 +292,8 @@
         messageCount++;
         const row = document.createElement('div');
         row.className = `msg-row ${isUser ? 'user' : 'bot'}`;
-
         const formatted = detectAndConvertLinks(content);
         const t = now();
-
         if (isUser) {
             row.innerHTML = `
                 <div style="display:flex;flex-direction:column;align-items:flex-end;max-width:72%;">
@@ -287,18 +314,13 @@
                 </div>
             `;
         }
-
         messagesWrap.appendChild(row);
         messagesWrap.scrollTo({ top: messagesWrap.scrollHeight, behavior: 'smooth' });
     }
 
     function copyMsg(id) {
         const el = document.getElementById(`bubble-${id}`);
-        if (el) {
-            navigator.clipboard.writeText(el.innerText).then(() => {
-                showToast('Copied to clipboard!');
-            });
-        }
+        if (el) { navigator.clipboard.writeText(el.innerText).then(() => showToast('Copied to clipboard!')); }
     }
 
     function showToast(msg) {
@@ -312,6 +334,174 @@
         });
         document.body.appendChild(t);
         setTimeout(() => t.remove(), 2000);
+    }
+
+    // ════════════════════════════════════════════
+    // DESTINATION CARD RENDERER
+    // ════════════════════════════════════════════
+    function renderDestinationCard(data) {
+        const card = document.createElement('div');
+        card.className = 'dest-card';
+        card.style.animationDelay = '0.1s';
+
+        // Helper to create collapsible section
+        function section(title, icon, contentHtml, defaultOpen) {
+            const id = 'sec-' + Math.random().toString(36).substr(2, 5);
+            return `
+                <div style="margin-bottom:12px;">
+                    <div class="collapsible ${defaultOpen ? 'active' : ''}" onclick="toggleCollapse('${id}')" style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;">
+                        <i class="${icon}" style="color:var(--gold);font-size:16px;width:24px;"></i>
+                        <span style="font-weight:500;font-size:15px;color:var(--cream);flex:1;">${title}</span>
+                        <span class="collapse-icon" style="color:#5a5250;font-size:12px;"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="collapse-content ${defaultOpen ? 'open' : ''}" id="${id}">${contentHtml}</div>
+                </div>
+            `;
+        }
+
+        // Location Details
+        const locationHtml = `
+            <div class="info-grid">
+                <div class="info-item"><i class="fas fa-tag"></i><div><div class="label">Place Name</div><div class="value">${data.place_name || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-id-card"></i><div><div class="label">Official Name</div><div class="value">${data.official_name || data.place_name || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-layer-group"></i><div><div class="label">Category</div><div><span class="badge badge-gold">${data.category || 'Tourist Attraction'}</span></div></div></div>
+                <div class="info-item"><i class="fas fa-map-marker-alt"></i><div><div class="label">State</div><div class="value">${data.state || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-location-dot"></i><div><div class="label">District</div><div class="value">${data.district || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-globe"></i><div><div class="label">Country</div><div class="value">${data.country || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-globe-asia"></i><div><div class="label">Latitude</div><div class="value">${data.latitude || data.latitude_display || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-globe-americas"></i><div><div class="label">Longitude</div><div class="value">${data.longitude || data.longitude_display || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-arrow-up"></i><div><div class="label">Elevation</div><div class="value">${data.elevation || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-home"></i><div><div class="label">Address</div><div class="value">${data.address || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-mailbox"></i><div><div class="label">PIN Code</div><div class="value">${data.pin_code || 'N/A'}</div></div></div>
+            </div>
+        `;
+
+        // About section
+        const aboutHtml = `
+            <div class="card-body">
+                <p>${data.about || 'No description available.'}</p>
+                ${data.unesco_status && data.unesco_status !== 'N/A' ? `<p style="margin-top:8px;"><span class="badge badge-green"><i class="fas fa-award"></i> UNESCO World Heritage Site</span></p>` : ''}
+                ${data.famous_for ? `<p style="margin-top:8px;"><span class="label">Famous for:</span> <span class="value">${data.famous_for}</span></p>` : ''}
+            </div>
+        `;
+
+        // Best Time to Visit
+        const bestTimeHtml = `
+            <div class="info-grid">
+                <div class="info-item"><i class="fas fa-calendar-check"></i><div><div class="label">Recommended Months</div><div class="value">${data.best_time || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-sun"></i><div><div class="label">Peak Season</div><div class="value">${data.peak_season || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-cloud-rain"></i><div><div class="label">Off Season</div><div class="value">${data.off_season || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-cloud-sun"></i><div><div class="label">Weather</div><div class="value">${data.weather || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-temperature-high"></i><div><div class="label">Temperature</div><div class="value">${data.temperature || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-water"></i><div><div class="label">Rainfall</div><div class="value">${data.rainfall || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-clock"></i><div><div class="label">Ideal Duration</div><div class="value">${data.ideal_duration || 'N/A'}</div></div></div>
+            </div>
+        `;
+
+        // Opening Hours
+        const hoursHtml = `
+            <div class="info-grid">
+                <div class="info-item"><i class="fas fa-door-open"></i><div><div class="label">Opening Time</div><div class="value">${data.opening_time || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-door-closed"></i><div><div class="label">Closing Time</div><div class="value">${data.closing_time || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-calendar-times"></i><div><div class="label">Weekly Holidays</div><div class="value">${data.weekly_holidays || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-clock"></i><div><div class="label">Entry Timing</div><div class="value">${data.entry_timing || 'N/A'}</div></div></div>
+            </div>
+        `;
+
+        // Entry Fee
+        const feeHtml = `
+            <div class="info-grid">
+                <div class="info-item"><i class="fas fa-user"></i><div><div class="label">Indian Adult</div><div class="value">${data.entry_fee_indian_adult || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-child"></i><div><div class="label">Indian Child</div><div class="value">${data.entry_fee_indian_child || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-passport"></i><div><div class="label">Foreign Tourist</div><div class="value">${data.entry_fee_foreign || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-camera"></i><div><div class="label">Camera Charges</div><div class="value">${data.camera_charges || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-car"></i><div><div class="label">Parking Charges</div><div class="value">${data.parking_charges || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-user-tie"></i><div><div class="label">Guide Charges</div><div class="value">${data.guide_charges || 'N/A'}</div></div></div>
+            </div>
+        `;
+
+        // Images
+        let imagesHtml = '';
+        if (data.images && data.images.length > 0) {
+            imagesHtml = `<div class="image-gallery">${data.images.map(img => `<img src="${img}" alt="${data.place_name}" onclick="window.open(this.src,'_blank')" loading="lazy">`).join('')}</div>`;
+        } else {
+            imagesHtml = `<p style="color:#5a5250;font-style:italic;">No images available for this destination.</p>`;
+        }
+
+        // Map
+        let mapHtml = '';
+        if (data.maps_link) {
+            const lat = data.latitude || data.latitude_display || '';
+            const lng = data.longitude || data.longitude_display || '';
+            mapHtml = `
+                <div class="map-container">
+                    <iframe src="https://maps.google.com/maps?q=${lat},${lng}&z=12&output=embed" allowfullscreen loading="lazy"></iframe>
+                </div>
+                <p style="margin-top:8px;font-size:12px;color:#5a5250;">
+                    <i class="fas fa-map-pin"></i> ${lat}, ${lng} &nbsp;|&nbsp; 
+                    <a href="${data.maps_link}" target="_blank" style="color:var(--gold);">Open in Google Maps <i class="fas fa-external-link-alt"></i></a>
+                </p>
+            `;
+        } else {
+            mapHtml = `<p style="color:#5a5250;font-style:italic;">Map location not available.</p>`;
+        }
+
+        // Contact
+        const contactHtml = `
+            <div class="info-grid">
+                <div class="info-item"><i class="fas fa-globe"></i><div><div class="label">Official Website</div><div class="value">${data.official_website && data.official_website !== 'N/A' ? `<a href="${data.official_website}" target="_blank" style="color:var(--gold);">Visit Website</a>` : 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-phone"></i><div><div class="label">Phone</div><div class="value">${data.contact_phone || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-envelope"></i><div><div class="label">Email</div><div class="value">${data.contact_email || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-link"></i><div><div class="label">Website</div><div class="value">${data.contact_website && data.contact_website !== 'N/A' ? `<a href="${data.contact_website}" target="_blank" style="color:var(--gold);">Visit</a>` : 'N/A'}</div></div></div>
+            </div>
+        `;
+
+        // Travel Tip
+        const tipHtml = `
+            <div style="background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.2);border-radius:12px;padding:16px;margin-top:8px;">
+                <p style="color:var(--gold);font-weight:500;margin-bottom:6px;"><i class="fas fa-lightbulb"></i> Travel Tip</p>
+                <p style="color:rgba(255,255,255,.8);font-size:14px;line-height:1.6;">${data.travel_tip || 'Plan your trip in advance and check local guidelines before visiting.'}</p>
+            </div>
+        `;
+
+        // Wikipedia link
+        const wikiHtml = data.wikipedia_url ? `
+            <p style="margin-top:12px;font-size:12px;color:#5a5250;text-align:center;">
+                <i class="fas fa-wikipedia-w"></i> Source: <a href="${data.wikipedia_url}" target="_blank" style="color:var(--gold);">Wikipedia</a>
+            </p>
+        ` : '';
+
+        // Build the full card
+        card.innerHTML = `
+            <div class="card-header">
+                <i class="fas fa-map-pin"></i>
+                <h3>📍 ${data.place_name || 'Destination'}</h3>
+            </div>
+            ${section('📍 Location Details', 'fas fa-map-marked-alt', locationHtml, true)}
+            ${section('📖 About', 'fas fa-book-open', aboutHtml, true)}
+            ${section('📅 Best Time to Visit', 'fas fa-calendar-alt', bestTimeHtml, false)}
+            ${section('⏰ Opening Hours', 'fas fa-clock', hoursHtml, false)}
+            ${section('🎟 Entry Fee', 'fas fa-ticket-alt', feeHtml, false)}
+            ${section('📸 Images', 'fas fa-images', imagesHtml, true)}
+            ${section('🗺 Map', 'fas fa-map', mapHtml, true)}
+            ${section('🌐 Official Website & Contact', 'fas fa-address-card', contactHtml, false)}
+            ${tipHtml}
+            ${wikiHtml}
+        `;
+
+        return card;
+    }
+
+    function toggleCollapse(id) {
+        const content = document.getElementById(id);
+        const header = content.previousElementSibling;
+        if (content.classList.contains('open')) {
+            content.classList.remove('open');
+            header.classList.remove('active');
+        } else {
+            content.classList.add('open');
+            header.classList.add('active');
+        }
     }
 
     // ── Send ──
@@ -333,7 +523,7 @@
         thinking.innerHTML = `
             <div class="msg-avatar bot-av" style="width:36px;height:36px;border-radius:50%;background:var(--terracotta);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;"><i class="fas fa-robot"></i></div>
             <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-            <span>Thinking…</span>
+            <span>Searching destination info…</span>
         `;
         messagesWrap.appendChild(thinking);
         messagesWrap.scrollTo({ top: messagesWrap.scrollHeight, behavior: 'smooth' });
@@ -348,13 +538,34 @@
             thinking.remove();
 
             if (data.error) {
-                addMessage(`⚠️ Error: ${data.error}`, false);
+                addMessage(`⚠️ ${data.error}`, false);
+            } else if (data.source === 'destination' && typeof data.response === 'object') {
+                // Render the beautiful destination card
+                const row = document.createElement('div');
+                row.className = 'msg-row bot';
+                row.innerHTML = `
+                    <div class="msg-avatar bot-av"><i class="fas fa-robot"></i></div>
+                    <div style="display:flex;flex-direction:column;max-width:85%;width:100%;">
+                        <div id="bubble-${++messageCount}"></div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+                            <div class="msg-time">${now()}</div>
+                            <button class="copy-btn" onclick="copyMsg(${messageCount})" title="Copy response"><i class="fas fa-copy"></i></button>
+                        </div>
+                    </div>
+                `;
+                messagesWrap.appendChild(row);
+                const bubble = row.querySelector(`#bubble-${messageCount}`);
+                const card = renderDestinationCard(data.response);
+                bubble.appendChild(card);
+                messagesWrap.scrollTo({ top: messagesWrap.scrollHeight, behavior: 'smooth' });
             } else {
                 let reply = '';
                 if (Array.isArray(data.response)) {
                     data.response.forEach(item => { reply += `<strong>${item.topic}:</strong> ${item.details}<br>`; });
-                } else {
+                } else if (typeof data.response === 'string') {
                     reply = data.response;
+                } else {
+                    reply = JSON.stringify(data.response);
                 }
                 addMessage(reply, false);
             }
@@ -370,18 +581,13 @@
 
     // ── Input helpers ──
     function handleKey(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     }
-
     function handleInput(el) {
         el.style.height = '48px';
         el.style.height = Math.min(el.scrollHeight, 160) + 'px';
         updateCharCount(el.value);
     }
-
     function updateCharCount(val) {
         const cc = document.getElementById('charCount');
         cc.textContent = `${val.length} / 500`;
@@ -393,7 +599,6 @@
         messageInput.value = text;
         messageInput.focus();
         handleInput(messageInput);
-        // close sidebar on mobile
         document.getElementById('sidebar').classList.remove('open');
     }
 
@@ -403,7 +608,8 @@
         messagesWrap.innerHTML = `
             <div class="welcome-card">
                 <h2>Hello, <em>Traveller!</em> 👋</h2>
-                <p>I'm your AI travel guide powered by Google Gemini. Ask me about destinations, budgets, transport, local food, hotels, and more. Use the quick prompts on the left to get started instantly.</p>
+                <p>I'm your AI travel guide. Ask me about <strong>any destination</strong> in the world — cities, temples, beaches, monuments, hill stations, museums, and more! I'll show you detailed information with images, maps, and travel tips.</p>
+                <p style="margin-top:12px;font-size:13px;color:#5a5250;">💡 Try typing a place name like <strong>"Taj Mahal"</strong>, <strong>"Paris"</strong>, or <strong>"Goa"</strong></p>
             </div>
         `;
         messageCount = 0;
@@ -429,9 +635,7 @@
     }
 
     // ── Sidebar toggle (mobile) ──
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('open');
-    }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
     // ── CSRF ──
     function getCookie(name) {
