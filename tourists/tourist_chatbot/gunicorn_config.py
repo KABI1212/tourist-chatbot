@@ -12,8 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tourist_chatbot.settings')
 
 # Bind to all available interfaces
-bind = "0.0.0.0:8000"
-
+bind = f"0.0.0.0:{os.environ.get('PORT', 8000)}"
 # Worker configuration
 workers = 4
 worker_class = "sync"

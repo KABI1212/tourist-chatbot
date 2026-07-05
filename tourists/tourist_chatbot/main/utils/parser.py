@@ -41,36 +41,35 @@ def parse_ai_response(response_text: str) -> List[Dict[str, str]]:
     return formatted
 
 
-def detect_and_convert_links(text: str) -> str:
+def _convert_markdown_images(text: str) -> str:
     """
-    Detect URLs in text and convert them to clickable HTML links.
+    Convert markdown image syntax ![alt](url) to HTML <img> tags.
+    Must be called BEFORE detect_and_convert_links.
     
     Args:
-        text: Raw text that may contain URLs.
+        text: Text that may contain markdown image references.
     
     Returns:
-        Text with URLs converted to HTML anchor tags.
+        Text with markdown images converted to HTML.
     """
     if not text:
         return ""
     
-    # Remove markdown bold/italic markers
-    text = re.sub(r"\*{1,2}", "", text)
+    # Convert ![alt](url) to <img> tags with styling
+    # Use a unique placeholder marker that won't be matched as a URL
+    # and won't be affected by text transformations
+    def replace_img(match):
+        alt_text = match.group(1)
+        img_url = match.group(2)
+        return (
+            f'<div class="dest-image-wrapper">'
+            f'<img src="ZZIMGPROTECT{img_url}ZZIMGEND" alt="{alt_text}" '
+            f'class="dest-image" loading="lazy" '
+            f'onclick="window.open(\'ZZIMGPROTECT{img_url}ZZIMGEND\',\'_blank\')" />'
+            f'</div>'
+        )
     
-    # Convert bracket-enclosed URLs: [https://example.com] -> <a href="...">...</a>
-    text = re.sub(
-        r"\[(https?://[^\]]+)\]",
-        lambda m: f'<a href="{m.group(1)}" target="_blank" rel="noopener noreferrer">{m.group(1)}</a>',
-        text,
-    )
-    
-    # Convert bare URLs: https://example.com -> <a href="...">...</a>
-    text = re.sub(
-        r"(?<!["">])(https?://[^\s<]+)",
-        lambda m: f'<a href="{m.group(1)}" target="_blank" rel="noopener noreferrer">{m.group(1)}</a>',
-        text,
-    )
-    
+    text = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", replace_img, text)
     return text
 
 
@@ -88,10 +87,32 @@ def format_chat_response(response_text: str) -> str:
     if not response_text:
         return ""
     
-    # Convert links
-    text = detect_and_convert_links(response_text)
+    # Step 1: Convert markdown images to HTML with protected URLs
+    text = _convert_markdown_images(response_text)
     
-    # Convert newlines to <br> tags
+    # Step 2: Remove bold/italic markers (but NOT our image markers)
+    text = text.replace("**", "")
+    
+    # Step 3: Convert markdown links [text](url) to HTML <a> tags
+    # This must be done BEFORE bare URL conversion to avoid double-wrapping
+    text = re.sub(
+        r'\[([^\]]+)\]\(((https?://[^)]+))\)',
+        lambda m: f'<a href="{m.group(2)}" target="_blank" rel="noopener noreferrer">{m.group(1)}</a>',
+        text,
+    )
+    
+    # Step 4: Convert bare URLs to clickable links (skip protected URLs)
+    # The ZZIMGPROTECT prefix prevents matching URLs inside img tags
+    text = re.sub(
+        r'(?<!ZZIMGPROTECT)(?<!["\'])(https?://[^\s<]+)',
+        lambda m: f'<a href="{m.group(1)}" target="_blank" rel="noopener noreferrer">{m.group(1)}</a>',
+        text,
+    )
+    
+    # Step 5: Restore image URL markers (remove the protection markers)
+    text = text.replace("ZZIMGPROTECT", "").replace("ZZIMGEND", "")
+    
+    # Step 6: Convert newlines to <br> tags
     text = text.replace("\n", "<br>")
     
     return text

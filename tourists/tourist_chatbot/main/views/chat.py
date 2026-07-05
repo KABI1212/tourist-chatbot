@@ -29,6 +29,11 @@ from ..services.destination_service import (
     generate_budget_response,
     generate_itinerary_response,
 )
+from ..services.destination_media_service import (
+    get_destination_images,
+    get_destination_location,
+    format_destination_media_response,
+)
 from ..utils.validators import validate_chat_message
 from ..utils.parser import parse_ai_response, format_chat_response
 
@@ -85,6 +90,22 @@ def chat_view(request):
 
             # Format the response for display
             formatted_response = format_chat_response(model_response)
+
+            # ── Inject destination media (images + map) if applicable ──
+            media_block = ""
+            if destination_name:
+                try:
+                    images = get_destination_images(destination_name)
+                    location = get_destination_location(destination_name)
+                    if images or location:
+                        media_block = format_destination_media_response(
+                            destination_name, images, location
+                        )
+                except Exception as e:
+                    logger.warning(f"Failed to fetch media for '{destination_name}': {e}")
+
+            if media_block:
+                formatted_response += "\n\n" + media_block
 
             # Save chat history to MongoDB for authenticated users
             if not is_guest and user_id:

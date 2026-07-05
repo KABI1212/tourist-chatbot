@@ -482,6 +482,57 @@
             white-space: nowrap;
         }
 
+        /* ── DESTINATION IMAGES ── */
+        .dest-image-wrapper {
+            margin: 12px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dest-image-wrapper:hover {
+            border-color: rgba(212, 168, 67, 0.4);
+            transform: scale(1.01);
+        }
+
+        .dest-image {
+            width: 100%;
+            max-height: 320px;
+            object-fit: cover;
+            display: block;
+            border-radius: 12px;
+        }
+
+        .bubble .dest-image-wrapper:first-of-type {
+            margin-top: 4px;
+        }
+
+        .bubble a[href*="google.com/maps"] {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: rgba(212, 168, 67, 0.12);
+            border: 1px solid rgba(212, 168, 67, 0.3);
+            border-radius: 8px;
+            color: var(--gold) !important;
+            text-decoration: none !important;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .bubble a[href*="google.com/maps"]:hover {
+            background: rgba(212, 168, 67, 0.2);
+            border-color: var(--gold);
+        }
+
+        .bubble a[href*="google.com/maps"]::before {
+            content: "📍 ";
+        }
+
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(16px); }
             to { opacity: 1; transform: translateY(0); }
