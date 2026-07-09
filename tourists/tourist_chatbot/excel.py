@@ -1,26 +1,28 @@
+"""
+Utility script: export all SQLite tables to an Excel file.
+Run from the project root:  python excel.py
+"""
 import sqlite3
+from pathlib import Path
 import pandas as pd
 
-# Specify database file path
-db_path = "D:\\project\\tourists\\tourist_chatbot\\db.sqlite3"  # Replace with your database file path
-excel_path = "output.xlsx"  # Desired Excel file output path
+BASE_DIR = Path(__file__).resolve().parent
+db_path = BASE_DIR / "db.sqlite3"
+excel_path = BASE_DIR / "output.xlsx"
 
-# Connect to the SQLite database
+if not db_path.exists():
+    print(f"Database not found at {db_path}")
+    raise SystemExit(1)
+
 conn = sqlite3.connect(db_path)
 
-# Get all table names
 query = "SELECT name FROM sqlite_master WHERE type='table';"
 tables = pd.read_sql(query, conn)
 
-# Automatically create and populate the Excel file
 with pd.ExcelWriter(excel_path, engine="openpyxl") as writer:
     for table in tables["name"]:
-        # Fetch the table data
         df = pd.read_sql(f"SELECT * FROM {table};", conn)
-        # Write the table data to a sheet named after the table
-        df.to_excel(writer, sheet_name=table, index=False)
+        df.to_excel(writer, sheet_name=table[:31], index=False)  # sheet name max 31 chars
 
-# Close the database connection
 conn.close()
-
-print(f"Excel file '{excel_path}' created successfully with all database tables.")
+print(f"Excel file saved to: {excel_path}")

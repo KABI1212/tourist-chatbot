@@ -5,562 +5,221 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Assistant — Tourist Guide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --terracotta: #c0623a;
-            --deep: #1a1410;
-            --gold: #d4a843;
-            --cream: #faf6f0;
-            --mid: #241c18;
-            --border: rgba(255, 255, 255, 0.07);
-            --text-muted: #8b7e74;
-            --bubble-user: var(--terracotta);
-            --bubble-bot: rgba(255, 255, 255, 0.05);
-            --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--deep);
-            color: var(--cream);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        :root { --terracotta:#c0623a; --deep:#1a1410; --gold:#d4a843; --cream:#faf6f0; --mid:#241c18; --border:rgba(255,255,255,.07); --card-bg:rgba(255,255,255,.03); }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'DM Sans',sans-serif; background:var(--deep); color:var(--cream); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
 
         /* ── NAVBAR ── */
-        .navbar {
-            background: rgba(14, 10, 8, 0.97);
-            border-bottom: 1px solid var(--border);
-            padding: 0 24px;
-            height: 62px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-            z-index: 10;
-        }
-
-        .nav-logo {
-            font-family: 'Playfair Display', serif;
-            font-size: 20px;
-            color: var(--gold);
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-links a,
-        .nav-links button {
-            color: rgba(255, 255, 255, 0.65);
-            text-decoration: none;
-            padding: 7px 13px;
-            border-radius: 6px;
-            font-size: 13px;
-            transition: all 0.3s;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-family: 'DM Sans', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .nav-links a:hover,
-        .nav-links button:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.07);
-        }
-
-        .nav-links .cta {
-            background: var(--terracotta);
-            color: white;
-        }
-
-        .nav-links .cta:hover {
-            background: #a8522f;
-        }
+        .navbar { background:rgba(14,10,8,.97); border-bottom:1px solid var(--border); padding:0 24px; height:62px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; z-index:10; }
+        .nav-logo { font-family:'Playfair Display',serif; font-size:20px; color:var(--gold); text-decoration:none; }
+        .nav-links { display:flex; align-items:center; gap:6px; }
+        .nav-links a { color:rgba(255,255,255,.65); text-decoration:none; padding:7px 13px; border-radius:6px; font-size:13px; transition:all .3s; }
+        .nav-links a:hover { color:white; background:rgba(255,255,255,.07); }
+        .nav-links .cta { background:var(--terracotta); color:white; }
+        .nav-links .cta:hover { background:#a8522f; }
 
         /* ── LAYOUT ── */
-        .chat-layout { display: flex; flex: 1; overflow: hidden; }
+        .chat-layout { display:flex; flex:1; overflow:hidden; }
 
         /* ── SIDEBAR ── */
-        .sidebar {
-            width: 280px;
-            background: #0e0a08;
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            transition: transform 0.3s ease;
-            z-index: 20;
-        }
-
-        .sidebar-head {
-            padding: 20px 18px 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .sidebar-head h3 {
-            font-family: 'Playfair Display', serif;
-            font-size: 16px;
-            color: var(--cream);
-            margin-bottom: 4px;
-        }
-
-        .sidebar-head p { font-size: 12px; color: var(--text-muted); }
-
-        .quick-prompts-title {
-            font-size: 11px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            padding: 14px 18px 10px;
-            font-weight: 500;
-        }
-
-        .quick-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 10px 10px;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.1) transparent;
-        }
-
-        .quick-list::-webkit-scrollbar { width: 5px; }
-        .quick-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-
-        .quick-btn {
-            width: 100%;
-            text-align: left;
-            padding: 11px 14px;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 8px;
-            color: rgba(255, 255, 255, 0.65);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            line-height: 1.4;
-            margin-bottom: 4px;
-        }
-
-        .quick-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.08);
-            color: white;
-        }
-
-        .quick-btn i { color: var(--terracotta); font-size: 13px; flex-shrink: 0; }
-
-        .sidebar-footer {
-            padding: 16px 18px;
-            border-top: 1px solid var(--border);
-        }
-
-        .new-chat-btn {
-            width: 100%;
-            padding: 10px;
-            background: rgba(192, 98, 58, 0.15);
-            border: 1px solid rgba(192, 98, 58, 0.3);
-            border-radius: 8px;
-            color: var(--terracotta);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-weight: 500;
-        }
-
-        .new-chat-btn:hover {
-            background: var(--terracotta);
-            color: white;
-        }
+        .sidebar { width:280px; background:#0e0a08; border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; transition:transform .3s; }
+        .sidebar-head { padding:20px 18px 16px; border-bottom:1px solid var(--border); }
+        .sidebar-head h3 { font-family:'Playfair Display',serif; font-size:16px; color:var(--cream); margin-bottom:4px; }
+        .sidebar-head p { font-size:12px; color:#5a5250; }
+        .quick-prompts-title { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#5a5250; padding:14px 18px 10px; font-weight:500; }
+        .quick-list { flex:1; overflow-y:auto; padding:0 10px 10px; }
+        .quick-btn { width:100%; text-align:left; padding:11px 14px; background:transparent; border:1px solid transparent; border-radius:8px; color:rgba(255,255,255,.65); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; transition:all .3s; display:flex; align-items:center; gap:10px; line-height:1.4; margin-bottom:4px; }
+        .quick-btn:hover { background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.08); color:white; }
+        .quick-btn i { color:var(--terracotta); font-size:13px; flex-shrink:0; }
+        .sidebar-footer { padding:16px 18px; border-top:1px solid var(--border); }
+        .new-chat-btn { width:100%; padding:10px; background:rgba(192,98,58,.15); border:1px solid rgba(192,98,58,.3); border-radius:8px; color:var(--terracotta); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; transition:all .3s; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:500; }
+        .new-chat-btn:hover { background:var(--terracotta); color:white; }
 
         /* ── MAIN CHAT AREA ── */
-        .chat-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-
-        .chat-topbar {
-            background: rgba(26, 20, 16, 0.8);
-            border-bottom: 1px solid var(--border);
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-        }
-
-        .assistant-info { display: flex; align-items: center; gap: 12px; }
-
-        .avatar {
-            width: 40px;
-            height: 40px;
-            background: var(--terracotta);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-
-        .assistant-name { font-weight: 500; font-size: 15px; }
-
-        .assistant-status {
-            font-size: 12px;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .online-dot {
-            width: 7px;
-            height: 7px;
-            background: #2ecc71;
-            border-radius: 50%;
-            animation: pulseDot 2s infinite;
-        }
-
-        @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-        .topbar-actions { display: flex; gap: 8px; align-items: center; }
-
-        .topbar-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: rgba(255, 255, 255, 0.5);
-            padding: 7px 12px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'DM Sans', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .topbar-btn:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        #google_translate_element { display: inline-block; }
-        #google_translate_element .goog-te-gadget-simple {
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 12px;
-        }
+        .chat-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+        .chat-topbar { background:rgba(26,20,16,.8); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+        .assistant-info { display:flex; align-items:center; gap:12px; }
+        .avatar { width:40px; height:40px; background:var(--terracotta); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+        .assistant-name { font-weight:500; font-size:15px; }
+        .assistant-status { font-size:12px; color:#5a5250; display:flex; align-items:center; gap:5px; }
+        .online-dot { width:7px; height:7px; background:#2ecc71; border-radius:50%; animation:pulseDot 2s infinite; }
+        @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:.4} }
+        .topbar-actions { display:flex; gap:8px; }
+        .topbar-btn { background:transparent; border:1px solid var(--border); border-radius:6px; color:rgba(255,255,255,.5); padding:7px 12px; font-size:12px; cursor:pointer; transition:all .3s; font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:6px; }
+        .topbar-btn:hover { border-color:rgba(255,255,255,.2); color:white; background:rgba(255,255,255,.04); }
+        #google_translate_element { display:inline-block; }
+        #google_translate_element .goog-te-gadget-simple { background:transparent; border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:12px; }
 
         /* ── MESSAGES ── */
-        .messages-wrap {
-            flex: 1;
-            overflow-y: auto;
-            padding: 28px 28px 20px;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.1) transparent;
-        }
+        .messages-wrap { flex:1; overflow-y:auto; padding:28px 28px 20px; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.1) transparent; }
+        .messages-wrap::-webkit-scrollbar { width:5px; }
+        .messages-wrap::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:4px; }
 
-        .messages-wrap::-webkit-scrollbar { width: 5px; }
-        .messages-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        /* welcome */
+        .welcome-card { background:rgba(255,255,255,.025); border:1px solid var(--border); border-radius:16px; padding:32px; text-align:center; margin-bottom:28px; animation:fadeUp .6s ease both; }
+        .welcome-card h2 { font-family:'Playfair Display',serif; font-size:26px; margin-bottom:10px; }
+        .welcome-card h2 em { font-style:italic; color:var(--gold); }
+        .welcome-card p { font-size:14px; color:#7a706a; line-height:1.6; }
 
-        .welcome-card {
-            background: rgba(255, 255, 255, 0.025);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 32px;
-            text-align: center;
-            margin-bottom: 28px;
-            animation: fadeUp 0.6s ease both;
-        }
+        /* message bubbles */
+        .msg-row { display:flex; gap:12px; margin-bottom:20px; animation:fadeUp .4s ease both; }
+        .msg-row.user { justify-content:flex-end; }
+        .msg-row.bot { justify-content:flex-start; align-items:flex-start; }
+        .msg-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+        .msg-avatar.bot-av { background:var(--terracotta); }
+        .msg-avatar.user-av { background:rgba(212,168,67,.2); color:var(--gold); }
+        .bubble { padding:13px 18px; border-radius:16px; max-width:72%; word-wrap:break-word; font-size:14px; line-height:1.7; }
+        .bubble.bot { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.07); border-radius:4px 16px 16px 16px; color:var(--cream); }
+        .bubble.user { background:var(--terracotta); border-radius:16px 4px 16px 16px; color:white; }
+        .bubble a { color:var(--gold); text-decoration:underline; word-break:break-all; }
+        .bubble a:hover { color:#e8c86a; }
+        .msg-time { font-size:11px; color:#3a3530; margin-top:5px; text-align:right; }
+        .msg-row.bot .msg-time { text-align:left; padding-left:48px; }
+        .copy-btn { background:transparent; border:none; color:#3a3530; cursor:pointer; font-size:11px; transition:color .2s; padding:2px 6px; border-radius:4px; }
+        .copy-btn:hover { color:var(--gold); background:rgba(255,255,255,.04); }
 
-        .welcome-card h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 26px;
-            margin-bottom: 10px;
-        }
-
-        .welcome-card h2 em { font-style: italic; color: var(--gold); }
-        .welcome-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
-
-        .msg-row {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            animation: fadeUp 0.4s ease both;
-        }
-
-        .msg-row.user { justify-content: flex-end; }
-        .msg-row.bot { justify-content: flex-start; align-items: flex-start; }
-
-        .msg-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .msg-avatar.bot-av { background: var(--terracotta); }
-        .msg-avatar.user-av { background: rgba(212, 168, 67, 0.2); color: var(--gold); }
-
-        .bubble {
-            padding: 13px 18px;
-            border-radius: 16px;
-            max-width: 72%;
-            word-wrap: break-word;
-            font-size: 14px;
-            line-height: 1.7;
-        }
-
-        .bubble.bot {
-            background: var(--bubble-bot);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            border-radius: 4px 16px 16px 16px;
-            color: var(--cream);
-        }
-
-        .bubble.user {
-            background: var(--bubble-user);
-            border-radius: 16px 4px 16px 16px;
-            color: white;
-        }
-
-        .bubble a { color: var(--gold); text-decoration: underline; word-break: break-all; }
-        .bubble a:hover { color: #e8c86a; }
-
-        .msg-time { font-size: 11px; color: #3a3530; margin-top: 5px; text-align: right; }
-        .msg-row.bot .msg-time { text-align: left; padding-left: 48px; }
-
-        .copy-btn {
-            background: transparent;
-            border: none;
-            color: #3a3530;
-            cursor: pointer;
-            font-size: 11px;
-            transition: color 0.2s;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        .copy-btn:hover { color: var(--gold); background: rgba(255, 255, 255, 0.04); }
-
-        .thinking {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 0 12px 48px;
-            animation: fadeUp 0.3s ease both;
-        }
-
-        .thinking span { font-size: 13px; color: var(--text-muted); font-style: italic; }
-
-        .dots { display: flex; gap: 5px; }
-        .dot {
-            width: 6px; height: 6px;
-            background: var(--terracotta);
-            border-radius: 50%;
-            animation: bounce 0.9s ease infinite;
-        }
-
-        .dot:nth-child(2) { animation-delay: 0.2s; }
-        .dot:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } }
+        /* thinking */
+        .thinking { display:flex; align-items:center; gap:10px; padding:12px 0 12px 48px; animation:fadeUp .3s ease both; }
+        .thinking span { font-size:13px; color:#5a5250; font-style:italic; }
+        .dots { display:flex; gap:5px; }
+        .dot { width:6px; height:6px; background:var(--terracotta); border-radius:50%; animation:bounce .9s ease infinite; }
+        .dot:nth-child(2) { animation-delay:.2s; }
+        .dot:nth-child(3) { animation-delay:.4s; }
+        @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-8px)} }
 
         /* ── INPUT ── */
-        .input-bar {
-            padding: 16px 24px;
-            border-top: 1px solid var(--border);
-            background: rgba(14, 10, 8, 0.97);
-            flex-shrink: 0;
+        .input-bar { padding:16px 24px; border-top:1px solid var(--border); background:rgba(14,10,8,.97); flex-shrink:0; }
+        .input-row { display:flex; gap:10px; align-items:flex-end; max-width:900px; margin:0 auto; }
+        .input-field { flex:1; padding:13px 18px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:12px; color:var(--cream); font-family:'DM Sans',sans-serif; font-size:14px; outline:none; transition:all .3s; resize:none; height:48px; max-height:160px; overflow-y:auto; line-height:1.5; }
+        .input-field::placeholder { color:#3a3530; }
+        .input-field:focus { border-color:rgba(212,168,67,.4); background:rgba(255,255,255,.07); }
+        .send-btn { width:48px; height:48px; background:var(--terracotta); border:none; border-radius:12px; color:white; cursor:pointer; font-size:17px; transition:all .3s; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .send-btn:hover { background:#a8522f; transform:scale(1.05); }
+        .send-btn:disabled { background:#3a3530; cursor:not-allowed; transform:none; }
+        .input-meta { display:flex; justify-content:space-between; align-items:center; padding:6px 0 0 0; max-width:900px; margin:0 auto; }
+        .char-count { font-size:11px; color:#3a3530; }
+        .char-count.warn { color:var(--terracotta); }
+        .hint { font-size:11px; color:#3a3530; }
+        .sidebar-toggle { display:none; background:transparent; border:none; color:white; font-size:18px; cursor:pointer; padding:8px; }
+
+        @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+        @media(max-width:768px){
+            .sidebar { position:fixed; top:62px; left:0; bottom:0; z-index:50; transform:translateX(-100%); }
+            .sidebar.open { transform:translateX(0); }
+            .sidebar-toggle { display:flex; }
+            .topbar-actions .topbar-btn span { display:none; }
         }
 
-        .input-row {
-            display: flex;
-            gap: 10px;
-            align-items: flex-end;
-            max-width: 900px;
-            margin: 0 auto;
-        }
+        /* ── HISTORY PANEL ── */
+        .history-panel { position:fixed; top:62px; right:0; bottom:0; width:320px; background:#0e0a08;
+            border-left:1px solid var(--border); z-index:50; transform:translateX(100%);
+            transition:transform .35s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; }
+        .history-panel.open { transform:translateX(0); }
+        .history-head { padding:18px 18px 14px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+        .history-head h3 { font-family:'Playfair Display',serif; font-size:16px; }
+        .history-close { background:none; border:none; color:#5a5250; font-size:18px; cursor:pointer; }
+        .history-close:hover { color:var(--gold); }
+        .history-list { flex:1; overflow-y:auto; padding:10px; }
+        .history-item { padding:10px 12px; border-radius:8px; margin-bottom:6px; cursor:pointer;
+            border:1px solid transparent; transition:all .25s; }
+        .history-item:hover { background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.07); }
+        .history-item .h-q { font-size:13px; color:var(--cream); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .history-item .h-meta { font-size:11px; color:#5a5250; margin-top:4px; }
+        .history-empty { text-align:center; padding:40px 20px; color:#5a5250; font-size:13px; }
+        .history-load-more { width:100%; padding:10px; background:transparent; border:1px solid rgba(255,255,255,.08);
+            border-radius:8px; color:#7a706a; font-size:13px; cursor:pointer; margin-top:8px;
+            transition:all .3s; font-family:'DM Sans',sans-serif; }
+        .history-load-more:hover { border-color:var(--gold); color:var(--gold); }
 
-        .input-field {
-            flex: 1;
-            padding: 13px 18px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            color: var(--cream);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.3s;
-            resize: none;
-            height: 48px;
-            max-height: 160px;
-            overflow-y: auto;
-            line-height: 1.5;
-        }
+        /* ── VOICE BTN ── */
+        .voice-btn { width:42px; height:42px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+            border-radius:10px; color:rgba(255,255,255,.5); cursor:pointer; font-size:15px; transition:all .3s;
+            display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .voice-btn:hover { border-color:var(--terracotta); color:var(--terracotta); }
+        .voice-btn.listening { background:rgba(192,98,58,.2); border-color:var(--terracotta);
+            color:var(--terracotta); animation:voicePulse 1s infinite; }
+        @keyframes voicePulse { 0%,100%{box-shadow:0 0 0 0 rgba(192,98,58,.4)} 50%{box-shadow:0 0 0 8px rgba(192,98,58,0)} }
 
-        .input-field::placeholder { color: #3a3530; }
-        .input-field:focus {
-            border-color: rgba(212, 168, 67, 0.4);
-            background: rgba(255, 255, 255, 0.07);
-        }
+        /* ── TYPING ANIMATION ── */
+        .typing-indicator { display:inline-flex; gap:4px; align-items:center; padding:4px 2px; }
+        .typing-dot { width:7px; height:7px; background:var(--terracotta); border-radius:50%;
+            animation:typingBounce 1.2s ease infinite; }
+        .typing-dot:nth-child(2) { animation-delay:.2s; }
+        .typing-dot:nth-child(3) { animation-delay:.4s; }
+        @keyframes typingBounce { 0%,80%,100%{transform:translateY(0);opacity:.5} 40%{transform:translateY(-6px);opacity:1} }
 
-        .send-btn {
-            width: 48px;
-            height: 48px;
-            background: var(--terracotta);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            cursor: pointer;
-            font-size: 17px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
+        /* ── RECENT SEARCHES ── */
+        .recent-section { padding:10px; border-top:1px solid var(--border); }
+        .recent-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#5a5250; padding:8px 8px 6px; }
+        .recent-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 10px;
+            background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); border-radius:20px;
+            font-size:12px; color:rgba(255,255,255,.6); cursor:pointer; margin:3px;
+            transition:all .25s; white-space:nowrap; max-width:220px; overflow:hidden; text-overflow:ellipsis; }
+        .recent-chip:hover { background:rgba(192,98,58,.12); border-color:rgba(192,98,58,.3); color:var(--cream); }
+        .recent-chip i { font-size:10px; color:#5a5250; }
 
-        .send-btn:hover:not(:disabled) { background: #a8522f; transform: scale(1.05); }
-        .send-btn:disabled { background: #3a3530; cursor: not-allowed; transform: none; }
+        /* ── TTS BUTTON on bubbles ── */
+        .tts-btn { background:transparent; border:none; color:#3a3530; cursor:pointer;
+            font-size:11px; transition:color .2s; padding:2px 6px; border-radius:4px; }
+        .tts-btn:hover { color:var(--gold); background:rgba(255,255,255,.04); }
+        .tts-btn.playing { color:var(--terracotta); }
 
-        .input-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 0 0 0;
-            max-width: 900px;
-            margin: 0 auto;
-        }
+        /* ════════════════════════════════════════ */
+        /* DESTINATION INFO CARD STYLES            */
+        /* ════════════════════════════════════════ */
+        .dest-card { background:var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:24px; margin-bottom:16px; animation:fadeUp .5s ease both; width:100%; max-width:100%; }
+        .dest-card .card-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+        .dest-card .card-header i { font-size:20px; color:var(--gold); width:32px; text-align:center; }
+        .dest-card .card-header h3 { font-family:'Playfair Display',serif; font-size:18px; color:var(--cream); }
+        .dest-card .card-body { font-size:14px; line-height:1.8; color:rgba(255,255,255,.8); }
+        .dest-card .card-body p { margin-bottom:8px; }
+        .dest-card .card-body .label { color:var(--gold); font-weight:500; }
+        .dest-card .card-body .value { color:var(--cream); }
 
-        .char-count { font-size: 11px; color: #3a3530; }
-        .char-count.warn { color: var(--terracotta); }
-        .hint { font-size: 11px; color: #3a3530; }
+        /* Grid layout for info cards */
+        .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .info-grid .info-item { display:flex; align-items:center; gap:8px; padding:8px 12px; background:rgba(255,255,255,.03); border-radius:8px; }
+        .info-grid .info-item i { color:var(--gold); font-size:14px; width:20px; text-align:center; }
+        .info-grid .info-item .label { font-size:12px; color:#7a706a; }
+        .info-grid .info-item .value { font-size:13px; color:var(--cream); font-weight:500; }
 
-        /* ── TOAST ── */
-        .toast {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(26, 20, 16, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--gold);
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 13px;
-            z-index: 999;
-            animation: fadeUp 0.3s ease;
-            pointer-events: none;
-            white-space: nowrap;
-        }
+        /* Image gallery */
+        .image-gallery { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px; margin-top:12px; }
+        .image-gallery img { width:100%; height:160px; object-fit:cover; border-radius:10px; cursor:pointer; transition:transform .3s, box-shadow .3s; }
+        .image-gallery img:hover { transform:scale(1.03); box-shadow:0 8px 30px rgba(0,0,0,.4); }
 
-        /* ── DESTINATION IMAGES ── */
-        .dest-image-wrapper {
-            margin: 12px 0;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.02);
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+        /* Collapsible sections */
+        .collapsible { cursor:pointer; user-select:none; }
+        .collapsible .collapse-icon { transition:transform .3s; display:inline-block; margin-left:8px; }
+        .collapsible.active .collapse-icon { transform:rotate(180deg); }
+        .collapse-content { overflow:hidden; max-height:0; transition:max-height .4s ease; }
+        .collapse-content.open { max-height:5000px; }
 
-        .dest-image-wrapper:hover {
-            border-color: rgba(212, 168, 67, 0.4);
-            transform: scale(1.01);
-        }
+        /* Map embed */
+        .map-container { width:100%; height:300px; border-radius:12px; overflow:hidden; margin-top:12px; border:1px solid var(--border); }
+        .map-container iframe { width:100%; height:100%; border:none; }
 
-        .dest-image {
-            width: 100%;
-            max-height: 320px;
-            object-fit: cover;
-            display: block;
-            border-radius: 12px;
-        }
+        /* Loading shimmer */
+        .shimmer { background:linear-gradient(90deg, rgba(255,255,255,.03) 25%, rgba(255,255,255,.06) 50%, rgba(255,255,255,.03) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-        .bubble .dest-image-wrapper:first-of-type {
-            margin-top: 4px;
-        }
+        /* Badge */
+        .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:500; }
+        .badge-gold { background:rgba(212,168,67,.15); color:var(--gold); border:1px solid rgba(212,168,67,.3); }
+        .badge-green { background:rgba(46,204,113,.15); color:#2ecc71; border:1px solid rgba(46,204,113,.3); }
+        .badge-red { background:rgba(231,76,60,.15); color:#e74c3c; border:1px solid rgba(231,76,60,.3); }
 
-        .bubble a[href*="google.com/maps"] {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 8px 16px;
-            background: rgba(212, 168, 67, 0.12);
-            border: 1px solid rgba(212, 168, 67, 0.3);
-            border-radius: 8px;
-            color: var(--gold) !important;
-            text-decoration: none !important;
-            font-weight: 500;
-            font-size: 13px;
-            transition: all 0.3s;
-        }
-
-        .bubble a[href*="google.com/maps"]:hover {
-            background: rgba(212, 168, 67, 0.2);
-            border-color: var(--gold);
-        }
-
-        .bubble a[href*="google.com/maps"]::before {
-            content: "📍 ";
-        }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ── MOBILE SIDEBAR TOGGLE ── */
-        .sidebar-toggle {
-            display: none;
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 8px;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                top: 62px;
-                left: 0;
-                bottom: 0;
-                transform: translateX(-100%);
-                box-shadow: 4px 0 20px rgba(0,0,0,0.6);
-            }
-            .sidebar.open { transform: translateX(0); }
-            .sidebar-toggle { display: flex; }
-            .topbar-actions .topbar-btn span { display: none; }
+        /* Responsive */
+        @media(max-width:768px){
+            .info-grid { grid-template-columns:1fr; }
+            .image-gallery { grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); }
+            .image-gallery img { height:120px; }
+            .dest-card { padding:16px; }
         }
     </style>
 </head>
@@ -569,14 +228,12 @@
 <!-- ── NAVBAR ── -->
 <nav class="navbar">
     <div style="display:flex;align-items:center;gap:12px;">
-        <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle quick prompts panel" title="Quick Prompts">
-            <i class="fas fa-bars"></i>
-        </button>
+        <button class="sidebar-toggle" onclick="toggleSidebar()" title="Quick Prompts"><i class="fas fa-bars"></i></button>
         <a href="{% url 'home' %}" class="nav-logo">Tourist Guide</a>
     </div>
     <div class="nav-links">
-        <a href="{% url 'home' %}"><i class="fas fa-house" style="font-size:12px;"></i> Home</a>
-        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt" style="font-size:12px;"></i> Logout</a>
+        <a href="{% url 'home' %}"><i class="fas fa-house" style="font-size:12px"></i> Home</a>
+        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt" style="font-size:12px"></i> Logout</a>
     </div>
 </nav>
 
@@ -584,26 +241,26 @@
 <div class="chat-layout">
 
     <!-- ── SIDEBAR ── -->
-    <aside class="sidebar" id="sidebar" aria-label="Quick prompts sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-head">
             <h3>Quick Prompts</h3>
             <p>Tap any suggestion to start</p>
         </div>
-        <div class="quick-prompts-title">Popular Topics</div>
-        <div class="quick-list" role="list">
-            <button class="quick-btn" onclick="usePrompt('Plan a 3-day trip from Chennai to Ooty with budget details')" role="listitem"><i class="fas fa-route"></i> Chennai to Ooty (3 Days)</button>
-            <button class="quick-btn" onclick="usePrompt('What are the best foods to try in Rajasthan?')" role="listitem"><i class="fas fa-utensils"></i> Rajasthan Food Guide</button>
-            <button class="quick-btn" onclick="usePrompt('Budget travel options from Delhi to Manali by bus and train')" role="listitem"><i class="fas fa-bus"></i> Delhi → Manali Budget</button>
-            <button class="quick-btn" onclick="usePrompt('Best luxury hotels in Goa under ₹5000 per night')" role="listitem"><i class="fas fa-hotel"></i> Goa Hotels Under ₹5000</button>
-            <button class="quick-btn" onclick="usePrompt('Cultural tips and things to avoid when visiting Japan')" role="listitem"><i class="fas fa-torii-gate"></i> Japan Cultural Tips</button>
-            <button class="quick-btn" onclick="usePrompt('Weekend getaway destinations near Bangalore within 200km')" role="listitem"><i class="fas fa-map-pin"></i> Bangalore Getaways</button>
-            <button class="quick-btn" onclick="usePrompt('Compare flight vs train from Mumbai to Hyderabad with cost')" role="listitem"><i class="fas fa-plane-departure"></i> Mumbai → Hyderabad</button>
-            <button class="quick-btn" onclick="usePrompt('Best time to visit Kerala and top 5 attractions')" role="listitem"><i class="fas fa-umbrella-beach"></i> Kerala Travel Guide</button>
-            <button class="quick-btn" onclick="usePrompt('Solo travel safety tips for women in India')" role="listitem"><i class="fas fa-shield-halved"></i> Solo Travel Safety</button>
-            <button class="quick-btn" onclick="usePrompt('What documents do I need for international travel from India?')" role="listitem"><i class="fas fa-passport"></i> Travel Documents</button>
+        <div class="quick-prompts-title">Popular Destinations</div>
+        <div class="quick-list">
+            <button class="quick-btn" onclick="usePrompt('Taj Mahal')"><i class="fas fa-monument"></i> Taj Mahal</button>
+            <button class="quick-btn" onclick="usePrompt('Goa')"><i class="fas fa-umbrella-beach"></i> Goa</button>
+            <button class="quick-btn" onclick="usePrompt('Paris')"><i class="fas fa-city"></i> Paris</button>
+            <button class="quick-btn" onclick="usePrompt('Kerala')"><i class="fas fa-tree"></i> Kerala</button>
+            <button class="quick-btn" onclick="usePrompt('Manali')"><i class="fas fa-mountain"></i> Manali</button>
+            <button class="quick-btn" onclick="usePrompt('Rome')"><i class="fas fa-landmark"></i> Rome</button>
+            <button class="quick-btn" onclick="usePrompt('Tokyo')"><i class="fas fa-torii-gate"></i> Tokyo</button>
+            <button class="quick-btn" onclick="usePrompt('London')"><i class="fas fa-bridge"></i> London</button>
+            <button class="quick-btn" onclick="usePrompt('Dubai')"><i class="fas fa-building"></i> Dubai</button>
+            <button class="quick-btn" onclick="usePrompt('Bali')"><i class="fas fa-palmtree"></i> Bali</button>
         </div>
         <div class="sidebar-footer">
-            <button class="new-chat-btn" onclick="clearChat()" aria-label="Start new conversation"><i class="fas fa-plus"></i> New Conversation</button>
+            <button class="new-chat-btn" onclick="clearChat()"><i class="fas fa-plus"></i> New Conversation</button>
         </div>
     </aside>
 
@@ -613,43 +270,35 @@
         <!-- TOP BAR -->
         <div class="chat-topbar">
             <div class="assistant-info">
-                <div class="avatar" aria-hidden="true"><i class="fas fa-robot"></i></div>
+                <div class="avatar"><i class="fas fa-robot"></i></div>
                 <div>
                     <div class="assistant-name">Travel AI Assistant</div>
-                    <div class="assistant-status"><span class="online-dot" aria-label="online"></span> Powered by Gemini</div>
+                    <div class="assistant-status"><div class="online-dot"></div> Powered by Wikipedia & Gemini</div>
                 </div>
             </div>
             <div class="topbar-actions">
                 <div id="google_translate_element"></div>
-                <button class="topbar-btn" onclick="exportChat()" title="Export chat as text"><i class="fas fa-download"></i> <span>Export</span></button>
-                <button class="topbar-btn" onclick="clearChat()" title="Clear conversation"><i class="fas fa-trash-can"></i> <span>Clear</span></button>
+                <button class="topbar-btn" onclick="toggleHistory()" title="Chat History"><i class="fas fa-history"></i> <span>History</span></button>
+                <button class="topbar-btn" onclick="exportChat()" title="Export Chat"><i class="fas fa-download"></i> <span>Export</span></button>
+                <button class="topbar-btn" onclick="clearChat()" title="Clear Chat"><i class="fas fa-trash-can"></i> <span>Clear</span></button>
             </div>
         </div>
 
         <!-- MESSAGES -->
-        <div class="messages-wrap" id="messagesWrap" aria-live="polite" aria-atomic="false">
-            <div class="welcome-card" id="welcomeMessage">
+        <div class="messages-wrap" id="messagesWrap">
+            <div class="welcome-card">
                 <h2>Hello, <em>Traveller!</em> 👋</h2>
-                <p>I'm your AI travel guide powered by Google Gemini. Ask me about destinations, budgets, transport, local food, hotels, and more. Use the quick prompts on the left to get started instantly.</p>
+                <p>I'm your AI travel guide. Ask me about <strong>any destination</strong> in the world — cities, temples, beaches, monuments, hill stations, museums, and more! I'll show you detailed information with images, maps, and travel tips.</p>
+                <p style="margin-top:12px;font-size:13px;color:#5a5250;">💡 Try typing a place name like <strong>"Taj Mahal"</strong>, <strong>"Paris"</strong>, or <strong>"Goa"</strong></p>
             </div>
         </div>
 
         <!-- INPUT -->
         <div class="input-bar">
             <div class="input-row">
-                <textarea
-                    class="input-field"
-                    id="messageInput"
-                    placeholder="Ask about any destination, route, food, hotel..."
-                    onkeydown="handleKey(event)"
-                    oninput="handleInput(this)"
-                    rows="1"
-                    maxlength="500"
-                    aria-label="Chat message"
-                ></textarea>
-                <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send message (Enter)" aria-label="Send message">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+                <textarea class="input-field" id="messageInput" placeholder="Ask about any destination in the world..." onkeydown="handleKey(event)" oninput="handleInput(this)" rows="1"></textarea>
+                <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice Input"><i class="fas fa-microphone"></i></button>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send (Enter)"><i class="fas fa-paper-plane"></i></button>
             </div>
             <div class="input-meta">
                 <span class="hint"><i class="fas fa-keyboard" style="font-size:10px;"></i> Enter to send &nbsp;·&nbsp; Shift+Enter for new line</span>
@@ -657,6 +306,17 @@
             </div>
         </div>
 
+    </div>
+</div>
+
+<!-- ── HISTORY PANEL ── -->
+<div class="history-panel" id="historyPanel">
+    <div class="history-head">
+        <h3><i class="fas fa-history" style="color:var(--gold);margin-right:8px;"></i>Chat History</h3>
+        <button class="history-close" onclick="toggleHistory()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="history-list" id="historyList">
+        <div class="history-empty"><i class="fas fa-comment-slash" style="font-size:24px;margin-bottom:12px;display:block;"></i>No history yet</div>
     </div>
 </div>
 
@@ -677,91 +337,238 @@
     const sendBtn = document.getElementById('sendBtn');
     let isLoading = false;
     let messageCount = 0;
-    const MAX_CHAR = 500;
 
     // ── Helpers ──
-    const now = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    function sanitizeAndConvertLinks(text) {
-        // Remove markdown bold markers, then convert URLs to links.
-        let cleaned = text.replace(/\*{1,2}/g, '');
-        // Handle explicit markdown links: [url](url) – extract the URL
-        cleaned = cleaned.replace(/\[(https?:\/\/[^\]]+)\]\(\1\)/gi, (match, url) => {
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-        });
-        // Plain URL conversion
-        cleaned = cleaned.replace(/(https?:\/\/[^\s<]+)/gi, url => {
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-        });
-        return cleaned;
+    function now() {
+        return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    function addMessage(content, isUser, isError = false) {
+    function detectAndConvertLinks(content) {
+        let text = content.replace(/\*{1,2}/g, '');
+        text = text.replace(/\[https?:\/\/[^\]]+\]/gi, m => {
+            const url = m.slice(1, -1);
+            return `<a href="${url}" target="_blank" rel="noopener">${url}</a>`;
+        });
+        text = text.replace(/(https?:\/\/[^\s<]+)/gi, m => {
+            return `<a href="${m}" target="_blank" rel="noopener">${m}</a>`;
+        });
+        return text;
+    }
+
+    function addMessage(content, isUser) {
         messageCount++;
         const row = document.createElement('div');
         row.className = `msg-row ${isUser ? 'user' : 'bot'}`;
-        row.setAttribute('role', 'listitem');
-
-        let formatted = sanitizeAndConvertLinks(content);
-        if (isError) formatted = `<span style="color:#f48b6c;">${formatted}</span>`;
-
-        const timeStr = now();
+        const formatted = detectAndConvertLinks(content);
+        const t = now();
         if (isUser) {
             row.innerHTML = `
                 <div style="display:flex;flex-direction:column;align-items:flex-end;max-width:72%;">
                     <div class="bubble user">${formatted}</div>
-                    <div class="msg-time">${timeStr}</div>
+                    <div class="msg-time">${t}</div>
                 </div>
-                <div class="msg-avatar user-av" aria-hidden="true"><i class="fas fa-user"></i></div>
+                <div class="msg-avatar user-av"><i class="fas fa-user"></i></div>
             `;
         } else {
             row.innerHTML = `
-                <div class="msg-avatar bot-av" aria-hidden="true"><i class="fas fa-robot"></i></div>
+                <div class="msg-avatar bot-av"><i class="fas fa-robot"></i></div>
                 <div style="display:flex;flex-direction:column;max-width:72%;">
                     <div class="bubble bot" id="bubble-${messageCount}">${formatted}</div>
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <div class="msg-time">${timeStr}</div>
-                        <button class="copy-btn" onclick="copyMsg(${messageCount})" title="Copy response" aria-label="Copy response"><i class="fas fa-copy"></i></button>
+                        <div class="msg-time">${t}</div>
+                        <button class="copy-btn" onclick="copyMsg(${messageCount})" title="Copy response"><i class="fas fa-copy"></i></button>
                     </div>
                 </div>
             `;
         }
         messagesWrap.appendChild(row);
         messagesWrap.scrollTo({ top: messagesWrap.scrollHeight, behavior: 'smooth' });
-
-        // Announce new message to screen readers
-        const liveRegion = document.getElementById('messagesWrap');
-        if (liveRegion) {
-            // Trigger aria-live region update by briefly removing and adding a node
-            const temp = document.createElement('span');
-            temp.textContent = isUser ? 'You sent a message' : 'Assistant replied';
-            temp.style.position = 'absolute';
-            temp.style.left = '-9999px';
-            temp.setAttribute('aria-live', 'assertive');
-            document.body.appendChild(temp);
-            setTimeout(() => temp.remove(), 100);
-        }
     }
 
     function copyMsg(id) {
         const el = document.getElementById(`bubble-${id}`);
-        if (el) {
-            navigator.clipboard.writeText(el.innerText).then(() => {
-                showToast('✓ Copied to clipboard');
-            }).catch(() => {
-                showToast('Failed to copy');
-            });
-        }
+        if (el) { navigator.clipboard.writeText(el.innerText).then(() => showToast('Copied to clipboard!')); }
     }
 
     function showToast(msg) {
-        const existing = document.querySelector('.toast');
-        if (existing) existing.remove();
         const t = document.createElement('div');
-        t.className = 'toast';
         t.textContent = msg;
+        Object.assign(t.style, {
+            position:'fixed', bottom:'90px', left:'50%', transform:'translateX(-50%)',
+            background:'rgba(26,20,16,.95)', border:'1px solid rgba(255,255,255,.1)',
+            color:'#d4a843', padding:'10px 20px', borderRadius:'8px', fontSize:'13px',
+            zIndex:'999', animation:'fadeUp .3s ease', pointerEvents:'none'
+        });
         document.body.appendChild(t);
-        setTimeout(() => t.remove(), 2200);
+        setTimeout(() => t.remove(), 2000);
+    }
+
+    // ════════════════════════════════════════════
+    // DESTINATION CARD RENDERER
+    // ════════════════════════════════════════════
+    function renderDestinationCard(data) {
+        const card = document.createElement('div');
+        card.className = 'dest-card';
+        card.style.animationDelay = '0.1s';
+
+        // Helper to create collapsible section
+        function section(title, icon, contentHtml, defaultOpen) {
+            const id = 'sec-' + Math.random().toString(36).substr(2, 5);
+            return `
+                <div style="margin-bottom:12px;">
+                    <div class="collapsible ${defaultOpen ? 'active' : ''}" onclick="toggleCollapse('${id}')" style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;">
+                        <i class="${icon}" style="color:var(--gold);font-size:16px;width:24px;"></i>
+                        <span style="font-weight:500;font-size:15px;color:var(--cream);flex:1;">${title}</span>
+                        <span class="collapse-icon" style="color:#5a5250;font-size:12px;"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="collapse-content ${defaultOpen ? 'open' : ''}" id="${id}">${contentHtml}</div>
+                </div>
+            `;
+        }
+
+        // Location Details
+        const locationHtml = `
+            <div class="info-grid">
+                <div class="info-item"><i class="fas fa-tag"></i><div><div class="label">Place Name</div><div class="value">${data.place_name || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-id-card"></i><div><div class="label">Official Name</div><div class="value">${data.official_name || data.place_name || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-layer-group"></i><div><div class="label">Category</div><div><span class="badge badge-gold">${data.category || 'Tourist Attraction'}</span></div></div></div>
+                <div class="info-item"><i class="fas fa-map-marker-alt"></i><div><div class="label">State</div><div class="value">${data.state || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-location-dot"></i><div><div class="label">District</div><div class="value">${data.district || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-globe"></i><div><div class="label">Country</div><div class="value">${data.country || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-globe-asia"></i><div><div class="label">Latitude</div><div class="value">${data.latitude || data.latitude_display || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-globe-americas"></i><div><div class="label">Longitude</div><div class="value">${data.longitude || data.longitude_display || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-arrow-up"></i><div><div class="label">Elevation</div><div class="value">${data.elevation || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-home"></i><div><div class="label">Address</div><div class="value">${data.address || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-mailbox"></i><div><div class="label">PIN Code</div><div class="value">${data.pin_code || 'N/A'}</div></div></div>
+            </div>
+        `;
+
+        // About section
+        const aboutHtml = `
+            <div class="card-body">
+                <p>${data.about || 'No description available.'}</p>
+                ${data.unesco_status && data.unesco_status !== 'N/A' ? `<p style="margin-top:8px;"><span class="badge badge-green"><i class="fas fa-award"></i> UNESCO World Heritage Site</span></p>` : ''}
+                ${data.famous_for ? `<p style="margin-top:8px;"><span class="label">Famous for:</span> <span class="value">${data.famous_for}</span></p>` : ''}
+            </div>
+        `;
+
+        // Best Time to Visit
+        const bestTimeHtml = `
+            <div class="info-grid">
+                <div class="info-item"><i class="fas fa-calendar-check"></i><div><div class="label">Recommended Months</div><div class="value">${data.best_time || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-sun"></i><div><div class="label">Peak Season</div><div class="value">${data.peak_season || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-cloud-rain"></i><div><div class="label">Off Season</div><div class="value">${data.off_season || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-cloud-sun"></i><div><div class="label">Weather</div><div class="value">${data.weather || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-temperature-high"></i><div><div class="label">Temperature</div><div class="value">${data.temperature || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-water"></i><div><div class="label">Rainfall</div><div class="value">${data.rainfall || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-clock"></i><div><div class="label">Ideal Duration</div><div class="value">${data.ideal_duration || 'N/A'}</div></div></div>
+            </div>
+        `;
+
+        // Opening Hours
+        const hoursHtml = `
+            <div class="info-grid">
+                <div class="info-item"><i class="fas fa-door-open"></i><div><div class="label">Opening Time</div><div class="value">${data.opening_time || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-door-closed"></i><div><div class="label">Closing Time</div><div class="value">${data.closing_time || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-calendar-times"></i><div><div class="label">Weekly Holidays</div><div class="value">${data.weekly_holidays || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-clock"></i><div><div class="label">Entry Timing</div><div class="value">${data.entry_timing || 'N/A'}</div></div></div>
+            </div>
+        `;
+
+        // Entry Fee
+        const feeHtml = `
+            <div class="info-grid">
+                <div class="info-item"><i class="fas fa-user"></i><div><div class="label">Indian Adult</div><div class="value">${data.entry_fee_indian_adult || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-child"></i><div><div class="label">Indian Child</div><div class="value">${data.entry_fee_indian_child || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-passport"></i><div><div class="label">Foreign Tourist</div><div class="value">${data.entry_fee_foreign || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-camera"></i><div><div class="label">Camera Charges</div><div class="value">${data.camera_charges || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-car"></i><div><div class="label">Parking Charges</div><div class="value">${data.parking_charges || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-user-tie"></i><div><div class="label">Guide Charges</div><div class="value">${data.guide_charges || 'N/A'}</div></div></div>
+            </div>
+        `;
+
+        // Images
+        let imagesHtml = '';
+        if (data.images && data.images.length > 0) {
+            imagesHtml = `<div class="image-gallery">${data.images.map(img => `<img src="${img}" alt="${data.place_name}" onclick="window.open(this.src,'_blank')" loading="lazy">`).join('')}</div>`;
+        } else {
+            imagesHtml = `<p style="color:#5a5250;font-style:italic;">No images available for this destination.</p>`;
+        }
+
+        // Map
+        let mapHtml = '';
+        if (data.maps_link) {
+            const lat = data.latitude || data.latitude_display || '';
+            const lng = data.longitude || data.longitude_display || '';
+            mapHtml = `
+                <div class="map-container">
+                    <iframe src="https://maps.google.com/maps?q=${lat},${lng}&z=12&output=embed" allowfullscreen loading="lazy"></iframe>
+                </div>
+                <p style="margin-top:8px;font-size:12px;color:#5a5250;">
+                    <i class="fas fa-map-pin"></i> ${lat}, ${lng} &nbsp;|&nbsp; 
+                    <a href="${data.maps_link}" target="_blank" style="color:var(--gold);">Open in Google Maps <i class="fas fa-external-link-alt"></i></a>
+                </p>
+            `;
+        } else {
+            mapHtml = `<p style="color:#5a5250;font-style:italic;">Map location not available.</p>`;
+        }
+
+        // Contact
+        const contactHtml = `
+            <div class="info-grid">
+                <div class="info-item"><i class="fas fa-globe"></i><div><div class="label">Official Website</div><div class="value">${data.official_website && data.official_website !== 'N/A' ? `<a href="${data.official_website}" target="_blank" style="color:var(--gold);">Visit Website</a>` : 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-phone"></i><div><div class="label">Phone</div><div class="value">${data.contact_phone || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-envelope"></i><div><div class="label">Email</div><div class="value">${data.contact_email || 'N/A'}</div></div></div>
+                <div class="info-item"><i class="fas fa-link"></i><div><div class="label">Website</div><div class="value">${data.contact_website && data.contact_website !== 'N/A' ? `<a href="${data.contact_website}" target="_blank" style="color:var(--gold);">Visit</a>` : 'N/A'}</div></div></div>
+            </div>
+        `;
+
+        // Travel Tip
+        const tipHtml = `
+            <div style="background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.2);border-radius:12px;padding:16px;margin-top:8px;">
+                <p style="color:var(--gold);font-weight:500;margin-bottom:6px;"><i class="fas fa-lightbulb"></i> Travel Tip</p>
+                <p style="color:rgba(255,255,255,.8);font-size:14px;line-height:1.6;">${data.travel_tip || 'Plan your trip in advance and check local guidelines before visiting.'}</p>
+            </div>
+        `;
+
+        // Wikipedia link
+        const wikiHtml = data.wikipedia_url ? `
+            <p style="margin-top:12px;font-size:12px;color:#5a5250;text-align:center;">
+                <i class="fas fa-wikipedia-w"></i> Source: <a href="${data.wikipedia_url}" target="_blank" style="color:var(--gold);">Wikipedia</a>
+            </p>
+        ` : '';
+
+        // Build the full card
+        card.innerHTML = `
+            <div class="card-header">
+                <i class="fas fa-map-pin"></i>
+                <h3>📍 ${data.place_name || 'Destination'}</h3>
+            </div>
+            ${section('📍 Location Details', 'fas fa-map-marked-alt', locationHtml, true)}
+            ${section('📖 About', 'fas fa-book-open', aboutHtml, true)}
+            ${section('📅 Best Time to Visit', 'fas fa-calendar-alt', bestTimeHtml, false)}
+            ${section('⏰ Opening Hours', 'fas fa-clock', hoursHtml, false)}
+            ${section('🎟 Entry Fee', 'fas fa-ticket-alt', feeHtml, false)}
+            ${section('📸 Images', 'fas fa-images', imagesHtml, true)}
+            ${section('🗺 Map', 'fas fa-map', mapHtml, true)}
+            ${section('🌐 Official Website & Contact', 'fas fa-address-card', contactHtml, false)}
+            ${tipHtml}
+            ${wikiHtml}
+        `;
+
+        return card;
+    }
+
+    function toggleCollapse(id) {
+        const content = document.getElementById(id);
+        const header = content.previousElementSibling;
+        if (content.classList.contains('open')) {
+            content.classList.remove('open');
+            header.classList.remove('active');
+        } else {
+            content.classList.add('open');
+            header.classList.add('active');
+        }
     }
 
     // ── Send ──
@@ -769,12 +576,6 @@
         if (isLoading) return;
         const message = messageInput.value.trim();
         if (!message) return;
-
-        // Enforce max length again (belt and suspenders)
-        if (message.length > MAX_CHAR) {
-            showToast(`Message too long (max ${MAX_CHAR} characters)`);
-            return;
-        }
 
         addMessage(message, true);
         messageInput.value = '';
@@ -786,11 +587,10 @@
         // thinking indicator
         const thinking = document.createElement('div');
         thinking.className = 'thinking';
-        thinking.setAttribute('aria-label', 'Assistant is thinking');
         thinking.innerHTML = `
-            <div class="msg-avatar bot-av" style="width:36px;height:36px;border-radius:50%;background:var(--terracotta);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;" aria-hidden="true"><i class="fas fa-robot"></i></div>
+            <div class="msg-avatar bot-av" style="width:36px;height:36px;border-radius:50%;background:var(--terracotta);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;"><i class="fas fa-robot"></i></div>
             <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-            <span>Thinking…</span>
+            <span>Searching destination info…</span>
         `;
         messagesWrap.appendChild(thinking);
         messagesWrap.scrollTo({ top: messagesWrap.scrollHeight, behavior: 'smooth' });
@@ -798,32 +598,47 @@
         try {
             const res = await fetch("{% url 'chat' %}", {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
                 body: JSON.stringify({ message })
             });
-
-            if (!res.ok) throw new Error(`Server responded with ${res.status}`);
             const data = await res.json();
             thinking.remove();
 
             if (data.error) {
-                addMessage(`⚠️ ${data.error}`, false, true);
+                addMessage(`⚠️ ${data.error}`, false);
+            } else if (data.source === 'destination' && typeof data.response === 'object') {
+                // Render the beautiful destination card
+                const row = document.createElement('div');
+                row.className = 'msg-row bot';
+                row.innerHTML = `
+                    <div class="msg-avatar bot-av"><i class="fas fa-robot"></i></div>
+                    <div style="display:flex;flex-direction:column;max-width:85%;width:100%;">
+                        <div id="bubble-${++messageCount}"></div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+                            <div class="msg-time">${now()}</div>
+                            <button class="copy-btn" onclick="copyMsg(${messageCount})" title="Copy response"><i class="fas fa-copy"></i></button>
+                        </div>
+                    </div>
+                `;
+                messagesWrap.appendChild(row);
+                const bubble = row.querySelector(`#bubble-${messageCount}`);
+                const card = renderDestinationCard(data.response);
+                bubble.appendChild(card);
+                messagesWrap.scrollTo({ top: messagesWrap.scrollHeight, behavior: 'smooth' });
             } else {
                 let reply = '';
-                // Support both plain string and structured array from API
                 if (Array.isArray(data.response)) {
-                    reply = data.response.map(item => `<strong>${item.topic}:</strong> ${item.details}`).join('<br>');
-                } else {
+                    data.response.forEach(item => { reply += `<strong>${item.topic}:</strong> ${item.details}<br>`; });
+                } else if (typeof data.response === 'string') {
                     reply = data.response;
+                } else {
+                    reply = JSON.stringify(data.response);
                 }
                 addMessage(reply, false);
             }
         } catch (err) {
             thinking.remove();
-            addMessage(`⚠️ Network error: ${err.message || 'Could not connect to the assistant.'}`, false, true);
+            addMessage(`⚠️ Network error: ${err.message}`, false);
         } finally {
             isLoading = false;
             sendBtn.disabled = false;
@@ -833,25 +648,17 @@
 
     // ── Input helpers ──
     function handleKey(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     }
-
     function handleInput(el) {
-        // Auto-resize
         el.style.height = '48px';
-        const newHeight = Math.min(el.scrollHeight, 160);
-        el.style.height = newHeight + 'px';
+        el.style.height = Math.min(el.scrollHeight, 160) + 'px';
         updateCharCount(el.value);
     }
-
     function updateCharCount(val) {
-        const len = val.length;
         const cc = document.getElementById('charCount');
-        cc.textContent = `${len} / ${MAX_CHAR}`;
-        cc.className = 'char-count' + (len > MAX_CHAR * 0.9 ? ' warn' : '');
+        cc.textContent = `${val.length} / 500`;
+        cc.className = `char-count${val.length > 450 ? ' warn' : ''}`;
     }
 
     // ── Quick prompts ──
@@ -859,43 +666,32 @@
         messageInput.value = text;
         messageInput.focus();
         handleInput(messageInput);
-        // Close sidebar on mobile
         document.getElementById('sidebar').classList.remove('open');
     }
 
     // ── Clear chat ──
     function clearChat() {
-        if (isLoading) {
-            showToast('Please wait for the current response');
-            return;
-        }
-        if (messageCount > 0) {
-            if (!confirm('Clear the entire conversation?')) return;
-        }
+        if (isLoading) return;
         messagesWrap.innerHTML = `
-            <div class="welcome-card" id="welcomeMessage">
+            <div class="welcome-card">
                 <h2>Hello, <em>Traveller!</em> 👋</h2>
-                <p>I'm your AI travel guide powered by Google Gemini. Ask me about destinations, budgets, transport, local food, hotels, and more. Use the quick prompts on the left to get started instantly.</p>
+                <p>I'm your AI travel guide. Ask me about <strong>any destination</strong> in the world — cities, temples, beaches, monuments, hill stations, museums, and more! I'll show you detailed information with images, maps, and travel tips.</p>
+                <p style="margin-top:12px;font-size:13px;color:#5a5250;">💡 Try typing a place name like <strong>"Taj Mahal"</strong>, <strong>"Paris"</strong>, or <strong>"Goa"</strong></p>
             </div>
         `;
         messageCount = 0;
-        showToast('Conversation cleared');
+        showToast('Chat cleared');
     }
 
     // ── Export chat ──
     function exportChat() {
-        const messages = messagesWrap.querySelectorAll('.msg-row');
-        if (!messages.length) {
-            showToast('No messages to export');
-            return;
-        }
+        const bubbles = messagesWrap.querySelectorAll('.bubble');
+        if (!bubbles.length) { showToast('Nothing to export'); return; }
         let text = 'Tourist Guide — Chat Export\n' + new Date().toLocaleString() + '\n\n';
-        messages.forEach(row => {
+        messagesWrap.querySelectorAll('.msg-row').forEach(row => {
             const isUser = row.classList.contains('user');
             const bubble = row.querySelector('.bubble');
-            if (bubble) {
-                text += `${isUser ? 'You' : 'AI Assistant'}:\n${bubble.innerText}\n\n`;
-            }
+            if (bubble) text += `${isUser ? 'You' : 'AI Assistant'}:\n${bubble.innerText}\n\n`;
         });
         const blob = new Blob([text], { type: 'text/plain' });
         const a = document.createElement('a');
@@ -906,11 +702,9 @@
     }
 
     // ── Sidebar toggle (mobile) ──
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('open');
-    }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-    // ── CSRF helper ──
+    // ── CSRF ──
     function getCookie(name) {
         for (const c of document.cookie.split(';')) {
             const t = c.trim();
@@ -919,10 +713,217 @@
         return null;
     }
 
-    // ── Initial focus ──
-    document.addEventListener('DOMContentLoaded', () => {
-        messageInput.focus();
-    });
+    // ════════════════════════════════════════════
+    // CHAT HISTORY PANEL
+    // ════════════════════════════════════════════
+    let historyPage = 1;
+    let historyLoading = false;
+
+    function toggleHistory() {
+        const panel = document.getElementById('historyPanel');
+        const isOpen = panel.classList.toggle('open');
+        if (isOpen) loadHistory(1);
+    }
+
+    async function loadHistory(page = 1) {
+        if (historyLoading) return;
+        historyLoading = true;
+        const list = document.getElementById('historyList');
+        if (page === 1) list.innerHTML = '<div class="history-empty"><i class="fas fa-spinner fa-spin"></i> Loading…</div>';
+
+        try {
+            const res = await fetch(`/api/chat/history/?page=${page}`);
+            if (!res.ok) throw new Error('Not logged in');
+            const data = await res.json();
+            if (page === 1) list.innerHTML = '';
+
+            if (!data.history || data.history.length === 0) {
+                if (page === 1) list.innerHTML = '<div class="history-empty"><i class="fas fa-comment-slash" style="font-size:24px;margin-bottom:12px;display:block;"></i>No history yet</div>';
+                return;
+            }
+
+            data.history.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                const ts = item.timestamp ? new Date(item.timestamp).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+                div.innerHTML = `
+                    <div class="h-q">${item.user_message || item.question || ''}</div>
+                    <div class="h-meta">${ts} &nbsp;·&nbsp; <span style="color:var(--gold)">${item.intent || ''}</span></div>
+                `;
+                div.onclick = () => {
+                    messageInput.value = item.user_message || item.question || '';
+                    handleInput(messageInput);
+                    toggleHistory();
+                };
+                list.appendChild(div);
+            });
+
+            if (data.has_next) {
+                const btn = document.createElement('button');
+                btn.className = 'history-load-more';
+                btn.innerHTML = '<i class="fas fa-chevron-down"></i> Load More';
+                btn.onclick = () => { btn.remove(); loadHistory(page + 1); };
+                list.appendChild(btn);
+            }
+        } catch (e) {
+            list.innerHTML = '<div class="history-empty">Sign in to see history</div>';
+        } finally {
+            historyLoading = false;
+        }
+    }
+
+    // ════════════════════════════════════════════
+    // VOICE INPUT (Web Speech API)
+    // ════════════════════════════════════════════
+    let recognition = null;
+    let isListening = false;
+
+    function toggleVoice() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) { showToast('Voice input not supported in this browser.'); return; }
+
+        if (isListening) {
+            recognition.stop();
+            return;
+        }
+
+        recognition = new SpeechRecognition();
+        recognition.lang = 'en-IN';
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+
+        const voiceBtn = document.getElementById('voiceBtn');
+        voiceBtn.classList.add('listening');
+        isListening = true;
+
+        recognition.onresult = (e) => {
+            const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+            messageInput.value = transcript;
+            handleInput(messageInput);
+        };
+
+        recognition.onend = () => {
+            voiceBtn.classList.remove('listening');
+            isListening = false;
+            if (messageInput.value.trim()) sendMessage();
+        };
+
+        recognition.onerror = (e) => {
+            voiceBtn.classList.remove('listening');
+            isListening = false;
+            showToast('Voice error: ' + e.error);
+        };
+
+        recognition.start();
+    }
+
+    // ════════════════════════════════════════════
+    // VOICE OUTPUT (Text-to-Speech)
+    // ════════════════════════════════════════════
+    let ttsUtterance = null;
+
+    function speakText(text, btn) {
+        if (!window.speechSynthesis) return;
+        if (ttsUtterance) {
+            speechSynthesis.cancel();
+            document.querySelectorAll('.tts-btn.playing').forEach(b => {
+                b.classList.remove('playing');
+                b.innerHTML = '<i class="fas fa-volume-up"></i>';
+            });
+            ttsUtterance = null;
+            if (btn.dataset.playing) { delete btn.dataset.playing; return; }
+        }
+        const clean = text.replace(/<[^>]+>/g, '').replace(/[#*_`]/g, '');
+        ttsUtterance = new SpeechSynthesisUtterance(clean.slice(0, 500));
+        ttsUtterance.rate = 0.95;
+        ttsUtterance.lang = 'en-IN';
+        btn.classList.add('playing');
+        btn.innerHTML = '<i class="fas fa-stop"></i>';
+        btn.dataset.playing = '1';
+        ttsUtterance.onend = () => {
+            btn.classList.remove('playing');
+            btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            delete btn.dataset.playing;
+            ttsUtterance = null;
+        };
+        speechSynthesis.speak(ttsUtterance);
+    }
+
+    // Patch addMessage to include TTS button on bot messages
+    const _origAddMessage = addMessage;
+    // Override to add TTS button
+    window.addMessage = function(content, isUser) {
+        messageCount++;
+        const row = document.createElement('div');
+        row.className = `msg-row ${isUser ? 'user' : 'bot'}`;
+        const formatted = detectAndConvertLinks(content);
+        const t = now();
+        if (isUser) {
+            row.innerHTML = `
+                <div style="display:flex;flex-direction:column;align-items:flex-end;max-width:72%;">
+                    <div class="bubble user">${formatted}</div>
+                    <div class="msg-time">${t}</div>
+                </div>
+                <div class="msg-avatar user-av"><i class="fas fa-user"></i></div>
+            `;
+        } else {
+            row.innerHTML = `
+                <div class="msg-avatar bot-av"><i class="fas fa-robot"></i></div>
+                <div style="display:flex;flex-direction:column;max-width:72%;">
+                    <div class="bubble bot" id="bubble-${messageCount}">${formatted}</div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div class="msg-time">${t}</div>
+                        <button class="copy-btn" onclick="copyMsg(${messageCount})" title="Copy"><i class="fas fa-copy"></i></button>
+                        <button class="tts-btn" onclick="speakText(document.getElementById('bubble-${messageCount}').innerText, this)" title="Read aloud"><i class="fas fa-volume-up"></i></button>
+                    </div>
+                </div>
+            `;
+        }
+        messagesWrap.appendChild(row);
+        messagesWrap.scrollTo({ top: messagesWrap.scrollHeight, behavior: 'smooth' });
+
+        // Save recent search for user messages
+        if (isUser) _saveRecentSearch(content);
+    };
+
+    // ════════════════════════════════════════════
+    // RECENT SEARCHES (localStorage)
+    // ════════════════════════════════════════════
+    const RECENT_KEY = 'tg_recent_searches';
+
+    function _saveRecentSearch(query) {
+        if (!query || query.length < 3) return;
+        let searches = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+        searches = [query, ...searches.filter(s => s !== query)].slice(0, 8);
+        localStorage.setItem(RECENT_KEY, JSON.stringify(searches));
+        _renderRecentSearches();
+    }
+
+    function _renderRecentSearches() {
+        const existing = document.getElementById('recentSearches');
+        if (existing) existing.remove();
+
+        const searches = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+        if (!searches.length) return;
+
+        const section = document.createElement('div');
+        section.id = 'recentSearches';
+        section.className = 'recent-section';
+        section.innerHTML = `
+            <div class="recent-label">Recent Searches</div>
+            <div>${searches.map(s =>
+                `<span class="recent-chip" onclick="usePrompt('${s.replace(/'/g,"\\'")}')">
+                    <i class="fas fa-clock"></i>${s.slice(0, 28)}${s.length > 28 ? '…' : ''}
+                </span>`
+            ).join('')}</div>
+        `;
+
+        const sidebarFooter = document.querySelector('.sidebar-footer');
+        if (sidebarFooter) sidebarFooter.before(section);
+    }
+
+    // Init recent searches on load
+    _renderRecentSearches();
 </script>
 </body>
 </html>

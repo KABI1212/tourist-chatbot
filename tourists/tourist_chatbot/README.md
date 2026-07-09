@@ -1,186 +1,181 @@
-# Tourist Chatbot — AI-Powered Travel Planning
+# Tourist Guide — AI Travel Chatbot
 
-A production-ready Django web application that uses Google Gemini AI to provide intelligent travel recommendations, itineraries, budgeting, and local insights.
+A production-ready Django chatbot that helps you plan trips, explore destinations,
+estimate budgets, and discover hidden gems worldwide.
 
-## ✨ Features
+---
 
-- **AI Travel Assistant** — Powered by Google Gemini 2.5 Flash Lite
-- **Smart Itineraries** — Structured travel plans with transport modes, costs, and Google Maps links
-- **Budget Planning** — Cost breakdowns for budget, mid-range, and luxury travelers
-- **Multi-Language Support** — Google Translate built-in (20+ languages)
-- **Guest Access** — Try the chatbot without registering
-- **User Authentication** — Register, login, profile management, password change
-- **Chat History** — Conversations saved in MongoDB for registered users
-- **Rate Limiting** — 10 requests per minute per IP
-- **Production Ready** — WhiteNoise, Gunicorn, CSP headers, secure cookies
-- **Responsive Design** — Works on desktop, tablet, and mobile
+## Tech Stack
 
-## 🛠️ Technology Stack
+| Layer | Technology |
+|---|---|
+| Backend | Django 5.x, Django REST Framework |
+| AI | Google Gemini 2.5 Flash Lite (`google-genai`) |
+| Primary data | Wikipedia API, Wikidata, OpenStreetMap/Nominatim |
+| Chat persistence | MongoDB Atlas |
+| Auth DB | SQLite (dev) |
+| Static files | WhiteNoise |
+| Production server | Gunicorn |
 
-| Category | Technology |
-|----------|-----------|
-| Backend | Python 3.12+, Django 5.1 |
-| Database | MongoDB Atlas (via PyMongo) |
-| AI | Google Gemini API |
-| Frontend | HTML5, CSS3, Vanilla JavaScript |
-| Auth | bcrypt password hashing |
-| Deployment | Gunicorn, WhiteNoise |
-| Security | CSRF, CSP, Secure Cookies, Rate Limiting |
+---
 
-## 📋 Prerequisites
+## Features
 
-- Python 3.12+
-- MongoDB Atlas account
-- Google Gemini API key
+- **13-intent chatbot** — trip planning, budget estimation, hotels, restaurants, transport, weather, safety tips, visa info, emergency contacts, and more
+- **Layered response pipeline** — Wikipedia/Wikidata/OSM → local JSON → Gemini AI
+- **Rich destination cards** — images, maps, opening hours, entry fees, weather
+- **Full auth** — register, login, forgot password, reset password, change password, profile
+- **Chat history** — persisted to MongoDB, browsable from the sidebar
+- **Voice I/O** — Web Speech API for voice input; TTS for reading responses aloud
+- **Recent searches** — localStorage-based quick re-access
+- **Google Translate** — 20+ languages built-in
+- **Django Admin** — customised with search, filters, and inline profile editing
 
-## 🚀 Installation
+---
 
-### 1. Clone the repository
+## Quick Start
+
+### 1. Clone and set up
 
 ```bash
-git clone <repository-url>
+git clone <repo>
 cd tourist_chatbot
-```
-
-### 2. Create and activate virtual environment
-
-```bash
 python -m venv .venv
 # Windows
 .venv\Scripts\activate
 # macOS/Linux
 source .venv/bin/activate
-```
 
-### 3. Install dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 4. Set up environment variables
+### 2. Configure environment
 
-Create a `.env` file in the project root:
-
-```env
-# Django
-SECRET_KEY=your-secret-key-here
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-
-# Google Gemini AI
-GOOGLE_API_KEY=your-gemini-api-key
-
-# MongoDB Atlas
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority
-DATABASE_NAME=tourist_chatbot
+```bash
+cp .env.example .env
+# Edit .env — add GOOGLE_API_KEY, MONGODB_URI, DJANGO_SECRET_KEY
 ```
 
-### 5. Run migrations
+### 3. Migrate and run
 
 ```bash
 python manage.py migrate
-```
-
-### 6. Collect static files
-
-```bash
-python manage.py collectstatic --noinput
-```
-
-### 7. Start the development server
-
-```bash
+python manage.py createsuperuser  # optional
 python manage.py runserver
 ```
 
-Visit http://127.0.0.1:8000 in your browser.
+Visit **http://127.0.0.1:8000**
 
-## 🌐 Deployment
+---
 
-### Railway
+## Environment Variables
 
-1. Connect your GitHub repository
-2. Set environment variables in Railway dashboard
-3. Deploy — Railway auto-detects the Procfile
+| Variable | Required | Description |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | ✅ | 50+ character random string |
+| `DEBUG` | ✅ | `True` (dev) / `False` (prod) |
+| `ALLOWED_HOSTS` | ✅ | Comma-separated hostnames |
+| `GOOGLE_API_KEY` | ✅ | Gemini API key from [Google AI Studio](https://aistudio.google.com/) |
+| `MONGODB_URI` | ⚠️ optional | MongoDB Atlas connection string (chat history) |
+| `DATABASE_NAME` | ⚠️ optional | MongoDB database name (default: `tourist_chatbot`) |
+| `EMAIL_HOST_USER` | ⚠️ optional | Gmail address for password reset emails |
+| `EMAIL_HOST_PASSWORD` | ⚠️ optional | Gmail app password |
 
-### Render
+---
 
-1. Create a new Web Service
-2. Connect your repository
-3. Set:
-   - Build Command: `pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate`
-   - Start Command: `gunicorn tourist_chatbot.wsgi:application --config gunicorn_config.py`
+## Deployment (Railway / Render)
 
-## 📁 Project Structure
+1. Push to GitHub
+2. Connect repo to Railway/Render
+3. Set all environment variables in the dashboard
+4. Set start command: `gunicorn tourist_chatbot.wsgi:application --config gunicorn_config.py`
+5. Set `DEBUG=False` and `ALLOWED_HOSTS=your-domain.com`
+
+---
+
+## API Endpoints
+
+| Method | URL | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/chat/` | ✅ | Send a message, get AI response |
+| `GET` | `/api/chat/history/` | ✅ | Get paginated chat history |
+| `DELETE` | `/api/chat/delete/<id>/` | ✅ | Soft-delete a message |
+| `POST` | `/api/chat/clear/` | ✅ | Clear all chat history |
+
+### Chat request
+
+```json
+POST /api/chat/
+Content-Type: application/json
+X-CSRFToken: <token>
+
+{ "message": "Plan a trip from Chennai to Ooty for 3 days, budget 15000" }
+```
+
+### Chat response (destination card)
+
+```json
+{
+  "source": "destination",
+  "response": {
+    "place_name": "Ooty",
+    "country": "India",
+    "about": "...",
+    "images": ["https://..."],
+    "maps_link": "https://www.google.com/maps/...",
+    ...
+  }
+}
+```
+
+### Chat response (Gemini)
+
+```json
+{
+  "source": "gemini",
+  "response": [
+    { "topic": "📍 DESTINATION OVERVIEW", "details": "Ooty, Tamil Nadu..." },
+    ...
+  ]
+}
+```
+
+---
+
+## Project Structure
 
 ```
 tourist_chatbot/
 ├── main/
-│   ├── views/
-│   │   ├── __init__.py
-│   │   ├── auth.py
-│   │   ├── chat.py
-│   │   └── home.py
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── gemini_service.py
-│   │   └── mongodb_service.py
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   ├── validators.py
-│   │   ├── parser.py
-│   │   └── helpers.py
-│   ├── forms/
-│   │   ├── __init__.py
-│   │   └── register.py
-│   ├── middleware/
-│   │   ├── __init__.py
-│   │   └── guest_auth.py
-│   ├── templates/
-│   │   ├── chat.html
-│   │   ├── dashboard.html
-│   │   ├── home.html
-│   │   ├── login.html
-│   │   ├── register.html
-│   │   ├── profile.html
-│   │   ├── change_password.html
-│   │   └── forgot_password.html
-│   ├── models.py
-│   ├── admin.py
-│   └── tests.py
+│   ├── models.py          # UserProfile, SavedDestination, RecentSearch
+│   ├── views.py           # All views — pages, auth, profile, chat API
+│   ├── admin.py           # Customised Django admin
+│   ├── serializers.py     # DRF serializers
+│   ├── destination_service.py  # Wikipedia + Wikidata + OSM (with caching)
+│   ├── wiki_service.py    # Wikipedia text fallback
+│   ├── local_travel_data.py    # Local JSON fallback
+│   ├── mongo_client.py    # MongoDB CRUD helpers
+│   ├── utils/             # json_error, json_success, DRF exception handler
+│   └── templates/         # chat.html, home.html, dashboard.html, auth pages
 ├── tourist_chatbot/
-│   ├── settings.py
-│   ├── urls.py
-│   ├── wsgi.py
-│   ├── asgi.py
-│   └── logging_config.py
-├── .env
-├── .gitignore
-├── manage.py
-├── Procfile
-├── runtime.txt
-├── gunicorn_config.py
-└── README.md
+│   ├── settings.py        # All config via env vars
+│   └── urls.py            # All URL patterns
+├── chatbot/services/      # Intent, Route, Budget, Orchestrator services
+│   ├── intent_service.py  # 13-intent classifier with entity extraction
+│   ├── route_service.py   # Static route lookup (23 routes)
+│   ├── budget_service.py  # Trip cost calculator
+│   └── orchestrator.py    # Routes intents to services
+├── data/
+│   └── destinations.json  # Local destination database
+├── .env.example           # Template — copy to .env
+├── requirements.txt       # Clean, pinned dependencies
+└── gunicorn_config.py     # Production server config
 ```
 
-## 🔒 Security
+---
 
-- CSRF protection enabled
-- Content Security Policy headers
-- Secure, HttpOnly, SameSite cookies
-- Rate limiting on chat endpoint
-- Input validation and sanitization
-- bcrypt password hashing
-- Environment-based secrets
-- No hardcoded credentials
+## Security Notes
 
-## 🧪 Testing
-
-```bash
-python manage.py test main
-```
-
-## 📄 License
-
-MIT License
+- The `.env` file at the root **contains real credentials** — rotate `GOOGLE_API_KEY` and `MONGODB_URI` if the repo has ever been public.
+- `DJANGO_SECRET_KEY` should be changed before any production deployment.
+- `DEBUG=False` **must** be set in production.

@@ -8,91 +8,126 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root { --terracotta:#c0623a; --deep:#1a1410; --gold:#d4a843; --cream:#faf6f0; }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'DM Sans',sans-serif; background:#1a1410; color:#faf6f0; min-height:100vh; display:flex; flex-direction:column; }
-        .navbar { background:rgba(14,10,8,.97); border-bottom:1px solid rgba(255,255,255,.07); padding:0 24px; height:62px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
-        .nav-logo { font-family:'Playfair Display',serif; font-size:20px; color:#d4a843; text-decoration:none; }
-        .nav-links { display:flex; align-items:center; gap:6px; }
-        .nav-links a { color:rgba(255,255,255,.65); text-decoration:none; padding:7px 13px; border-radius:6px; font-size:13px; transition:all .3s; }
+        body { font-family:'DM Sans',sans-serif; background:var(--deep); color:var(--cream); min-height:100vh; }
+        nav { background:rgba(14,10,8,.97); border-bottom:1px solid rgba(255,255,255,.07);
+              padding:0 24px; height:62px; display:flex; align-items:center; justify-content:space-between; }
+        .nav-logo { font-family:'Playfair Display',serif; font-size:20px; color:var(--gold); text-decoration:none; }
+        .nav-links a { color:rgba(255,255,255,.65); text-decoration:none; padding:7px 13px;
+                       border-radius:6px; font-size:13px; transition:all .3s; margin-left:4px; }
         .nav-links a:hover { color:white; background:rgba(255,255,255,.07); }
-
-        .container { max-width:700px; margin:40px auto; padding:0 24px; width:100%; }
-        .card { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); border-radius:16px; padding:40px; }
-        h1 { font-family:'Playfair Display',serif; font-size:28px; margin-bottom:30px; text-align:center; }
-        h1 em { font-style:italic; color:#d4a843; }
-
-        .form-group { margin-bottom:20px; }
-        label { display:block; font-size:13px; color:#5a5250; margin-bottom:6px; font-weight:500; letter-spacing:0.5px; }
-        .form-control { width:100%; padding:12px 16px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:8px; color:#faf6f0; font-family:'DM Sans',sans-serif; font-size:14px; outline:none; transition:all .3s; }
-        .form-control:focus { border-color:rgba(212,168,67,.4); background:rgba(255,255,255,.07); }
-        .form-control[readonly] { opacity:.5; cursor:not-allowed; }
-
-        .btn { display:inline-flex; align-items:center; gap:8px; padding:12px 28px; border:none; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; cursor:pointer; transition:all .3s; text-decoration:none; }
-        .btn-primary { background:#c0623a; color:white; }
-        .btn-primary:hover { background:#a8522f; }
-        .btn-secondary { background:rgba(255,255,255,.05); color:rgba(255,255,255,.65); border:1px solid rgba(255,255,255,.1); }
-        .btn-secondary:hover { background:rgba(255,255,255,.1); color:white; }
-
-        .alert { padding:12px 16px; border-radius:8px; margin-bottom:20px; font-size:14px; }
-        .alert-error { background:rgba(192,98,58,.15); border:1px solid rgba(192,98,58,.3); color:#c0623a; }
-        .alert-success { background:rgba(46,204,113,.15); border:1px solid rgba(46,204,113,.3); color:#2ecc71; }
-
-        .actions { display:flex; gap:12px; margin-top:24px; justify-content:center; flex-wrap:wrap; }
-        .info-text { font-size:13px; color:#5a5250; text-align:center; margin-top:16px; }
-        .info-text a { color:#d4a843; text-decoration:none; }
-        .info-text a:hover { text-decoration:underline; }
+        .container { max-width:720px; margin:48px auto; padding:0 24px; }
+        h1 { font-family:'Playfair Display',serif; font-size:32px; margin-bottom:8px; }
+        .sub { color:#7a706a; font-size:14px; margin-bottom:32px; }
+        .alert { padding:12px 16px; border-radius:8px; font-size:14px; margin-bottom:20px; }
+        .alert-error   { background:rgba(192,98,58,.15); border:1px solid rgba(192,98,58,.4); color:#e8886a; }
+        .alert-success { background:rgba(46,204,113,.1);  border:1px solid rgba(46,204,113,.3); color:#2ecc71; }
+        .card { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07);
+                border-radius:14px; padding:32px; margin-bottom:24px; }
+        .card h3 { font-size:16px; font-weight:500; margin-bottom:20px;
+                   padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,.07); }
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .field { margin-bottom:18px; }
+        .field.full { grid-column:1/-1; }
+        label { display:block; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+                color:#7a706a; margin-bottom:7px; }
+        .fw { position:relative; }
+        .fw i { position:absolute; left:14px; top:50%; transform:translateY(-50%);
+                color:#4a4540; font-size:14px; pointer-events:none; }
+        input, textarea { width:100%; padding:11px 11px 11px 38px; background:rgba(255,255,255,.05);
+                          border:1px solid rgba(255,255,255,.1); border-radius:8px; color:var(--cream);
+                          font-size:14px; outline:none; transition:border-color .3s;
+                          font-family:'DM Sans',sans-serif; }
+        textarea { padding-top:11px; resize:none; min-height:80px; }
+        input:focus, textarea:focus { border-color:rgba(212,168,67,.5); }
+        .btn-row { display:flex; gap:12px; flex-wrap:wrap; }
+        .btn { padding:12px 28px; border:none; border-radius:8px; font-size:14px;
+               font-weight:500; cursor:pointer; transition:all .3s; font-family:'DM Sans',sans-serif; }
+        .btn-primary { background:var(--terracotta); color:white; }
+        .btn-primary:hover { background:#a8522f; transform:translateY(-1px); }
+        .btn-outline { background:transparent; border:1px solid rgba(255,255,255,.15); color:var(--cream); }
+        .btn-outline:hover { border-color:var(--gold); color:var(--gold); }
+        @media(max-width:600px) { .form-row { grid-template-columns:1fr; } }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <a href="{% url 'home' %}" class="nav-logo">Tourist Guide</a>
-        <div class="nav-links">
-            <a href="{% url 'home' %}"><i class="fas fa-house"></i> Home</a>
-            <a href="{% url 'chat' %}"><i class="fas fa-comments"></i> Chat</a>
-            <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
-        </div>
-    </nav>
-
-    <div class="container">
-        <div class="card">
-            <h1>My <em>Profile</em></h1>
-
-            {% if error %}
-                <div class="alert alert-error">{{ error }}</div>
-            {% endif %}
-            {% if success %}
-                <div class="alert alert-success">{{ success }}</div>
-            {% endif %}
-
-            <form method="POST" action="{% url 'profile' %}">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" class="form-control" value="{{ profile.username }}" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" class="form-control" value="{{ profile.email }}" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" name="full_name" class="form-control" value="{{ profile.full_name }}" required>
-                </div>
-                <div class="form-group">
-                    <label>Phone Number</label>
-                    <input type="tel" name="phone" class="form-control" value="{{ profile.phone }}" required>
-                </div>
-                <div class="form-group">
-                    <label>Address</label>
-                    <textarea name="address" class="form-control" rows="3" required>{{ profile.address }}</textarea>
-                </div>
-
-                <div class="actions">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Profile</button>
-                    <a href="{% url 'change_password' %}" class="btn btn-secondary"><i class="fas fa-key"></i> Change Password</a>
-                </div>
-            </form>
-        </div>
+<nav>
+    <a href="{% url 'home' %}" class="nav-logo">Tourist Guide</a>
+    <div class="nav-links">
+        <a href="{% url 'home' %}"><i class="fas fa-house" style="font-size:12px"></i> Home</a>
+        <a href="{% url 'chat' %}"><i class="fas fa-comments" style="font-size:12px"></i> Chat</a>
+        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt" style="font-size:12px"></i> Logout</a>
     </div>
+</nav>
+
+<div class="container">
+    <h1>My Profile</h1>
+    <p class="sub">Manage your account information.</p>
+
+    {% if error %}
+        <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+    {% endif %}
+    {% if success %}
+        <div class="alert alert-success"><i class="fas fa-check-circle"></i> {{ success }}</div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="card">
+            <h3><i class="fas fa-user" style="color:var(--gold);margin-right:8px;"></i> Personal Info</h3>
+            <div class="form-row">
+                <div class="field">
+                    <label>Full Name</label>
+                    <div class="fw"><i class="fas fa-user"></i>
+                        <input type="text" name="full_name" value="{{ profile.full_name }}" placeholder="Your full name">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Phone</label>
+                    <div class="fw"><i class="fas fa-phone"></i>
+                        <input type="tel" name="phone" value="{{ profile.phone }}" placeholder="+91 00000 00000">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <div class="fw"><i class="fas fa-envelope"></i>
+                        <input type="email" name="email" value="{{ request.user.email }}" placeholder="you@email.com">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Username</label>
+                    <div class="fw"><i class="fas fa-at"></i>
+                        <input type="text" value="{{ request.user.username }}" disabled style="opacity:.5;cursor:not-allowed;">
+                    </div>
+                </div>
+                <div class="field full">
+                    <label>Address</label>
+                    <div class="fw"><i class="fas fa-home" style="top:14px;transform:none;"></i>
+                        <textarea name="address">{{ profile.address }}</textarea>
+                    </div>
+                </div>
+                <div class="field full">
+                    <label>Bio / Travel Interests</label>
+                    <div class="fw"><i class="fas fa-info-circle" style="top:14px;transform:none;"></i>
+                        <textarea name="bio">{{ profile.bio }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <a href="{% url 'change_password' %}" class="btn btn-outline">
+                <i class="fas fa-key"></i> Change Password
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </form>
+</div>
 </body>
 </html>
