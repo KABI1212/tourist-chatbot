@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourist Guide — AI-Powered Travel Planning</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <div class="logo-badge"><i class="fas fa-compass"></i></div>
+                <span class="logo-text">Tourist Guide</span>
+            </a>
+
+            <div class="nav-links" id="navAuthLinks">
+                <a href="destinations.html" class="nav-link"><i class="fas fa-compass"></i> Explore</a>
+                <a href="login.html" class="nav-link"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <a href="register.html" class="nav-link cta"><i class="fas fa-user-plus"></i> Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="tag-pill"><i class="fas fa-sparkles"></i> Powered by Google Gemini AI</div>
+            <h1>Your Journey<br>Begins <em>Here</em></h1>
+            <p>Experience intelligent global travel planning. Discover hidden gems, get accurate budget breakdowns, find hotels, transportation, local delicacies, and generate tailored day-by-day itineraries anywhere in the world.</p>
+            <div class="hero-actions">
+                <a href="chatbot.html" class="btn btn-primary"><i class="fas fa-robot"></i> Start Planning with AI</a>
+                <a href="destinations.html" class="btn btn-outline"><i class="fas fa-map-marked-alt"></i> Explore Destinations</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+        <div class="stats-inner">
+            <div class="stat-item">
+                <strong>190+</strong>
+                <span>Countries Covered</span>
+            </div>
+            <div class="stat-item">
+                <strong>10,000+</strong>
+                <span>Attractions & Gems</span>
+            </div>
+            <div class="stat-item">
+                <strong>3.2s</strong>
+                <span>Instant AI Response</span>
+            </div>
+            <div class="stat-item">
+                <strong>100%</strong>
+                <span>Tailored Itineraries</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEATURES SECTION -->
+    <section class="section">
+        <div class="section-head">
+            <div class="s-label">Smart Travel Suite</div>
+            <h2 class="s-title">Everything You Need for <em>Effortless Travel</em></h2>
+            <p class="s-desc">Anticipate every detail of your journey before taking the first step with our production-grade Spring Boot & Gemini AI engine.</p>
+        </div>
+
+        <div class="grid-3">
+            <div class="feature-card">
+                <div class="f-icon"><i class="fas fa-map-location-dot"></i></div>
+                <h3>Global Destination Explorer</h3>
+                <p>Lookup any valid location worldwide. Instantly access verified coordinates, curated photography, UNESCO statuses, best visit times, and timings.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="f-icon"><i class="fas fa-route"></i></div>
+                <h3>Multi-Day Itinerary Builder</h3>
+                <p>Ask for a "3-day trip to Ooty" and receive an hour-by-hour itinerary with attractions, food spots, local transport modes, and rest intervals.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="f-icon"><i class="fas fa-calculator"></i></div>
+                <h3>Estimated Budget Calculator</h3>
+                <p>Receive realistic travel budgets covering fuel, tolls, budget-to-luxury stays, dining, admission tickets, and emergency buffers.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="f-icon"><i class="fas fa-utensils"></i></div>
+                <h3>Authentic Food & Dining</h3>
+                <p>Discover famous street food, regional signature dishes, vegetarian/non-vegetarian dining spots, and average per-meal dining expenses.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="f-icon"><i class="fas fa-train-subway"></i></div>
+                <h3>Multi-Modal Transport</h3>
+                <p>Calculate optimal travel paths using trains, flights, intercity buses, metros, cabs, and self-drive car/bike rentals with travel times.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="f-icon"><i class="fas fa-shield-halved"></i></div>
+                <h3>Safety, Visa & Local Tips</h3>
+                <p>Stay informed with country-specific visa rules, emergency contact numbers, medical facilities, local customs, and trusted safety advice.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT VIDEO SPLIT -->
+    <section class="about-split">
+        <div class="about-inner">
+            <div>
+                <div class="s-label">Immersive Exploration</div>
+                <h2 class="s-title" style="color:var(--cream);">Designed for <em>Modern Wanderers</em></h2>
+                <p style="color:var(--cream-muted); margin-bottom:20px; font-size:15px; line-height:1.8;">
+                    Traveling shouldn't be about juggling tabs across blogs, flight aggregators, and map apps. Our conversational AI synthesizes deep geographic insights into clear, actionable travel roadmaps in seconds.
+                </p>
+                <a href="chatbot.html" class="btn btn-gold"><i class="fas fa-comments"></i> Chat with AI Assistant</a>
+            </div>
+
+            <div class="video-box">
+                <video autoplay muted loop playsinline>
+                    <source src="assets/video1.mp4" type="video/mp4">
+                    Your browser does not support HTML5 video.
+                </video>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-inner">
+            <div class="nav-logo">
+                <div class="logo-badge" style="width:30px; height:30px; font-size:14px;"><i class="fas fa-compass"></i></div>
+                <span class="logo-text" style="font-size:18px;">Tourist Guide</span>
+            </div>
+            <div class="footer-copy">
+                &copy; 2026 Tourist Guide. Powered by Java 17, Spring Boot 3.x, MongoDB Atlas & Google Gemini.
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

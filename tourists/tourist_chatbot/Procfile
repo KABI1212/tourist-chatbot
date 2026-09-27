@@ -1,1 +1,0 @@
-web: gunicorn tourist_chatbot.wsgi:application --config gunicorn_config.py

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Destinations — Tourist Guide</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chatbot.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .dest-hero {
+            padding: 130px 32px 50px;
+            background: radial-gradient(circle at 50% 20%, rgba(192, 98, 58, 0.2) 0%, rgba(18, 14, 11, 0.98) 70%);
+            text-align: center;
+        }
+
+        .search-box-wrap {
+            max-width: 640px;
+            margin: 30px auto 0;
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-gold);
+            border-radius: var(--radius-full);
+            padding: 6px 8px 6px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--cream);
+            font-size: 15px;
+            font-family: inherit;
+        }
+
+        .dest-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .dest-tile {
+            background: var(--deep-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dest-tile:hover {
+            transform: translateY(-6px);
+            border-color: var(--border-gold);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .dest-tile-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .dest-tile-content {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dest-tile-title {
+            font-size: 18px;
+            margin-bottom: 6px;
+            color: var(--cream);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dest-tile-location {
+            font-size: 12px;
+            color: var(--gold);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dest-tile-desc {
+            font-size: 13px;
+            color: var(--cream-muted);
+            line-height: 1.6;
+            margin-bottom: 16px;
+            flex: 1;
+        }
+
+        .dest-tile-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <div class="logo-badge"><i class="fas fa-compass"></i></div>
+                <span class="logo-text">Tourist Guide</span>
+            </a>
+
+            <div class="nav-links" id="navAuthLinks">
+                <!-- Dynamically populated by auth.js -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- DESTINATION HERO & SEARCH -->
+    <section class="dest-hero">
+        <div class="tag-pill"><i class="fas fa-globe-americas"></i> Curated Destinations</div>
+        <h1 class="s-title">Explore Iconic <em>Places Worldwide</em></h1>
+        <p class="s-desc" style="max-width:600px; margin:0 auto;">
+            Search and discover famous monuments, natural wonders, and culture hubs with verified coordinates, entry fees, and instant AI travel planning.
+        </p>
+
+        <div class="search-box-wrap">
+            <i class="fas fa-search" style="color:var(--gold); align-self:center;"></i>
+            <input type="text" id="destSearchInput" class="search-input" placeholder="Search by destination name, country or tag…">
+            <button class="btn btn-primary btn-sm" onclick="filterDestinations()">
+                Search
+            </button>
+        </div>
+    </section>
+
+    <!-- DESTINATIONS GRID -->
+    <div class="section" style="padding-top:30px;">
+        <div id="destGrid" class="dest-grid">
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--slate);">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p style="margin-top:12px;">Loading curated destinations…</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-inner">
+            <div class="nav-logo">
+                <div class="logo-badge" style="width:30px; height:30px; font-size:14px;"><i class="fas fa-compass"></i></div>
+                <span class="logo-text" style="font-size:18px;">Tourist Guide</span>
+            </div>
+            <div class="footer-copy">
+                &copy; 2026 Tourist Guide. High-Performance Spring Boot 3 &amp; MongoDB Atlas.
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let allDestinations = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDestinations();
+
+            const input = document.getElementById('destSearchInput');
+            if (input) {
+                input.addEventListener('input', () => filterDestinations());
+            }
+        });
+
+        async function loadDestinations() {
+            const grid = document.getElementById('destGrid');
+            try {
+                const data = await Api.get('/destinations');
+                const list = Array.isArray(data) ? data : (data?.data || data?.destinations || []);
+                allDestinations = Array.isArray(list) ? list : [];
+                renderTiles(allDestinations);
+            } catch (err) {
+                console.error('Failed to load destinations:', err);
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--danger);">
+                        <i class="fas fa-exclamation-circle fa-2x"></i>
+                        <p style="margin-top:12px;">Failed to fetch destinations. Please make sure the Spring Boot backend is running.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderTiles(list) {
+            const grid = document.getElementById('destGrid');
+            if (!list || !list.length) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--slate);">
+                        <i class="fas fa-map-pin fa-2x"></i>
+                        <p style="margin-top:12px;">No destinations found matching your query.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = list.map(d => {
+                const img = (d.images && d.images[0]) || 'assets/photo1.jpeg';
+                return `
+                    <div class="dest-tile">
+                        <img src="${img}" alt="${d.name}" class="dest-tile-img" loading="lazy">
+                        <div class="dest-tile-content">
+                            <div class="dest-tile-title">
+                                <h3>${d.name}</h3>
+                                <button class="copy-btn" onclick="saveFavorite('${d.name}', '${d.country || ''}')" title="Save to Favorites">
+                                    <i class="far fa-heart" style="font-size:16px; color:var(--terracotta);"></i>
+                                </button>
+                            </div>
+                            <div class="dest-tile-location">
+                                <i class="fas fa-map-marker-alt"></i> ${d.country || 'Global Attraction'}
+                            </div>
+                            <p class="dest-tile-desc">
+                                ${d.description || (d.famousFor ? 'Famous for ' + d.famousFor : 'Discover this iconic travel destination.')}
+                            </p>
+                            <div class="dest-tile-footer">
+                                <span style="font-size:12px; color:var(--slate);">
+                                    <i class="fas fa-calendar-alt"></i> ${d.bestTime || 'Year-round'}
+                                </span>
+                                <a href="chatbot.html" onclick="askAboutDestination('${d.name}')" class="btn btn-outline btn-sm">
+                                    <i class="fas fa-robot"></i> Plan Trip
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterDestinations() {
+            const query = (document.getElementById('destSearchInput').value || '').toLowerCase().trim();
+            if (!query) {
+                renderTiles(allDestinations);
+                return;
+            }
+            const filtered = allDestinations.filter(d => 
+                (d.name && d.name.toLowerCase().includes(query)) ||
+                (d.country && d.country.toLowerCase().includes(query)) ||
+                (d.description && d.description.toLowerCase().includes(query)) ||
+                (d.famousFor && d.famousFor.toLowerCase().includes(query))
+            );
+            renderTiles(filtered);
+        }
+
+        function askAboutDestination(name) {
+            localStorage.setItem('pending_chat_prompt', `Plan a trip to ${name}`);
+        }
+
+        async function saveFavorite(name, country) {
+            if (!Auth.isAuthenticated()) {
+                window.location.href = 'login.html?redirect=destinations.html';
+                return;
+            }
+            try {
+                await Api.post('/favorites', { destinationName: name, country });
+                App.toast(`Added ${name} to your favorites!`, 'success');
+            } catch (err) {
+                App.toast(err.message || 'Could not save favorite', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

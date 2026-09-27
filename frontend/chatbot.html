@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Travel Assistant — Tourist Guide</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chatbot.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body style="overflow:hidden;">
+
+    <!-- NAVBAR -->
+    <nav class="navbar" style="position:fixed; top:0; left:0; right:0;">
+        <div class="nav-inner">
+            <div style="display:flex; align-items:center; gap:16px;">
+                <button class="topbar-btn" onclick="App.toggleSidebar()" style="display:flex;" title="Toggle Sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <a href="index.html" class="nav-logo">
+                    <div class="logo-badge"><i class="fas fa-compass"></i></div>
+                    <span class="logo-text">Tourist Guide</span>
+                </a>
+            </div>
+
+            <div class="nav-links" id="navAuthLinks">
+                <!-- Dynamically populated by auth.js -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- CHAT LAYOUT -->
+    <div class="chat-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-head">
+                <div>
+                    <h3><i class="fas fa-compass" style="color:var(--gold);"></i> Travel Hub</h3>
+                    <p>AI Conversations & Prompts</p>
+                </div>
+            </div>
+
+            <div class="sidebar-tabs">
+                <div class="sidebar-tab active" id="tabHistory" onclick="switchSidebarTab('history')">
+                    <i class="fas fa-history"></i> History
+                </div>
+                <div class="sidebar-tab" id="tabPrompts" onclick="switchSidebarTab('prompts')">
+                    <i class="fas fa-lightbulb"></i> Prompts
+                </div>
+            </div>
+
+            <div class="sidebar-content">
+                <!-- History Tab Content -->
+                <div id="contentHistory">
+                    <div class="sidebar-section-title">Recent Conversations</div>
+                    <div id="chatHistoryList">
+                        <p style="padding:12px;font-size:12px;color:var(--slate);font-style:italic;">Loading conversations…</p>
+                    </div>
+                </div>
+
+                <!-- Prompts Tab Content -->
+                <div id="contentPrompts" style="display:none;">
+                    <div class="sidebar-section-title">Popular Itineraries</div>
+                    <div class="quick-list">
+                        <button class="quick-btn" onclick="usePrompt('Plan a 3-day trip to Ooty with budget and places')">
+                            <i class="fas fa-mountain"></i> 3-day trip to Ooty
+                        </button>
+                        <button class="quick-btn" onclick="usePrompt('Suggest a 4-day itinerary for Goa with beaches & nightlife')">
+                            <i class="fas fa-umbrella-beach"></i> 4-day Goa Vacation
+                        </button>
+                        <button class="quick-btn" onclick="usePrompt('Plan a 5-day cultural trip to Kyoto, Japan')">
+                            <i class="fas fa-torii-gate"></i> 5-day Kyoto Trip
+                        </button>
+                        <button class="quick-btn" onclick="usePrompt('Weekend getaway to Manali with adventure sports')">
+                            <i class="fas fa-snowflake"></i> Weekend in Manali
+                        </button>
+                    </div>
+
+                    <div class="sidebar-section-title">Quick Place Inquiries</div>
+                    <div class="quick-list">
+                        <button class="quick-btn" onclick="usePrompt('Tell me about Taj Mahal entry fee, timings and tips')">
+                            <i class="fas fa-monument"></i> Taj Mahal Guide
+                        </button>
+                        <button class="quick-btn" onclick="usePrompt('What are the best street food spots and local dishes in Bangkok?')">
+                            <i class="fas fa-bowl-food"></i> Bangkok Street Food
+                        </button>
+                        <button class="quick-btn" onclick="usePrompt('How to travel from Paris to Nice by train with cost estimate')">
+                            <i class="fas fa-train"></i> Paris to Nice Train
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button class="new-chat-btn" onclick="startNewChat()">
+                    <i class="fas fa-plus"></i> New Travel Inquiry
+                </button>
+                <button class="topbar-btn" onclick="clearAllChats()" style="width:100%; justify-content:center;">
+                    <i class="fas fa-trash"></i> Clear All History
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CHAT AREA -->
+        <main class="chat-main">
+            <!-- TOPBAR -->
+            <div class="chat-topbar">
+                <div class="assistant-info">
+                    <div class="assistant-avatar"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <div class="assistant-name">Gemini AI Travel Guide</div>
+                        <div class="assistant-status">
+                            <span class="status-dot"></span> Online &amp; Worldwide Ready
+                        </div>
+                    </div>
+                </div>
+
+                <div class="topbar-actions">
+                    <button class="topbar-btn" onclick="exportChat()" title="Export chat as text">
+                        <i class="fas fa-download"></i> <span>Export</span>
+                    </button>
+                    <button class="topbar-btn" onclick="startNewChat()" title="Start fresh conversation">
+                        <i class="fas fa-redo"></i> <span>New</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- MESSAGES CONTAINER -->
+            <div class="messages-wrap" id="messagesWrap">
+                <div class="welcome-card">
+                    <h2>Hello, <em>Traveller!</em> 👋</h2>
+                    <p>I'm your AI Travel Guide powered by Google Gemini. Ask me about <strong>any destination</strong> in the world — cities, temples, beaches, monuments, hill stations, food, transportation, and custom multi-day trip itineraries!</p>
+                    <div class="welcome-suggestions">
+                        <span class="suggestion-chip" onclick="usePrompt('Plan a 3-day trip to Ooty')">🌄 3-day trip to Ooty</span>
+                        <span class="suggestion-chip" onclick="usePrompt('Suggest best places to visit in Paris')">🗼 Paris Travel Guide</span>
+                        <span class="suggestion-chip" onclick="usePrompt('Budget trip to Goa with food and hotels')">🏖 Goa on a Budget</span>
+                        <span class="suggestion-chip" onclick="usePrompt('Tell me about Taj Mahal timings and entry fee')">🕌 Taj Mahal</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INPUT BAR -->
+            <div class="input-bar">
+                <div class="input-container">
+                    <div class="input-row">
+                        <textarea class="chat-input" id="messageInput" placeholder="Ask anything, e.g. 'Suggest places to visit in Ooty for 3 days'…" rows="1"></textarea>
+                        <button class="send-btn" id="sendBtn" title="Send Message">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="input-meta">
+                        <span class="char-count" id="charCount">0 / 500</span>
+                        <span>Press Enter to send, Shift+Enter for newline</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script>
+        function switchSidebarTab(tab) {
+            const tabH = document.getElementById('tabHistory');
+            const tabP = document.getElementById('tabPrompts');
+            const contentH = document.getElementById('contentHistory');
+            const contentP = document.getElementById('contentPrompts');
+
+            if (tab === 'history') {
+                tabH.classList.add('active');
+                tabP.classList.remove('active');
+                contentH.style.display = 'block';
+                contentP.style.display = 'none';
+            } else {
+                tabP.classList.add('active');
+                tabH.classList.remove('active');
+                contentP.style.display = 'block';
+                contentH.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
