@@ -12,12 +12,17 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import com.tourist.chatbot.model.User;
+import com.tourist.chatbot.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -26,11 +31,15 @@ public class DataInitializer implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
     private final DestinationRepository destinationRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void run(ApplicationArguments args) {
         try {
+            seedDemoUser();
+
             if (destinationRepository.count() > 0) {
                 log.info("Destination catalog already initialized with {} destinations.", destinationRepository.count());
                 return;
@@ -40,6 +49,25 @@ public class DataInitializer implements ApplicationRunner {
             loadAndSeedDestinations();
         } catch (Exception e) {
             log.warn("MongoDB Atlas connection could not be established on startup (verify your network or MONGODB_URI): {}", e.getMessage());
+        }
+    }
+
+    private void seedDemoUser() {
+        try {
+            if (userRepository.findByUsername("demo").isEmpty()) {
+                User demoUser = User.builder()
+                        .username("demo")
+                        .email("demo@touristguide.com")
+                        .password(passwordEncoder.encode("demo123"))
+                        .fullName("Demo Traveller")
+                        .bio("Travel enthusiast discovering worldwide landmarks with AI.")
+                        .roles(Set.of("ROLE_USER"))
+                        .build();
+                userRepository.save(demoUser);
+                log.info("Seed demo account created: username='demo', password='demo123'");
+            }
+        } catch (Exception e) {
+            log.warn("Could not seed demo account: {}", e.getMessage());
         }
     }
 

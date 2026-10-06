@@ -53,9 +53,7 @@ public class TouristChatbotApplication {
                             val = val.substring(1, val.length() - 1);
                         }
 
-                        if (System.getProperty(key) == null && System.getenv(key) == null) {
-                            System.setProperty(key, val);
-                        }
+                        System.setProperty(key, val);
                     }
                 } catch (Exception e) {
                     log.warn("Could not read .env file {}: {}", envFile.getPath(), e.getMessage());

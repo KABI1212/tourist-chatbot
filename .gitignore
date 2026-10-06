@@ -8,7 +8,9 @@ target/
 
 # Environment Variables
 .env
-.env.local
+.env.*
+**/.env
+**/.env.*
 
 # IDE & Editors
 .vscode/

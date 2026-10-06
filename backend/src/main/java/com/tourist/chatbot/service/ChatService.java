@@ -58,11 +58,14 @@ public class ChatService {
                 .build();
         chatMessageRepository.save(userMsg);
 
+        // Fetch conversation history for full multi-turn context
+        List<ChatMessage> conversationHistory = chatMessageRepository.findByChatId(chat.getId(), Sort.by(Sort.Direction.ASC, "timestamp"));
+
         // 3. Check for matching curated destination in catalog
         Optional<Destination> matchedDest = findDestinationInMessage(message);
 
-        // 4. Generate AI response from Google Gemini
-        String aiResponseText = geminiService.generateResponse(message);
+        // 4. Generate AI response from Google Gemini with full conversation context
+        String aiResponseText = geminiService.generateResponse(conversationHistory, message);
 
         // 5. Persist Assistant Message
         ChatMessage botMsg = ChatMessage.builder()
@@ -94,11 +97,19 @@ public class ChatService {
     }
 
     private Optional<Destination> findDestinationInMessage(String message) {
-        String lower = message.toLowerCase();
-        // Check directly if message contains names of existing destinations
+        String lower = message.toLowerCase().trim();
         List<Destination> all = destinationRepository.findAll();
         for (Destination d : all) {
-            if (d.getName() != null && lower.contains(d.getName().toLowerCase())) {
+            if (d.getName() == null || d.getName().isBlank()) continue;
+            String destLower = d.getName().toLowerCase();
+
+            // Ignore if the word is an origin point: e.g. "from kerala"
+            if (lower.contains("from " + destLower) || lower.startsWith("from " + destLower)) {
+                continue;
+            }
+
+            // Check if the destination is explicitly mentioned as a word
+            if (lower.matches(".*\\b" + java.util.regex.Pattern.quote(destLower) + "\\b.*")) {
                 return Optional.of(d);
             }
         }

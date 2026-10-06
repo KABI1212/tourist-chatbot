@@ -10,14 +10,18 @@ const Api = {
      * Get stored JWT token
      */
     getToken() {
-        return localStorage.getItem('tourist_jwt_token');
+        const token = localStorage.getItem('tourist_jwt_token');
+        if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+            return null;
+        }
+        return token;
     },
 
     /**
      * Set stored JWT token
      */
     setToken(token) {
-        if (token) {
+        if (token && token !== 'null' && token !== 'undefined') {
             localStorage.setItem('tourist_jwt_token', token);
         } else {
             localStorage.removeItem('tourist_jwt_token');
@@ -47,13 +51,14 @@ const Api = {
         try {
             const response = await fetch(url, config);
 
-            // Handle token expiration
-            if (response.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
-                console.warn('Session expired or unauthorized. Clearing token.');
+            // Handle token expiration or unauthenticated / forbidden access
+            if ((response.status === 401 || response.status === 403) && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+                console.warn(`Session expired or unauthorized (status ${response.status}). Clearing token.`);
                 this.setToken(null);
                 localStorage.removeItem('tourist_user');
                 if (!window.location.pathname.includes('login.html')) {
-                    window.location.href = 'login.html?expired=true';
+                    const currentPage = window.location.pathname.split('/').pop() || 'chatbot.html';
+                    window.location.href = `login.html?expired=true&redirect=${encodeURIComponent(currentPage)}`;
                 }
             }
 

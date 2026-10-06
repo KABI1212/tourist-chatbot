@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
 </head>
 <body>
 
@@ -44,6 +45,12 @@
                 <button type="submit" class="btn btn-primary" id="submitBtn" style="width:100%; margin-top:10px;">
                     <i class="fas fa-sign-in-alt"></i> Sign In
                 </button>
+
+                <div style="text-align:center; margin:12px 0 8px; font-size:12px; color:var(--slate, #94a3b8);">— OR —</div>
+
+                <button type="button" class="btn btn-outline" id="demoLoginBtn" style="width:100%; border-color:var(--gold, #d4a24c); color:var(--gold, #d4a24c);">
+                    <i class="fas fa-bolt"></i> 1-Click Demo Login
+                </button>
             </form>
 
             <div class="auth-footer">
@@ -71,6 +78,16 @@
             }
 
             const form = document.getElementById('loginForm');
+            const demoBtn = document.getElementById('demoLoginBtn');
+
+            if (demoBtn) {
+                demoBtn.addEventListener('click', () => {
+                    document.getElementById('username').value = 'demo';
+                    document.getElementById('password').value = 'demo123';
+                    form.dispatchEvent(new Event('submit'));
+                });
+            }
+
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const errBox = document.getElementById('authError');
