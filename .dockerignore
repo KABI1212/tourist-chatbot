@@ -1,0 +1,9 @@
+backend/target/
+frontend/
+.git/
+.gitignore
+.env
+backend/.env
+*.log
+.vscode/
+.idea/

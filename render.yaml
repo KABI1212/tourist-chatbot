@@ -1,0 +1,25 @@
+# ===================================================================
+# Render Blueprint Specification (Infrastructure as Code)
+# Automatically configures the Spring Boot backend on Render
+# ===================================================================
+services:
+  - type: web
+    name: tourist-chatbot-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: DATABASE_NAME
+        value: tourist_chatbot
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true

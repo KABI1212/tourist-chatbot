@@ -177,3 +177,14 @@ Once started, open your web browser:
 * `GET  /api/users/profile` — Get full user profile
 * `PUT  /api/users/profile` — Update user profile details
 * `POST /api/users/change-password` — Change account password
+
+---
+
+## 🚀 Cloud Deployment (Render + Vercel)
+
+This repository is ready for 1-click cloud deployment:
+
+* **Backend (Spring Boot 3 + Java 17):** Deployed to **Render** via Docker using `render.yaml` or `backend/Dockerfile`.
+* **Frontend (HTML/CSS/JS):** Deployed to **Vercel** with automatic API rewrites in `vercel.json`.
+
+👉 **For step-by-step setup instructions, see the complete [Deployment Guide](DEPLOYMENT.md).**

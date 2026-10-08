@@ -2,8 +2,44 @@
  * Tourist Guide & TravelMind AI — Central API Client
  * Automatically manages JWT authorization headers and error handling.
  */
+/**
+ * Dynamically resolves the API base URL:
+ * 1. window.APP_CONFIG.BACKEND_URL (configured in js/config.js)
+ * 2. window.__API_BASE__ (dynamic injection)
+ * 3. localStorage 'tourist_api_url' (quick testing in browser)
+ * 4. file:// protocol -> http://localhost:8080/api (local testing)
+ * 5. Default -> '/api' (works with Vercel rewrites to Render)
+ */
+const getApiBase = () => {
+    if (window.APP_CONFIG && window.APP_CONFIG.BACKEND_URL && window.APP_CONFIG.BACKEND_URL.trim() !== '') {
+        let base = window.APP_CONFIG.BACKEND_URL.trim().replace(/\/+$/, '');
+        if (!base.endsWith('/api')) base += '/api';
+        return base;
+    }
 
-const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:8080/api' : '/api';
+    if (window.__API_BASE__ && window.__API_BASE__.trim() !== '') {
+        let base = window.__API_BASE__.trim().replace(/\/+$/, '');
+        if (!base.endsWith('/api')) base += '/api';
+        return base;
+    }
+
+    try {
+        const stored = localStorage.getItem('tourist_api_url');
+        if (stored && stored.trim() !== '') {
+            let base = stored.trim().replace(/\/+$/, '');
+            if (!base.endsWith('/api')) base += '/api';
+            return base;
+        }
+    } catch (e) {}
+
+    if (window.location.protocol === 'file:') {
+        return 'http://localhost:8080/api';
+    }
+
+    return '/api';
+};
+
+const API_BASE = getApiBase();
 
 const Api = {
     /**
@@ -87,8 +123,31 @@ const Api = {
             return data;
         } catch (error) {
             console.error(`API Error on [${options.method || 'GET'}] ${endpoint}:`, error);
+            if (error instanceof TypeError && error.message.toLowerCase().includes('fetch')) {
+                console.warn(
+                    `[Tourist API Notice] Could not connect to backend at "${url}".\n` +
+                    `• Render Free Tier services spin down when idle; waking up takes ~30-50s.\n` +
+                    `• If deploying on Vercel, verify your Render backend URL in frontend/js/config.js or vercel.json rewrites.\n` +
+                    `• You can test or change the API URL anytime via: Api.setBaseUrl('https://your-service.onrender.com/api')`
+                );
+            }
             throw error;
         }
+    },
+
+    getBaseUrl() {
+        return API_BASE;
+    },
+
+    setBaseUrl(url) {
+        if (url && url.trim()) {
+            let clean = url.trim().replace(/\/+$/, '');
+            if (!clean.endsWith('/api')) clean += '/api';
+            localStorage.setItem('tourist_api_url', clean);
+        } else {
+            localStorage.removeItem('tourist_api_url');
+        }
+        window.location.reload();
     },
 
     get(endpoint, options = {}) {

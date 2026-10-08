@@ -56,8 +56,9 @@ public class SecurityConfig {
                         })
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Public auth endpoints
+                        // Public auth & health endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/health").permitAll()
                         // Public destination browsing
                         .requestMatchers(HttpMethod.GET, "/api/destinations/**").permitAll()
                         // Static frontend resources & pages

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": false,
+  "rewrites": [
+    {
+      "source": "/api/:match*",
+      "destination": "https://tourist-chatbot-backend.onrender.com/api/:match*"
+    }
+  ]
+}
