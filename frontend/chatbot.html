@@ -4,15 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Travel Assistant — TouristAI</title>
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Cormorant Garamond & DM Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/chatbot.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌴</text></svg>">
+    <!-- Theme Switcher -->
+    <script src="js/theme.js"></script>
 </head>
 <body class="chat-page-body">
 
@@ -20,7 +22,7 @@
     <nav class="navbar" id="chatNavbar">
         <div class="nav-inner">
             <a href="index.html" class="nav-logo">
-                <div class="logo-badge"><i class="fas fa-tree"></i></div>
+                <div class="logo-badge"><i class="fas fa-compass"></i></div>
                 <span>TouristAI</span>
             </a>
 
@@ -28,7 +30,12 @@
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="destinations.html" class="nav-link">Destinations</a>
                 <a href="planner.html" class="nav-link">Plan Trip</a>
-                <a href="chatbot.html" class="nav-link active"><i class="fas fa-sparkles" style="color:var(--accent-cyan);"></i> AI Chat</a>
+                <a href="chatbot.html" class="nav-link active"><i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> AI Chat</a>
+                
+                <!-- Theme Toggle Button -->
+                <button type="button" class="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                </button>
             </div>
         </div>
     </nav>
@@ -47,18 +54,17 @@
             <div class="sidebar-scroll-area">
                 <div class="sidebar-group-title">Recent Chats</div>
                 <div id="recentChatsList">
-                    <!-- Populated dynamically -->
-                    <div class="recent-chat-item active" onclick="loadSampleChat('kerala')">
-                        <i class="fas fa-message"></i> Kerala Trip Plan
+                    <div class="recent-chat-item active" onclick="loadSampleChat('ooty_budget')">
+                        <i class="fas fa-message"></i> Chennai to Ooty under ₹8K
                     </div>
-                    <div class="recent-chat-item" onclick="loadSampleChat('ooty')">
-                        <i class="fas fa-message"></i> Places in Ooty
-                    </div>
-                    <div class="recent-chat-item" onclick="loadSampleChat('goa')">
-                        <i class="fas fa-message"></i> Best Beaches in Goa
+                    <div class="recent-chat-item" onclick="loadSampleChat('kerala')">
+                        <i class="fas fa-message"></i> 5 Days Kerala Backwaters
                     </div>
                     <div class="recent-chat-item" onclick="loadSampleChat('manali')">
-                        <i class="fas fa-message"></i> Budget for Manali
+                        <i class="fas fa-message"></i> Manali Adventure Budget
+                    </div>
+                    <div class="recent-chat-item" onclick="loadSampleChat('goa')">
+                        <i class="fas fa-message"></i> Goa Heritage &amp; Beaches
                     </div>
                 </div>
             </div>
@@ -75,8 +81,8 @@
             <!-- Header -->
             <div class="chat-stage-header">
                 <div class="assistant-headline">
-                    <h2>Your AI Travel Assistant</h2>
-                    <p>Ask about destinations, itineraries, hotels, places to visit and more!</p>
+                    <h2>Your AI Travel Concierge</h2>
+                    <p>Natural-language planning, transit routes, budget calculations, and regional guides</p>
                 </div>
 
                 <div style="display:flex; gap:10px;">
@@ -88,85 +94,89 @@
 
             <!-- Messages List -->
             <div class="messages-scroll-box" id="messagesBox">
-                <!-- User Prompt Bubble (Screen 2 Mockup) -->
+                <!-- User Prompt Bubble -->
                 <div class="msg-row user">
                     <div class="msg-bubble">
-                        Plan a 5 days trip to Kerala for 2 people
+                        Plan a 3-day trip from Chennai to Ooty for two people under ₹8,000, including transportation, hotels, food, sightseeing, and a complete itinerary.
                     </div>
                     <div class="msg-avatar usr"><i class="fas fa-user"></i></div>
                 </div>
 
-                <!-- AI Response Bubble (Screen 2 Mockup) -->
+                <!-- AI Response Bubble -->
                 <div class="msg-row assistant">
-                    <div class="msg-avatar ai"><i class="fas fa-tree"></i></div>
-                    <div class="msg-bubble">
-                        <p style="margin-bottom:10px; font-weight:600;">Here's a 5 days Kerala trip plan for 2 people:</p>
-                        
-                        <div class="itinerary-chat-preview">
-                            <ul class="itinerary-day-list">
-                                <li class="itinerary-day-item">
-                                    <span>🏝️</span>
-                                    <div><strong>Day 1:</strong> Arrive in Kochi - Local Sightseeing</div>
-                                </li>
-                                <li class="itinerary-day-item">
-                                    <span>🍃</span>
-                                    <div><strong>Day 2:</strong> Munnar - Tea Gardens, Waterfalls</div>
-                                </li>
-                                <li class="itinerary-day-item">
-                                    <span>🐘</span>
-                                    <div><strong>Day 3:</strong> Thekkady - Wildlife, Boating</div>
-                                </li>
-                                <li class="itinerary-day-item">
-                                    <span>⛵</span>
-                                    <div><strong>Day 4:</strong> Alleppey - Houseboat Experience</div>
-                                </li>
-                                <li class="itinerary-day-item">
-                                    <span>✈️</span>
-                                    <div><strong>Day 5:</strong> Departure from Kochi</div>
-                                </li>
-                            </ul>
+                    <div class="msg-avatar bot"><i class="fas fa-compass"></i></div>
+                    <div class="msg-bubble ai-bubble">
+                        <p>Here is your comprehensive <strong>3-Day Ooty Budget Itinerary</strong> tailored for <strong>2 travelers</strong> under <strong>₹8,000 total (₹4,000/person)</strong>, covering round-trip train transit from Chennai, verified heritage stays, local food, and sights:</p>
 
-                            <div class="budget-estimate-badge">
-                                Estimated Budget: ₹20,000 - ₹30,000 for 2 people
+                        <!-- Trip Preview Card -->
+                        <div class="chat-trip-card">
+                            <h4>3-Day Chennai to Ooty Budget Trip</h4>
+                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Total Budget: ₹7,650 for 2 • Mode: Nilgiri Express + Toy Train</p>
+
+                            <div class="day-preview-item">
+                                <strong>Day 1 • Boarding &amp; Arrival</strong>
+                                <span>Board Overnight Nilgiri Express (Chennai Central &rarr; Mettupalayam Sleeper ~₹380/seat). Transfer via UNESCO Toy Train to Ooty. Check into Zostel / budget homestay (~₹1,400/night). Evening at Ooty Lake &amp; Botanical Garden.</span>
                             </div>
 
-                            <div>
-                                <button class="btn-view-itinerary" onclick="openPlannerFor('Kerala', 5, 2)">
-                                    <i class="fas fa-calendar-alt"></i> View Detailed Itinerary
-                                </button>
+                            <div class="day-preview-item">
+                                <strong>Day 2 • Peaks &amp; Tea Gardens</strong>
+                                <span>Shared cab / bus to Doddabetta Peak (₹10 entry). Visit Tea Factory &amp; Museum. Walk through Rose Garden. Sample Ooty Varkey and homemade chocolates at Commercial Road.</span>
                             </div>
+
+                            <div class="day-preview-item">
+                                <strong>Day 3 • Waterfalls &amp; Return</strong>
+                                <span>Morning visit to Pykara Lake &amp; Waterfalls. Return to Mettupalayam by state bus (₹60/person) and board return train back to Chennai.</span>
+                            </div>
+
+                            <div class="budget-est-row">
+                                <span class="budget-lbl">Estimated Total for 2</span>
+                                <span class="budget-val">₹7,650 (Under ₹8,000 limit)</span>
+                            </div>
+
+                            <button class="btn btn-primary btn-sm" style="margin-top:14px; width:100%; justify-content:center;" onclick="window.location.href='destinations.html?view=Ooty'">
+                                View Full Ooty Guide &amp; Maps &rarr;
+                            </button>
+                        </div>
+
+                        <!-- Action bar -->
+                        <div class="msg-actions-row">
+                            <button class="msg-action-btn" onclick="copyAiResponse(this)"><i class="fas fa-copy"></i> Copy</button>
+                            <button class="msg-action-btn" onclick="retryAiResponse()"><i class="fas fa-rotate-right"></i> Retry</button>
+                            <button class="msg-action-btn" onclick="shareAiResponse()"><i class="fas fa-share-nodes"></i> Share</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Suggested Quick Prompts -->
-            <div class="prompts-quick-strip" id="quickPromptsRow">
-                <div class="prompt-chip" onclick="usePrompt('Plan a 5 days trip to Kerala for 2 people')">
-                    🏝️ 5 days trip to Kerala
+            <!-- Bottom Floating Prompt Chips -->
+            <div class="chat-footer-dock">
+                <div class="prompt-chips-tray" id="chipsTray">
+                    <button class="prompt-chip" onclick="useSuggestedChip('Plan a 3-day trip from Chennai to Ooty for 2 people under ₹8,000')">
+                        🏔️ Chennai &rarr; Ooty under ₹8K
+                    </button>
+                    <button class="prompt-chip" onclick="useSuggestedChip('What are the best places to visit in Kerala?')">
+                        🌴 Best Places in Kerala
+                    </button>
+                    <button class="prompt-chip" onclick="useSuggestedChip('3-Day Manali itinerary for adventure lovers with estimated budget')">
+                        ⛷️ 3-Day Manali Itinerary
+                    </button>
+                    <button class="prompt-chip" onclick="useSuggestedChip('Best budget beach stay options in Goa for couples')">
+                        🏖️ Goa Couple Budget Stays
+                    </button>
+                    <button class="prompt-chip" onclick="useSuggestedChip('How to reach Ooty by train from Chennai or Bangalore?')">
+                        🚂 Trains to Ooty (IRCTC)
+                    </button>
                 </div>
-                <div class="prompt-chip" onclick="usePrompt('What are the best places to visit in Ooty?')">
-                    🏔️ Best places in Ooty
-                </div>
-                <div class="prompt-chip" onclick="usePrompt('Suggest budget and hotels for Manali for 2 people')">
-                    ❄️ Budget for Manali
-                </div>
-                <div class="prompt-chip" onclick="usePrompt('Top beaches and nightlife guide for Goa')">
-                    🏖️ Best beaches in Goa
-                </div>
-            </div>
 
-            <!-- Bottom Input Bar -->
-            <div class="chat-bottom-input-wrap">
-                <form class="chat-input-box" id="chatInputForm" onsubmit="handleSend(event)">
+                <!-- Input Field -->
+                <form class="chat-input-row" id="chatForm" onsubmit="handleChatSubmit(event)">
                     <textarea 
-                        class="chat-textarea" 
                         id="chatMessageInput" 
-                        placeholder="Ask me anything about travel..." 
-                        rows="1"
+                        rows="1" 
+                        placeholder="Ask anything about travel, budgets, transit routes or itineraries…" 
+                        onkeydown="handleInputKeydown(event)"
                         required></textarea>
-                    
-                    <button type="submit" class="chat-send-btn" id="chatSendBtn" title="Send message">
+                    <button type="submit" class="chat-send-btn" id="sendBtn" title="Send Message">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </form>

@@ -97,6 +97,15 @@ const Auth = {
             <a href="chatbot.html" class="nav-link ${isChat ? 'active' : ''}"><i class="fas fa-sparkles" style="color:var(--accent-cyan);"></i> AI Chat</a>
         `;
 
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const themeIcon = currentTheme === 'dark' ? 'fa-sun' : 'fa-moon';
+
+        html += `
+            <button type="button" class="theme-toggle-btn" onclick="window.toggleTheme && window.toggleTheme()" title="Toggle Theme" aria-label="Toggle Theme">
+                <i class="fas ${themeIcon}"></i>
+            </button>
+        `;
+
         if (this.isAuthenticated()) {
             const user = this.getUser();
             const displayName = user ? (user.fullName || user.username) : 'Traveller';

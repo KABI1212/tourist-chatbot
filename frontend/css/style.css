@@ -3,43 +3,45 @@
    Modern, Ultra-Premium Travel-Tech Aesthetics
    ========================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap');
 
 :root {
-    /* Brand & Color Tokens */
-    --primary: #2563EB;
-    --primary-hover: #1D4ED8;
-    --primary-light: #3B82F6;
-    --primary-glow: rgba(37, 99, 235, 0.35);
+    /* Brand & Color Tokens — Luxury Travel Editorial (Dark Theme Default) */
+    --primary: #C5A46D; /* Champagne Gold */
+    --primary-hover: #D8BC88;
+    --primary-light: #DFC89B;
+    --primary-glow: rgba(197, 164, 109, 0.35);
 
-    --bg-dark: #0B132B;
-    --bg-surface: #0E1733;
-    --bg-card: #131C38;
-    --bg-card-hover: #1B264F;
-    --bg-sidebar: #080D1D;
-    --bg-input: rgba(255, 255, 255, 0.06);
-    --bg-input-focus: rgba(255, 255, 255, 0.1);
+    --bg-dark: #11110F; /* Charcoal Black */
+    --bg-surface: #191916; /* Dark Surface */
+    --bg-card: #1F1F1B;
+    --bg-card-hover: #272722;
+    --bg-sidebar: #141412;
+    --bg-input: rgba(247, 244, 237, 0.05);
+    --bg-input-focus: rgba(247, 244, 237, 0.09);
 
-    --text-main: #F8FAFC;
-    --text-muted: #94A3B8;
-    --text-dim: #64748B;
-    --text-light: #E2E8F0;
+    --text-main: #F7F4ED; /* Warm Ivory */
+    --text-muted: #B8B2A6; /* Muted Beige */
+    --text-dim: #7C7870;
+    --text-light: #F7F4ED;
 
     --accent-emerald: #10B981;
     --accent-emerald-glow: rgba(16, 185, 129, 0.25);
-    --accent-cyan: #06B6D4;
-    --accent-gold: #F59E0B;
+    --accent-cyan: #38BDF8;
+    --accent-gold: #C5A46D; /* Champagne Gold */
+    --accent-gold-hover: #D8BC88;
+    --accent-gold-glow: rgba(197, 164, 109, 0.28);
     --accent-rose: #F43F5E;
     --accent-purple: #8B5CF6;
 
-    --border: rgba(255, 255, 255, 0.1);
-    --border-light: rgba(255, 255, 255, 0.18);
-    --border-gold: rgba(245, 158, 11, 0.35);
-    --border-focus: #3B82F6;
+    --border: rgba(197, 164, 109, 0.2); /* Soft borders with subtle gold accents */
+    --border-light: rgba(197, 164, 109, 0.32);
+    --border-gold: #C5A46D;
+    --border-focus: #C5A46D;
 
-    /* Spacing & Radii */
-    --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-display: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    /* Typography & Hierarchy */
+    --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
     --radius-sm: 8px;
     --radius-md: 14px;
     --radius-lg: 20px;
@@ -47,12 +49,47 @@
     --radius-full: 9999px;
 
     /* Shadows */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
-    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
-    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 30px rgba(37, 99, 235, 0.25);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.65);
+    --shadow-glow: 0 0 30px rgba(197, 164, 109, 0.22);
 
     --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Luxury Travel Editorial — Light Theme Support */
+[data-theme="light"] {
+    --bg-dark: #F7F4ED; /* Warm Ivory */
+    --bg-surface: #FFFFFF;
+    --bg-card: #FFFFFF;
+    --bg-card-hover: #F2EFE8;
+    --bg-sidebar: #ECE8DF;
+    --bg-input: rgba(17, 17, 15, 0.05);
+    --bg-input-focus: rgba(17, 17, 15, 0.09);
+
+    --text-main: #11110F; /* Charcoal Black */
+    --text-muted: #57544E;
+    --text-dim: #7C7870;
+    --text-light: #11110F;
+
+    --primary: #9E7D47; /* Rich Champagne Gold for contrast on light background */
+    --primary-hover: #866838;
+    --primary-light: #B49258;
+    --primary-glow: rgba(158, 125, 71, 0.3);
+
+    --accent-gold: #9E7D47;
+    --accent-gold-hover: #866838;
+    --accent-gold-glow: rgba(158, 125, 71, 0.25);
+
+    --border: rgba(158, 125, 71, 0.22);
+    --border-light: rgba(158, 125, 71, 0.38);
+    --border-gold: #9E7D47;
+    --border-focus: #9E7D47;
+
+    --shadow-sm: 0 2px 8px rgba(17, 17, 15, 0.06);
+    --shadow-md: 0 8px 24px rgba(17, 17, 15, 0.1);
+    --shadow-lg: 0 16px 40px rgba(17, 17, 15, 0.14);
+    --shadow-glow: 0 0 30px rgba(158, 125, 71, 0.15);
 }
 
 /* Base Resets */
@@ -77,6 +114,12 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, .hero-title, .section-title, .dest-card-title, .editorial-heading {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
 }
 
 a {
@@ -92,9 +135,31 @@ img {
 }
 
 button, input, select, textarea {
-    font-family: inherit;
+    font-family: var(--font-sans);
     font-size: inherit;
     color: inherit;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-full);
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--accent-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 15px;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--bg-input-focus);
+    border-color: var(--accent-gold);
+    transform: rotate(15deg);
 }
 
 /* ==========================================================
@@ -106,13 +171,18 @@ button, input, select, textarea {
     left: 0;
     right: 0;
     height: 72px;
-    background: rgba(11, 19, 43, 0.85);
+    background: rgba(17, 17, 15, 0.88);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
     z-index: 1000;
     display: flex;
     align-items: center;
+    transition: background 0.3s ease;
+}
+
+[data-theme="light"] .navbar {
+    background: rgba(247, 244, 237, 0.88);
 }
 
 .nav-inner {
@@ -131,22 +201,23 @@ button, input, select, textarea {
     gap: 12px;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 22px;
-    color: #fff;
+    font-size: 24px;
+    color: var(--text-main);
     cursor: pointer;
+    letter-spacing: 0.02em;
 }
 
 .logo-badge {
     width: 38px;
     height: 38px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #10B981 0%, #06B6D4 100%);
+    background: linear-gradient(135deg, #C5A46D 0%, #8E6D38 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
+    color: #11110F;
     font-size: 18px;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    box-shadow: 0 4px 14px rgba(197, 164, 109, 0.35);
 }
 
 .nav-links {

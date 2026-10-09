@@ -3,25 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TouristAI — Explore the World with AI</title>
-    <meta name="description" content="TouristAI is your personal AI travel planning assistant. Generate day-by-day itineraries, explore destinations, estimate budgets, and chat with AI.">
-    <!-- Google Fonts -->
+    <title>TouristAI — Luxury AI Travel Planning & Destination Guide</title>
+    <meta name="description" content="TouristAI is an intelligent, luxury travel planning assistant. Generate custom day-by-day itineraries, estimate travel budgets, explore curated destinations, and chat with Google Gemini AI.">
+    <!-- Google Fonts: Cormorant Garamond & DM Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/chatbot.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌴</text></svg>">
+    <!-- Theme Script loaded early to prevent theme flicker -->
+    <script src="js/theme.js"></script>
 </head>
 <body>
 
-    <!-- NAVBAR (Screen 1) -->
+    <!-- NAVBAR (Screen 1 Consistent) -->
     <nav class="navbar" id="mainNavbar">
         <div class="nav-inner">
             <a href="index.html" class="nav-logo" id="brandLogo">
-                <div class="logo-badge"><i class="fas fa-tree"></i></div>
+                <div class="logo-badge"><i class="fas fa-compass"></i></div>
                 <span>TouristAI</span>
             </a>
 
@@ -29,22 +31,29 @@
                 <a href="index.html" class="nav-link active">Home</a>
                 <a href="destinations.html" class="nav-link">Destinations</a>
                 <a href="planner.html" class="nav-link">Plan Trip</a>
-                <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles" style="color:var(--accent-cyan);"></i> AI Chat</a>
+                <a href="#budgetCalculatorSection" class="nav-link">Budget Estimator</a>
+                <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> AI Chat</a>
+                
+                <!-- Theme Toggle Button -->
+                <button type="button" class="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                </button>
+
                 <a href="login.html" class="nav-btn-login">Login</a>
             </div>
         </div>
     </nav>
 
-    <!-- HERO SECTION (Screen 1) -->
+    <!-- HERO SECTION (Screen 1 Luxury Editorial Style) -->
     <header class="hero-travel">
         <div class="hero-travel-content">
-            <div class="hero-pill"><i class="fas fa-sparkles" style="color:var(--accent-emerald);"></i> Powered by Google Gemini AI &amp; Spring Boot</div>
+            <div class="hero-pill"><i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> Powered by Google Gemini AI &amp; Spring Boot 3</div>
             <h1>Explore the World<br>with AI</h1>
-            <p>Your Personal Travel Planning Assistant</p>
+            <p>Your Personal Luxury Travel Planning &amp; Exploration Concierge</p>
 
             <!-- Search Bar inside Hero -->
             <form class="hero-search-bar" id="heroSearchForm" onsubmit="handleHeroSearch(event)">
-                <input type="text" class="hero-search-input" id="heroSearchInput" placeholder="Where do you want to go?" autocomplete="off" required>
+                <input type="text" class="hero-search-input" id="heroSearchInput" placeholder="Where do you want to explore? (e.g. Ooty, Manali, Paris)" autocomplete="off" required>
                 <button type="submit" class="hero-search-btn" id="heroSearchBtn" title="Search destination or plan trip">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -56,25 +65,25 @@
             <div class="quick-card" onclick="window.location.href='destinations.html'" id="cardFindDestinations">
                 <div class="quick-card-icon"><i class="fas fa-map-location-dot"></i></div>
                 <h4>Find Destinations</h4>
-                <span>Explore 44+ curated locations</span>
+                <span>Explore 44+ curated global &amp; Indian destinations</span>
             </div>
 
             <div class="quick-card" onclick="window.location.href='planner.html'" id="cardPlanItinerary">
                 <div class="quick-card-icon"><i class="fas fa-calendar-check"></i></div>
                 <h4>Plan Itinerary</h4>
-                <span>Generate custom day-by-day plan</span>
+                <span>Generate bespoke day-by-day itineraries</span>
             </div>
 
-            <div class="quick-card" onclick="openChatWithPrompt('What are essential travel tips for hill stations and mountains?')" id="cardGetTips">
-                <div class="quick-card-icon"><i class="fas fa-lightbulb"></i></div>
-                <h4>Get Travel Tips</h4>
-                <span>Packing, transit &amp; cultural advice</span>
+            <div class="quick-card" onclick="openChatWithPrompt('Plan a 3-day trip from Chennai to Ooty for 2 people under ₹8,000 including train, stay and food')" id="cardGetTips">
+                <div class="quick-card-icon"><i class="fas fa-bolt"></i></div>
+                <h4>Budget Trip AI</h4>
+                <span>Budget-constrained multi-modal trip plans</span>
             </div>
 
-            <div class="quick-card" onclick="openChatWithPrompt('Provide local guide info with best food, timings and safety rules')" id="cardLocalGuide">
-                <div class="quick-card-icon"><i class="fas fa-compass"></i></div>
-                <h4>Local Guide Info</h4>
-                <span>Authentic food, costs &amp; maps</span>
+            <div class="quick-card" onclick="scrollToBudgetCalculator()" id="cardLocalGuide">
+                <div class="quick-card-icon"><i class="fas fa-calculator"></i></div>
+                <h4>Budget Estimator</h4>
+                <span>Interactive breakdown for Solo, Couples &amp; Groups</span>
             </div>
         </div>
     </header>
@@ -83,10 +92,10 @@
     <section class="section-wrapper">
         <div class="section-header-row">
             <div class="section-title-wrap">
-                <h2>Top Travel Destinations</h2>
-                <p>Discover hand-picked iconic places with live weather, coordinates and attractions</p>
+                <h2>Iconic Destinations</h2>
+                <p>Curated escapes with verified climates, cultural highlights, and transport connections</p>
             </div>
-            <a href="destinations.html" class="btn btn-outline btn-sm">View All Destinations <i class="fas fa-arrow-right"></i></a>
+            <a href="destinations.html" class="btn btn-outline btn-sm">Explore All Destinations <i class="fas fa-arrow-right"></i></a>
         </div>
 
         <div class="dest-cards-grid" id="popularDestGrid">
@@ -94,39 +103,213 @@
         </div>
     </section>
 
-    <!-- MAIN REQUIREMENTS BAR (Matching bottom infographic) -->
+    <!-- INTERACTIVE TRIP BUDGET CALCULATOR SECTION -->
+    <section class="section-wrapper" id="budgetCalculatorSection" style="padding-top:20px; padding-bottom:60px;">
+        <div class="section-header-row">
+            <div class="section-title-wrap">
+                <h2>Interactive Travel Budget Estimator</h2>
+                <p>Plan realistic trip budgets across Solo, Couple, Family, and Group journeys</p>
+            </div>
+            <span class="badge-tag" style="background:rgba(197,164,109,0.15); color:var(--accent-gold); font-size:13px; padding:6px 14px;">
+                <i class="fas fa-coins"></i> Real-Time Cost Engine
+            </span>
+        </div>
+
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px; box-shadow:var(--shadow-md);">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:32px; align-items:start;">
+                
+                <!-- Controls Column -->
+                <div>
+                    <h3 style="font-family:var(--font-display); font-size:22px; color:var(--text-main); margin-bottom:18px;">Trip Parameters</h3>
+                    
+                    <div class="form-field" style="margin-bottom:18px;">
+                        <label style="color:var(--text-muted); font-size:13px; font-weight:600; margin-bottom:8px; display:block;">Target Destination</label>
+                        <select class="form-select" id="calcDestinationSelect" onchange="recalculateBudget()">
+                            <option value="Ooty, Tamil Nadu">Ooty, Tamil Nadu (Hill Station)</option>
+                            <option value="Manali, Himachal Pradesh">Manali, Himachal (Himalayas)</option>
+                            <option value="Goa, India">Goa (Beaches &amp; Heritage)</option>
+                            <option value="Kerala, India">Kerala Backwaters &amp; Munnar</option>
+                            <option value="Jaipur, Rajasthan">Jaipur &amp; Royal Rajasthan</option>
+                            <option value="Paris, France">Paris, France (International)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field" style="margin-bottom:18px;">
+                        <label style="color:var(--text-muted); font-size:13px; font-weight:600; margin-bottom:8px; display:block;">Travelers Count</label>
+                        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;" id="travelerButtons">
+                            <button type="button" class="prompt-chip" onclick="setCalcTravelers(1, this)">Solo (1)</button>
+                            <button type="button" class="prompt-chip active" onclick="setCalcTravelers(2, this)">Couple (2)</button>
+                            <button type="button" class="prompt-chip" onclick="setCalcTravelers(4, this)">Family (4)</button>
+                            <button type="button" class="prompt-chip" onclick="setCalcTravelers(6, this)">Group (6)</button>
+                        </div>
+                    </div>
+
+                    <div class="form-field" style="margin-bottom:18px;">
+                        <label style="color:var(--text-muted); font-size:13px; font-weight:600; margin-bottom:8px; display:flex; justify-content:space-between;">
+                            <span>Trip Duration</span>
+                            <span id="calcDaysDisplay" style="color:var(--accent-gold); font-weight:700;">3 Days / 2 Nights</span>
+                        </label>
+                        <input type="range" id="calcDaysSlider" min="1" max="10" value="3" style="width:100%; accent-color:var(--accent-gold);" oninput="onDaysSliderChange(this.value)">
+                    </div>
+
+                    <div class="form-field">
+                        <label style="color:var(--text-muted); font-size:13px; font-weight:600; margin-bottom:8px; display:block;">Travel Comfort Tier</label>
+                        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+                            <button type="button" class="prompt-chip" onclick="setCalcTier('budget', this)">Budget</button>
+                            <button type="button" class="prompt-chip active" onclick="setCalcTier('standard', this)">Standard</button>
+                            <button type="button" class="prompt-chip" onclick="setCalcTier('luxury', this)">Luxury</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Cost Breakdown Column -->
+                <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:14px;">
+                        <div>
+                            <span style="font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); font-weight:700;">Estimated Total Budget</span>
+                            <div style="font-family:var(--font-display); font-size:32px; font-weight:700; color:var(--accent-gold);" id="calcTotalDisplay">₹16,400</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span style="font-size:12px; color:var(--text-dim);">Per Person</span>
+                            <div style="font-size:18px; font-weight:600; color:var(--text-main);" id="calcPerPersonDisplay">₹8,200</div>
+                        </div>
+                    </div>
+
+                    <!-- Itemized Categories -->
+                    <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;">
+                        <div style="display:flex; justify-content:space-between; color:var(--text-muted);">
+                            <span><i class="fas fa-train" style="width:20px; color:var(--accent-cyan);"></i> Transportation (Round Trip)</span>
+                            <strong style="color:var(--text-main);" id="itemTransit">₹4,200</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; color:var(--text-muted);">
+                            <span><i class="fas fa-hotel" style="width:20px; color:var(--accent-gold);"></i> Accommodation &amp; Stays</span>
+                            <strong style="color:var(--text-main);" id="itemStay">₹5,600</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; color:var(--text-muted);">
+                            <span><i class="fas fa-utensils" style="width:20px; color:#F59E0B;"></i> Food &amp; Dining Allowance</span>
+                            <strong style="color:var(--text-main);" id="itemFood">₹3,800</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; color:var(--text-muted);">
+                            <span><i class="fas fa-ticket-alt" style="width:20px; color:var(--accent-emerald);"></i> Sightseeing &amp; Entry Tickets</span>
+                            <strong style="color:var(--text-main);" id="itemTickets">₹1,200</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; color:var(--text-muted);">
+                            <span><i class="fas fa-taxi" style="width:20px; color:#8B5CF6;"></i> Local Transit (Autos / Cabs)</span>
+                            <strong style="color:var(--text-main);" id="itemLocalTransit">₹1,000</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; color:var(--text-muted); border-top:1px dashed var(--border); padding-top:10px;">
+                            <span><i class="fas fa-shield-halved" style="width:20px; color:var(--accent-rose);"></i> Emergency Contingency (10%)</span>
+                            <strong style="color:var(--text-main);" id="itemContingency">₹1,600</strong>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:24px; display:flex; gap:10px;">
+                        <button type="button" class="btn btn-primary btn-sm" style="flex:1;" onclick="applyBudgetToPlanner()">
+                            <i class="fas fa-wand-magic-sparkles"></i> Plan This Trip
+                        </button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="askAiAboutBudget()">
+                            <i class="fas fa-comment-dots"></i> Chat with AI
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- TRANSPORT & TRANSIT HUB -->
+    <section class="section-wrapper" style="padding-top:20px; padding-bottom:60px;">
+        <div class="section-header-row">
+            <div class="section-title-wrap">
+                <h2>Transportation &amp; Booking Hub</h2>
+                <p>Verified booking services and multi-modal transit links for smooth journey coordination</p>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:20px;">
+            <div class="req-card" style="padding:22px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                    <div class="logo-badge" style="background:rgba(56,189,248,0.15); color:var(--accent-cyan); font-size:16px;"><i class="fas fa-train"></i></div>
+                    <div>
+                        <h4 style="font-size:16px; font-weight:700; color:var(--text-main);">Railway Booking</h4>
+                        <span style="font-size:12px; color:var(--text-muted);">IRCTC &amp; Toy Trains</span>
+                    </div>
+                </div>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Direct express trains, sleeper/3AC bookings, and scenic mountain railways.</p>
+                <a href="https://www.irctc.co.in" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="width:100%; justify-content:center;">Open IRCTC Official <i class="fas fa-external-link-alt"></i></a>
+            </div>
+
+            <div class="req-card" style="padding:22px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                    <div class="logo-badge" style="background:rgba(244,63,94,0.15); color:var(--accent-rose); font-size:16px;"><i class="fas fa-bus"></i></div>
+                    <div>
+                        <h4 style="font-size:16px; font-weight:700; color:var(--text-main);">Bus Transit</h4>
+                        <span style="font-size:12px; color:var(--text-muted);">State &amp; Private Volvos</span>
+                    </div>
+                </div>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Overnight luxury sleepers, SETC, KSRTC, and interstate buses.</p>
+                <a href="https://www.redbus.in" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="width:100%; justify-content:center;">Search on RedBus <i class="fas fa-external-link-alt"></i></a>
+            </div>
+
+            <div class="req-card" style="padding:22px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                    <div class="logo-badge" style="background:rgba(197,164,109,0.15); color:var(--accent-gold); font-size:16px;"><i class="fas fa-plane-departure"></i></div>
+                    <div>
+                        <h4 style="font-size:16px; font-weight:700; color:var(--text-main);">Flight Routes</h4>
+                        <span style="font-size:12px; color:var(--text-muted);">Domestic &amp; Global Flights</span>
+                    </div>
+                </div>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Compare airfares, nearest airport connections, and baggage rules.</p>
+                <a href="https://www.skyscanner.co.in" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="width:100%; justify-content:center;">Compare Skyscanner <i class="fas fa-external-link-alt"></i></a>
+            </div>
+
+            <div class="req-card" style="padding:22px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                    <div class="logo-badge" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); font-size:16px;"><i class="fas fa-hotel"></i></div>
+                    <div>
+                        <h4 style="font-size:16px; font-weight:700; color:var(--text-main);">Stays &amp; Resorts</h4>
+                        <span style="font-size:12px; color:var(--text-muted);">Boutique &amp; Heritage Stays</span>
+                    </div>
+                </div>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Check verified availability, guest reviews, and breakfast deals.</p>
+                <a href="https://www.booking.com" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="width:100%; justify-content:center;">Search Booking.com <i class="fas fa-external-link-alt"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CAPABILITIES STRIP -->
     <section class="requirements-strip">
         <div style="max-width:1360px; margin:0 auto 32px; text-align:center;">
-            <h2 style="font-family:var(--font-display); font-size:26px; color:#fff; margin-bottom:8px;">Main Capabilities of TouristAI</h2>
-            <p style="color:var(--text-muted); font-size:14px;">End-to-end intelligence built for modern travelers</p>
+            <h2 style="font-family:var(--font-display); font-size:28px; color:var(--text-main); margin-bottom:8px;">Core Capabilities of TouristAI</h2>
+            <p style="color:var(--text-muted); font-size:14px;">Enterprise full-stack travel intelligence built with Spring Boot 3 &amp; Gemini</p>
         </div>
 
         <div class="req-grid">
             <!-- 1. User Management -->
             <div class="req-card">
                 <div class="req-head">
-                    <div class="req-icon" style="background:rgba(245,158,11,0.15); color:var(--accent-gold);"><i class="fas fa-user-shield"></i></div>
+                    <div class="req-icon" style="background:rgba(197,164,109,0.15); color:var(--accent-gold);"><i class="fas fa-user-shield"></i></div>
                     <h4>1. User Management</h4>
                 </div>
                 <ul class="req-list">
-                    <li><i class="fas fa-check"></i> User Registration &amp; Login</li>
-                    <li><i class="fas fa-check"></i> Profile Management</li>
-                    <li><i class="fas fa-check"></i> Secure JWT Authentication</li>
-                    <li><i class="fas fa-check"></i> Save Trips &amp; Chat History</li>
+                    <li><i class="fas fa-check"></i> User Registration &amp; Sign In</li>
+                    <li><i class="fas fa-check"></i> Profile &amp; Preferences</li>
+                    <li><i class="fas fa-check"></i> Stateless JWT Authentication</li>
+                    <li><i class="fas fa-check"></i> Saved Trips &amp; History Persistence</li>
                 </ul>
             </div>
 
             <!-- 2. AI Chat Assistant -->
             <div class="req-card">
                 <div class="req-head">
-                    <div class="req-icon" style="background:rgba(37,99,235,0.15); color:var(--primary-light);"><i class="fas fa-robot"></i></div>
-                    <h4>2. AI Chat Assistant</h4>
+                    <div class="req-icon" style="background:rgba(56,189,248,0.15); color:var(--accent-cyan);"><i class="fas fa-robot"></i></div>
+                    <h4>2. AI Travel Assistant</h4>
                 </div>
                 <ul class="req-list">
-                    <li><i class="fas fa-check"></i> Natural Language Travel Chat</li>
-                    <li><i class="fas fa-check"></i> Destination Recommendations</li>
-                    <li><i class="fas fa-check"></i> Itinerary Suggestions</li>
-                    <li><i class="fas fa-check"></i> Multi-Turn Memory</li>
+                    <li><i class="fas fa-check"></i> Natural-Language Conversations</li>
+                    <li><i class="fas fa-check"></i> Strict Budget Awareness (e.g. under ₹8K)</li>
+                    <li><i class="fas fa-check"></i> Multi-turn Conversation Memory</li>
+                    <li><i class="fas fa-check"></i> Graceful Fallback Engine</li>
                 </ul>
             </div>
 
@@ -134,13 +317,13 @@
             <div class="req-card">
                 <div class="req-head">
                     <div class="req-icon" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald);"><i class="fas fa-map-marked-alt"></i></div>
-                    <h4>3. Destinations &amp; Places</h4>
+                    <h4>3. Destination Discovery</h4>
                 </div>
                 <ul class="req-list">
-                    <li><i class="fas fa-check"></i> Instant Search &amp; Filter</li>
-                    <li><i class="fas fa-check"></i> Curated Attractions &amp; Highlights</li>
-                    <li><i class="fas fa-check"></i> Photos, Ratings &amp; Reviews</li>
-                    <li><i class="fas fa-check"></i> Google Maps &amp; Coordinates</li>
+                    <li><i class="fas fa-check"></i> 44+ Verified Global &amp; Indian Places</li>
+                    <li><i class="fas fa-check"></i> Climate, Best Time &amp; Ratings</li>
+                    <li><i class="fas fa-check"></i> Curated Attractions &amp; Photography</li>
+                    <li><i class="fas fa-check"></i> Coordinates &amp; Map Pins</li>
                 </ul>
             </div>
 
@@ -148,55 +331,13 @@
             <div class="req-card">
                 <div class="req-head">
                     <div class="req-icon" style="background:rgba(244,63,94,0.15); color:var(--accent-rose);"><i class="fas fa-calendar-alt"></i></div>
-                    <h4>4. Trip Planning &amp; Itinerary</h4>
+                    <h4>4. Custom Trip Planner</h4>
                 </div>
                 <ul class="req-list">
-                    <li><i class="fas fa-check"></i> Custom AI Itinerary Generation</li>
-                    <li><i class="fas fa-check"></i> Dates, Travelers &amp; Budget Tiers</li>
-                    <li><i class="fas fa-check"></i> Day-wise Travel Timeline</li>
-                    <li><i class="fas fa-check"></i> Export &amp; Download as PDF</li>
-                </ul>
-            </div>
-
-            <!-- 5. Travel Services Info -->
-            <div class="req-card">
-                <div class="req-head">
-                    <div class="req-icon" style="background:rgba(139,92,246,0.15); color:var(--accent-purple);"><i class="fas fa-hotel"></i></div>
-                    <h4>5. Travel Services Info</h4>
-                </div>
-                <ul class="req-list">
-                    <li><i class="fas fa-check"></i> Hotel &amp; Resort Suggestions</li>
-                    <li><i class="fas fa-check"></i> Transportation Options</li>
-                    <li><i class="fas fa-check"></i> Local Food &amp; Restaurants</li>
-                    <li><i class="fas fa-check"></i> Realistic Cost Breakdown</li>
-                </ul>
-            </div>
-
-            <!-- 6. Travel Tips & Support -->
-            <div class="req-card">
-                <div class="req-head">
-                    <div class="req-icon" style="background:rgba(6,182,212,0.15); color:var(--accent-cyan);"><i class="fas fa-lightbulb"></i></div>
-                    <h4>6. Travel Tips &amp; Support</h4>
-                </div>
-                <ul class="req-list">
-                    <li><i class="fas fa-check"></i> Best Time to Visit &amp; Seasons</li>
-                    <li><i class="fas fa-check"></i> Weather Information</li>
-                    <li><i class="fas fa-check"></i> Travel Do's &amp; Don'ts</li>
-                    <li><i class="fas fa-check"></i> 24/7 AI Travel Planning</li>
-                </ul>
-            </div>
-
-            <!-- 7. System & Technical -->
-            <div class="req-card">
-                <div class="req-head">
-                    <div class="req-icon" style="background:rgba(59,130,246,0.15); color:#60A5FA;"><i class="fas fa-cogs"></i></div>
-                    <h4>7. System &amp; Technical</h4>
-                </div>
-                <ul class="req-list">
-                    <li><i class="fas fa-check"></i> Responsive Web UI</li>
-                    <li><i class="fas fa-check"></i> Java 17 + Spring Boot 3.3.4</li>
-                    <li><i class="fas fa-check"></i> MongoDB Atlas Database</li>
-                    <li><i class="fas fa-check"></i> Google Gemini AI Engine</li>
+                    <li><i class="fas fa-check"></i> 4-Step Interactive Stepper</li>
+                    <li><i class="fas fa-check"></i> Morning, Afternoon &amp; Evening Plans</li>
+                    <li><i class="fas fa-check"></i> Instant Day-wise Timeline</li>
+                    <li><i class="fas fa-check"></i> Printable / PDF Export Ready</li>
                 </ul>
             </div>
         </div>
@@ -206,11 +347,11 @@
     <footer>
         <div class="footer-inner">
             <div class="nav-logo">
-                <div class="logo-badge"><i class="fas fa-tree"></i></div>
+                <div class="logo-badge"><i class="fas fa-compass"></i></div>
                 <span>TouristAI</span>
             </div>
             <div class="footer-copy">
-                &copy; 2026 TouristAI. Built with Java 17, Spring Boot, MongoDB Atlas &amp; Google Gemini AI.
+                &copy; 2026 TouristAI. Built with Java 17, Spring Boot 3.3.4, MongoDB Atlas &amp; Google Gemini AI.
             </div>
         </div>
     </footer>
@@ -220,118 +361,172 @@
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        function handleHeroSearch(e) {
-            e.preventDefault();
-            const q = document.getElementById('heroSearchInput').value.trim();
-            if (!q) return;
-            // Direct to destinations search or planner
-            window.location.href = `destinations.html?search=${encodeURIComponent(q)}`;
-        }
+        let currentCalcTravelers = 2;
+        let currentCalcDays = 3;
+        let currentCalcTier = 'standard';
 
-        function openChatWithPrompt(prompt) {
-            localStorage.setItem('pending_chat_prompt', prompt);
-            window.location.href = 'chatbot.html';
-        }
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadPopularDestinations();
+            recalculateBudget();
+        });
 
-        async function loadFeaturedDestinations() {
+        async function loadPopularDestinations() {
             const container = document.getElementById('popularDestGrid');
-            if (!container) return;
-
-            const fallbackList = [
-                {
-                    name: 'Ooty',
-                    country: 'India',
-                    famousFor: 'Queen of Hill Stations, Tea Gardens, Toy Train',
-                    rating: 4.8,
-                    reviewCount: '3.4K',
-                    weather: '18°C Mostly Cloudy',
-                    images: ['https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800']
-                },
-                {
-                    name: 'Manali',
-                    country: 'India',
-                    famousFor: 'Solang Valley, Snow Sports, Rohtang Pass',
-                    rating: 4.8,
-                    reviewCount: '4.2K',
-                    weather: '14°C Sunny & Crisp',
-                    images: ['https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800']
-                },
-                {
-                    name: 'Kerala',
-                    country: 'India',
-                    famousFor: 'Backwaters, Alleppey Houseboats, Munnar',
-                    rating: 4.9,
-                    reviewCount: '5.1K',
-                    weather: '26°C Tropical Warmth',
-                    images: ['https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800']
-                },
-                {
-                    name: 'Goa',
-                    country: 'India',
-                    famousFor: 'Golden Beaches, Nightlife, Water Sports',
-                    rating: 4.7,
-                    reviewCount: '4.8K',
-                    weather: '28°C Sunny Coastal',
-                    images: ['https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800']
-                },
-                {
-                    name: 'Paris',
-                    country: 'France',
-                    famousFor: 'Eiffel Tower, Louvre Museum, Gastronomy',
-                    rating: 4.8,
-                    reviewCount: '6.2K',
-                    weather: '19°C Pleasant',
-                    images: ['https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800']
-                },
-                {
-                    name: 'Taj Mahal',
-                    country: 'India',
-                    famousFor: 'Mughal Architecture, Wonder of the World',
-                    rating: 4.9,
-                    reviewCount: '7.8K',
-                    weather: 'Sunny & Historic',
-                    images: ['https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800']
-                }
-            ];
-
             try {
                 const res = await Api.get('/destinations');
-                const list = (Array.isArray(res) && res.length > 0) ? res.slice(0, 6) : fallbackList;
-                renderCards(list);
-            } catch (err) {
-                renderCards(fallbackList);
-            }
-
-            function renderCards(destList) {
-                container.innerHTML = destList.map(d => `
-                    <div class="dest-card" onclick="window.location.href='destinations.html?view=${encodeURIComponent(d.name)}'">
-                        <div class="dest-card-img-wrap">
-                            <img class="dest-card-img" src="${(d.images && d.images[0]) || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'}" alt="${d.name}" loading="lazy">
-                            <div class="dest-card-badge">
-                                <i class="fas fa-star" style="color:var(--accent-gold);"></i> ${d.rating || '4.8'}
-                            </div>
-                        </div>
-                        <div class="dest-card-body">
-                            <div class="dest-card-title">
-                                <span>${d.name}</span>
-                            </div>
-                            <div class="dest-card-location">
-                                <i class="fas fa-location-dot"></i> ${d.country || 'Global'}
-                            </div>
-                            <p class="dest-card-desc">${d.famousFor || d.description || 'Scenic highlights and cultural treasures.'}</p>
-                            <div class="dest-card-footer">
-                                <div class="rating-pill">
-                                    <i class="fas fa-cloud-sun"></i> <span>${d.weather || 'Pleasant'}</span>
-                                </div>
-                                <span style="font-size:13px; font-weight:600; color:var(--primary-light);">Explore <i class="fas fa-arrow-right"></i></span>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+                const list = (Array.isArray(res) && res.length > 0) ? res.slice(0, 6) : getFallbackPopular();
+                renderPopularCards(container, list);
+            } catch (e) {
+                renderPopularCards(container, getFallbackPopular());
             }
         }
 
-        document.addEventListener('DOMContentLoaded', loadFeaturedDestinations);
+        function getFallbackPopular() {
+            return [
+                { name: "Ooty", country: "India", famousFor: "Queen of Hill Stations, Tea Gardens, Toy Train", weather: "18°C", rating: 4.8, images: ["https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800"] },
+                { name: "Manali", country: "India", famousFor: "Snow Peaks, Solang Valley, Rohtang Pass", weather: "12°C", rating: 4.7, images: ["https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800"] },
+                { name: "Kerala Backwaters", country: "India", famousFor: "Houseboats, Alleppey Lagoons & Munnar Hills", weather: "26°C", rating: 4.9, images: ["https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800"] },
+                { name: "Goa", country: "India", famousFor: "Pristine Beaches, Portuguese Forts & Seafood", weather: "29°C", rating: 4.6, images: ["https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800"] },
+                { name: "Paris", country: "France", famousFor: "Eiffel Tower, Louvre Museum, French Bistros", weather: "16°C", rating: 4.9, images: ["https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800"] },
+                { name: "Kyoto", country: "Japan", famousFor: "Historic Shrines, Bamboo Groves, Geisha Culture", weather: "20°C", rating: 4.9, images: ["https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800"] }
+            ];
+        }
+
+        function renderPopularCards(container, list) {
+            container.innerHTML = '';
+            list.forEach(dest => {
+                const card = document.createElement('div');
+                card.className = 'dest-card';
+                const img = (dest.images && dest.images.length > 0) ? dest.images[0] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800';
+                card.innerHTML = `
+                    <div class="dest-card-img-wrap">
+                        <img src="${img}" alt="${dest.name}" class="dest-card-img" loading="lazy">
+                        <div class="dest-card-badge">
+                            <i class="fas fa-star" style="color:var(--accent-gold);"></i> ${dest.rating || '4.8'}
+                        </div>
+                    </div>
+                    <div class="dest-card-body">
+                        <div class="dest-card-title">
+                            <span>${dest.name}</span>
+                            <span style="font-size:12px; color:var(--accent-gold); font-weight:600;">${dest.weather || 'Pleasant'}</span>
+                        </div>
+                        <div class="dest-card-location">
+                            <i class="fas fa-location-dot"></i> ${dest.country || 'India'}
+                        </div>
+                        <p style="font-size:13.5px; color:var(--text-muted); margin-bottom:16px; flex:1;">
+                            ${dest.famousFor || dest.description || 'Scenic highlights and cultural experiences.'}
+                        </p>
+                        <div style="display:flex; gap:10px;">
+                            <a href="destinations.html?view=${encodeURIComponent(dest.name)}" class="btn btn-outline btn-sm" style="flex:1; justify-content:center;">View Details</a>
+                            <a href="planner.html?dest=${encodeURIComponent(dest.name)}" class="btn btn-primary btn-sm" style="flex:1; justify-content:center;">Plan Trip</a>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function handleHeroSearch(e) {
+            e.preventDefault();
+            const val = document.getElementById('heroSearchInput').value.trim();
+            if (val) {
+                window.location.href = `destinations.html?search=${encodeURIComponent(val)}`;
+            }
+        }
+
+        function openChatWithPrompt(promptText) {
+            window.location.href = `chatbot.html?prompt=${encodeURIComponent(promptText)}`;
+        }
+
+        function scrollToBudgetCalculator() {
+            document.getElementById('budgetCalculatorSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /* Budget Estimator Logic */
+        function setCalcTravelers(count, btn) {
+            currentCalcTravelers = count;
+            document.querySelectorAll('#travelerButtons button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            recalculateBudget();
+        }
+
+        function onDaysSliderChange(val) {
+            currentCalcDays = parseInt(val);
+            document.getElementById('calcDaysDisplay').textContent = `${val} Days / ${val - 1} Nights`;
+            recalculateBudget();
+        }
+
+        function setCalcTier(tier, btn) {
+            currentCalcTier = tier;
+            const parent = btn.parentElement;
+            parent.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            recalculateBudget();
+        }
+
+        function recalculateBudget() {
+            const dest = document.getElementById('calcDestinationSelect').value;
+            const isInternational = dest.includes('Paris') || dest.includes('International');
+            
+            let baseDailyStay = 2200;
+            let baseDailyFood = 800;
+            let baseTransit = 1800;
+            let baseTickets = 400;
+            let baseLocalTransit = 400;
+
+            if (currentCalcTier === 'budget') {
+                baseDailyStay = 1200;
+                baseDailyFood = 500;
+                baseTransit = 900;
+                baseTickets = 250;
+                baseLocalTransit = 250;
+            } else if (currentCalcTier === 'luxury') {
+                baseDailyStay = 6500;
+                baseDailyFood = 2200;
+                baseTransit = 5000;
+                baseTickets = 1000;
+                baseLocalTransit = 1200;
+            }
+
+            if (isInternational) {
+                baseDailyStay *= 3.5;
+                baseDailyFood *= 3.5;
+                baseTransit = 28000;
+            }
+
+            const roomsNeeded = Math.ceil(currentCalcTravelers / 2);
+            const totalStay = baseDailyStay * (currentCalcDays - 1 > 0 ? currentCalcDays - 1 : 1) * roomsNeeded;
+            const totalFood = baseDailyFood * currentCalcDays * currentCalcTravelers;
+            const totalTransit = baseTransit * currentCalcTravelers;
+            const totalTickets = baseTickets * currentCalcDays * currentCalcTravelers;
+            const totalLocalTransit = baseLocalTransit * currentCalcDays * (Math.ceil(currentCalcTravelers / 3));
+
+            const subTotal = totalStay + totalFood + totalTransit + totalTickets + totalLocalTransit;
+            const contingency = Math.round(subTotal * 0.10);
+            const grandTotal = subTotal + contingency;
+            const perPerson = Math.round(grandTotal / currentCalcTravelers);
+
+            document.getElementById('calcTotalDisplay').textContent = '₹' + grandTotal.toLocaleString('en-IN');
+            document.getElementById('calcPerPersonDisplay').textContent = '₹' + perPerson.toLocaleString('en-IN');
+            document.getElementById('itemTransit').textContent = '₹' + totalTransit.toLocaleString('en-IN');
+            document.getElementById('itemStay').textContent = '₹' + totalStay.toLocaleString('en-IN');
+            document.getElementById('itemFood').textContent = '₹' + totalFood.toLocaleString('en-IN');
+            document.getElementById('itemTickets').textContent = '₹' + totalTickets.toLocaleString('en-IN');
+            document.getElementById('itemLocalTransit').textContent = '₹' + totalLocalTransit.toLocaleString('en-IN');
+            document.getElementById('itemContingency').textContent = '₹' + contingency.toLocaleString('en-IN');
+        }
+
+        function applyBudgetToPlanner() {
+            const dest = document.getElementById('calcDestinationSelect').value.split(',')[0];
+            window.location.href = `planner.html?dest=${encodeURIComponent(dest)}&travelers=${currentCalcTravelers}&days=${currentCalcDays}&budget=${currentCalcTier}`;
+        }
+
+        function askAiAboutBudget() {
+            const dest = document.getElementById('calcDestinationSelect').value;
+            const total = document.getElementById('calcTotalDisplay').textContent;
+            const prompt = `Plan a ${currentCalcDays}-day trip to ${dest} for ${currentCalcTravelers} travelers on a ${currentCalcTier} budget around ${total}. Include transport, stay, food, and day-wise activities.`;
+            openChatWithPrompt(prompt);
+        }
     </script>
 </body>
 </html>

@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login — TouristAI</title>
-    <!-- Google Fonts -->
+    <title>Sign In — TouristAI</title>
+    <!-- Google Fonts: Cormorant Garamond & DM Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/chatbot.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌴</text></svg>">
+    <!-- Theme Switcher -->
+    <script src="js/theme.js"></script>
 </head>
 <body style="background:var(--bg-dark); display:flex; flex-direction:column; min-height:100vh;">
 
@@ -20,13 +22,18 @@
     <nav class="navbar">
         <div class="nav-inner">
             <a href="index.html" class="nav-logo">
-                <div class="logo-badge"><i class="fas fa-tree"></i></div>
+                <div class="logo-badge"><i class="fas fa-compass"></i></div>
                 <span>TouristAI</span>
             </a>
             <div class="nav-links">
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="destinations.html" class="nav-link">Destinations</a>
                 <a href="planner.html" class="nav-link">Plan Trip</a>
+                
+                <!-- Theme Toggle Button -->
+                <button type="button" class="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                </button>
             </div>
         </div>
     </nav>
@@ -36,9 +43,9 @@
         <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px; max-width:440px; width:100%; box-shadow:var(--shadow-lg);">
             
             <div style="text-align:center; margin-bottom:28px;">
-                <div class="logo-badge" style="margin:0 auto 14px; width:46px; height:46px; font-size:22px;"><i class="fas fa-tree"></i></div>
-                <h2 style="font-family:var(--font-display); font-size:26px; color:#fff; font-weight:700; margin-bottom:6px;">Welcome to TouristAI</h2>
-                <p style="color:var(--text-muted); font-size:14px;">Sign in to save custom trips, manage itineraries, and view history.</p>
+                <div class="logo-badge" style="margin:0 auto 14px; width:46px; height:46px; font-size:22px;"><i class="fas fa-compass"></i></div>
+                <h2 style="font-family:var(--font-display); font-size:28px; color:var(--text-main); font-weight:700; margin-bottom:6px;">Welcome Back</h2>
+                <p style="color:var(--text-muted); font-size:14px;">Sign in to access saved journeys, personalized itineraries, and travel history.</p>
             </div>
 
             <div id="authAlert" style="display:none; padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:18px;"></div>
@@ -68,7 +75,7 @@
             </form>
 
             <div style="text-align:center; margin-top:24px; font-size:13.5px; color:var(--text-muted);">
-                Don't have an account? <a href="register.html" style="color:var(--primary-light); font-weight:600;">Create Account</a>
+                Don't have an account? <a href="register.html" style="color:var(--accent-gold); font-weight:600;">Create Account</a>
             </div>
         </div>
     </main>
