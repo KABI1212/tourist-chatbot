@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -62,4 +63,16 @@ public class Destination {
     private String officialWebsite;
 
     private String travelTip;
+
+    private Double rating;
+
+    private Integer reviewCount;
+
+    private List<Map<String, Object>> attractions; // name, rating, reviews, image, description
+
+    private List<Map<String, Object>> hotels;      // name, tier, pricePerNight, rating, image
+
+    private List<Map<String, Object>> localFoods;   // name, type, description, price
+
+    private List<String> travelTipsList;
 }

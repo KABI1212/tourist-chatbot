@@ -3,144 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register — Tourist Guide</title>
+    <title>Create Account — TouristAI</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/chatbot.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌴</text></svg>">
 </head>
-<body>
+<body style="background:var(--bg-dark); display:flex; flex-direction:column; min-height:100vh;">
 
-    <div class="auth-page">
-        <div class="auth-overlay"></div>
-        <div class="auth-card wide">
-            <div class="auth-header">
-                <a href="index.html" class="nav-logo" style="justify-content:center; margin-bottom:16px;">
-                    <div class="logo-badge"><i class="fas fa-compass"></i></div>
-                    <span class="logo-text">Tourist Guide</span>
-                </a>
-                <h2>Create Your Account</h2>
-                <p>Join thousands of global travellers exploring smarter with our Spring Boot & Gemini AI platform.</p>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <div class="logo-badge"><i class="fas fa-tree"></i></div>
+                <span>TouristAI</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="destinations.html" class="nav-link">Destinations</a>
+                <a href="planner.html" class="nav-link">Plan Trip</a>
+                <a href="login.html" class="nav-link">Sign In</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- AUTH CARD CONTAINER -->
+    <main style="flex:1; display:flex; align-items:center; justify-content:center; padding:110px 20px 50px;">
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px; max-width:520px; width:100%; box-shadow:var(--shadow-lg);">
+            
+            <div style="text-align:center; margin-bottom:28px;">
+                <div class="logo-badge" style="margin:0 auto 14px; width:46px; height:46px; font-size:22px;"><i class="fas fa-tree"></i></div>
+                <h2 style="font-family:var(--font-display); font-size:26px; color:#fff; font-weight:700; margin-bottom:6px;">Join TouristAI</h2>
+                <p style="color:var(--text-muted); font-size:14px;">Create your personal account to save custom itineraries, bookmark destinations, and plan trips effortlessly.</p>
             </div>
 
-            <div class="auth-error" id="authError"></div>
-            <div class="auth-success" id="authSuccess"></div>
+            <div id="authAlert" style="display:none; padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:18px;"></div>
 
-            <form id="registerForm">
-                <div class="form-row">
-                    <div class="form-group">
+            <form id="registerForm" onsubmit="handleRegisterSubmit(event)">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                    <div class="form-field">
                         <label for="username"><i class="fas fa-user"></i> Username *</label>
-                        <input type="text" id="username" class="form-control" placeholder="johndoe" required>
+                        <input type="text" id="username" class="form-input" placeholder="traveler12" required autofocus>
                     </div>
 
-                    <div class="form-group">
-                        <label for="email"><i class="fas fa-envelope"></i> Email Address *</label>
-                        <input type="email" id="email" class="form-control" placeholder="john@example.com" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
+                    <div class="form-field">
                         <label for="fullName"><i class="fas fa-id-card"></i> Full Name</label>
-                        <input type="text" id="fullName" class="form-control" placeholder="John Doe">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="phone"><i class="fas fa-phone"></i> Phone Number</label>
-                        <input type="tel" id="phone" class="form-control" placeholder="+1 (555) 000-0000">
+                        <input type="text" id="fullName" class="form-input" placeholder="Alex Morgan">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="address"><i class="fas fa-map-marker-alt"></i> Home City / Address</label>
-                    <input type="text" id="address" class="form-control" placeholder="City, Country">
+                <div class="form-field">
+                    <label for="email"><i class="fas fa-envelope"></i> Email Address *</label>
+                    <input type="email" id="email" class="form-input" placeholder="alex@example.com" required>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="password"><i class="fas fa-lock"></i> Password * (min 6 characters)</label>
-                        <input type="password" id="password" class="form-control" placeholder="••••••••" minlength="6" required>
+                <div class="form-field">
+                    <label for="address"><i class="fas fa-map-marker-alt"></i> Home City / Country</label>
+                    <input type="text" id="address" class="form-input" placeholder="Chennai, India">
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                    <div class="form-field">
+                        <label for="password"><i class="fas fa-lock"></i> Password *</label>
+                        <input type="password" id="password" class="form-input" placeholder="••••••••" minlength="6" required>
                     </div>
 
-                    <div class="form-group">
-                        <label for="confirmPassword"><i class="fas fa-check-double"></i> Confirm Password *</label>
-                        <input type="password" id="confirmPassword" class="form-control" placeholder="••••••••" minlength="6" required>
+                    <div class="form-field">
+                        <label for="confirmPassword"><i class="fas fa-check-double"></i> Confirm *</label>
+                        <input type="password" id="confirmPassword" class="form-input" placeholder="••••••••" minlength="6" required>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" id="submitBtn" style="width:100%; margin-top:10px;">
-                    <i class="fas fa-user-plus"></i> Complete Registration
+                <button type="submit" class="btn btn-primary" id="registerSubmitBtn" style="width:100%; margin-top:12px;">
+                    <i class="fas fa-user-plus"></i> Create Account
                 </button>
             </form>
 
-            <div class="auth-footer">
-                Already registered? <a href="login.html">Sign In Here</a>
+            <div style="text-align:center; margin-top:24px; font-size:13.5px; color:var(--text-muted);">
+                Already have an account? <a href="login.html" style="color:var(--primary-light); font-weight:600;">Sign In</a>
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- SCRIPTS -->
+    <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('registerForm');
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const errBox = document.getElementById('authError');
-                const succBox = document.getElementById('authSuccess');
-                const btn = document.getElementById('submitBtn');
+        async function handleRegisterSubmit(e) {
+            e.preventDefault();
+            const alertBox = document.getElementById('authAlert');
+            alertBox.style.display = 'none';
 
-                errBox.style.display = 'none';
-                succBox.style.display = 'none';
+            const username = document.getElementById('username').value.trim();
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const btn = document.getElementById('registerSubmitBtn');
 
-                const username = document.getElementById('username').value.trim();
-                const email = document.getElementById('email').value.trim();
-                const fullName = document.getElementById('fullName').value.trim();
-                const phone = document.getElementById('phone').value.trim();
-                const address = document.getElementById('address').value.trim();
-                const password = document.getElementById('password').value;
-                const confirmPassword = document.getElementById('confirmPassword').value;
+            if (password !== confirmPassword) {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(244,63,94,0.15)';
+                alertBox.style.color = '#F43F5E';
+                alertBox.textContent = 'Passwords do not match.';
+                return;
+            }
 
-                if (password !== confirmPassword) {
-                    errBox.textContent = 'Passwords do not match.';
-                    errBox.style.display = 'block';
-                    return;
-                }
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account…';
 
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering…';
+            try {
+                await Auth.register({
+                    username,
+                    email,
+                    fullName,
+                    address,
+                    password
+                });
 
-                try {
-                    await Auth.register({
-                        username,
-                        email,
-                        fullName,
-                        phone,
-                        address,
-                        password
-                    });
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(16,185,129,0.15)';
+                alertBox.style.color = '#34D399';
+                alertBox.textContent = 'Registration successful! Taking you to login…';
 
-                    succBox.textContent = 'Registration successful! Taking you to your travel hub…';
-                    succBox.style.display = 'block';
-
-                    setTimeout(() => {
-                        window.location.href = 'chatbot.html';
-                    }, 800);
-                } catch (err) {
-                    errBox.textContent = err.message || 'Registration failed. Please check your details.';
-                    errBox.style.display = 'block';
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-user-plus"></i> Complete Registration';
-                }
-            });
-        });
+                setTimeout(() => {
+                    window.location.href = 'login.html?registered=true';
+                }, 800);
+            } catch (err) {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(244,63,94,0.15)';
+                alertBox.style.color = '#F43F5E';
+                alertBox.textContent = err.message || 'Registration failed. Please check your details.';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+            }
+        }
     </script>
 </body>
 </html>

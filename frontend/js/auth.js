@@ -83,25 +83,37 @@ const Auth = {
         const authContainer = document.getElementById('navAuthLinks');
         if (!authContainer) return;
 
+        const currentPath = window.location.pathname;
+        const isHome = currentPath.endsWith('index.html') || currentPath.endsWith('/') || currentPath === '';
+        const isDest = currentPath.endsWith('destinations.html');
+        const isPlanner = currentPath.endsWith('planner.html');
+        const isChat = currentPath.endsWith('chatbot.html');
+        const isDash = currentPath.endsWith('dashboard.html');
+
+        let html = `
+            <a href="index.html" class="nav-link ${isHome ? 'active' : ''}">Home</a>
+            <a href="destinations.html" class="nav-link ${isDest ? 'active' : ''}">Destinations</a>
+            <a href="planner.html" class="nav-link ${isPlanner ? 'active' : ''}">Plan Trip</a>
+            <a href="chatbot.html" class="nav-link ${isChat ? 'active' : ''}"><i class="fas fa-sparkles" style="color:var(--accent-cyan);"></i> AI Chat</a>
+        `;
+
         if (this.isAuthenticated()) {
             const user = this.getUser();
             const displayName = user ? (user.fullName || user.username) : 'Traveller';
-            authContainer.innerHTML = `
-                <a href="chatbot.html" class="nav-link cta"><i class="fas fa-robot"></i> AI Chatbot</a>
-                <a href="destinations.html" class="nav-link"><i class="fas fa-map-marked-alt"></i> Destinations</a>
-                <div class="user-profile-menu">
-                    <div class="user-avatar">${displayName.charAt(0).toUpperCase()}</div>
+            html += `
+                <a href="dashboard.html" class="user-profile-menu ${isDash ? 'active' : ''}" title="View Saved Trips & Profile">
+                    <div class="user-avatar-pill">${displayName.charAt(0).toUpperCase()}</div>
                     <span>${displayName}</span>
-                </div>
-                <a href="javascript:void(0)" onclick="Auth.logout()" class="nav-link" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+                </a>
+                <a href="javascript:void(0)" onclick="Auth.logout()" class="nav-link" title="Sign Out"><i class="fas fa-sign-out-alt"></i></a>
             `;
         } else {
-            authContainer.innerHTML = `
-                <a href="destinations.html" class="nav-link"><i class="fas fa-compass"></i> Explore</a>
-                <a href="login.html" class="nav-link"><i class="fas fa-sign-in-alt"></i> Login</a>
-                <a href="register.html" class="nav-link cta"><i class="fas fa-user-plus"></i> Register</a>
+            html += `
+                <a href="login.html" class="nav-btn-login">Login</a>
             `;
         }
+
+        authContainer.innerHTML = html;
     },
 
     requireAuth() {

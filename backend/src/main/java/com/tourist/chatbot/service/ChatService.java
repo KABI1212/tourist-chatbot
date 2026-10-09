@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,32 +35,35 @@ public class ChatService {
     private final UserService userService;
 
     public ChatResponse processMessage(ChatRequest request, String username) {
-        User user = userService.getUserByUsername(username);
-        String userId = user.getId();
+        User user = (username != null && !username.isBlank()) ? userService.getUserByUsername(username) : null;
+        String userId = user != null ? user.getId() : null;
         String message = request.getMessage().trim();
 
-        // 1. Get or create Chat session
-        Chat chat;
-        if (request.getChatId() != null && !request.getChatId().trim().isEmpty()) {
-            chat = chatRepository.findById(request.getChatId())
-                    .filter(c -> c.getUserId().equals(userId))
-                    .orElseGet(() -> createNewChat(userId, message));
-        } else {
-            chat = createNewChat(userId, message);
+        // 1. Get or create Chat session if authenticated
+        Chat chat = null;
+        List<ChatMessage> conversationHistory = new ArrayList<>();
+        if (userId != null) {
+            if (request.getChatId() != null && !request.getChatId().trim().isEmpty()) {
+                chat = chatRepository.findById(request.getChatId())
+                        .filter(c -> c.getUserId().equals(userId))
+                        .orElseGet(() -> createNewChat(userId, message));
+            } else {
+                chat = createNewChat(userId, message);
+            }
+
+            // 2. Persist User Message
+            ChatMessage userMsg = ChatMessage.builder()
+                    .chatId(chat.getId())
+                    .userId(userId)
+                    .role("user")
+                    .content(message)
+                    .source("user")
+                    .build();
+            chatMessageRepository.save(userMsg);
+
+            // Fetch conversation history for full multi-turn context
+            conversationHistory = chatMessageRepository.findByChatId(chat.getId(), Sort.by(Sort.Direction.ASC, "timestamp"));
         }
-
-        // 2. Persist User Message
-        ChatMessage userMsg = ChatMessage.builder()
-                .chatId(chat.getId())
-                .userId(userId)
-                .role("user")
-                .content(message)
-                .source("user")
-                .build();
-        chatMessageRepository.save(userMsg);
-
-        // Fetch conversation history for full multi-turn context
-        List<ChatMessage> conversationHistory = chatMessageRepository.findByChatId(chat.getId(), Sort.by(Sort.Direction.ASC, "timestamp"));
 
         // 3. Check for matching curated destination in catalog
         Optional<Destination> matchedDest = findDestinationInMessage(message);
@@ -67,20 +71,22 @@ public class ChatService {
         // 4. Generate AI response from Google Gemini with full conversation context
         String aiResponseText = geminiService.generateResponse(conversationHistory, message);
 
-        // 5. Persist Assistant Message
-        ChatMessage botMsg = ChatMessage.builder()
-                .chatId(chat.getId())
-                .userId(userId)
-                .role("assistant")
-                .content(aiResponseText)
-                .source(matchedDest.isPresent() ? "destination" : "gemini")
-                .metadata(matchedDest.isPresent() ? Map.of("destinationName", matchedDest.get().getName()) : null)
-                .build();
-        chatMessageRepository.save(botMsg);
+        // 5. Persist Assistant Message if authenticated
+        if (chat != null && userId != null) {
+            ChatMessage botMsg = ChatMessage.builder()
+                    .chatId(chat.getId())
+                    .userId(userId)
+                    .role("assistant")
+                    .content(aiResponseText)
+                    .source(matchedDest.isPresent() ? "destination" : "gemini")
+                    .metadata(matchedDest.isPresent() ? Map.of("destinationName", matchedDest.get().getName()) : null)
+                    .build();
+            chatMessageRepository.save(botMsg);
+        }
 
         return ChatResponse.builder()
                 .success(true)
-                .chatId(chat.getId())
+                .chatId(chat != null ? chat.getId() : (request.getChatId() != null ? request.getChatId() : "guest-chat"))
                 .response(aiResponseText)
                 .source(matchedDest.isPresent() ? "destination" : "gemini")
                 .destination(matchedDest.orElse(null))

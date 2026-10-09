@@ -3,130 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login — Tourist Guide</title>
+    <title>Login — TouristAI</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
+    <link rel="stylesheet" href="css/chatbot.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌴</text></svg>">
 </head>
-<body>
+<body style="background:var(--bg-dark); display:flex; flex-direction:column; min-height:100vh;">
 
-    <div class="auth-page">
-        <div class="auth-overlay"></div>
-        <div class="auth-card">
-            <div class="auth-header">
-                <a href="index.html" class="nav-logo" style="justify-content:center; margin-bottom:16px;">
-                    <div class="logo-badge"><i class="fas fa-compass"></i></div>
-                    <span class="logo-text">Tourist Guide</span>
-                </a>
-                <h2>Welcome Back</h2>
-                <p>Sign in to access your travel plans, saved destinations, and personalized AI itineraries.</p>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <div class="logo-badge"><i class="fas fa-tree"></i></div>
+                <span>TouristAI</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="destinations.html" class="nav-link">Destinations</a>
+                <a href="planner.html" class="nav-link">Plan Trip</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- AUTH CARD CONTAINER -->
+    <main style="flex:1; display:flex; align-items:center; justify-content:center; padding:110px 20px 40px;">
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px; max-width:440px; width:100%; box-shadow:var(--shadow-lg);">
+            
+            <div style="text-align:center; margin-bottom:28px;">
+                <div class="logo-badge" style="margin:0 auto 14px; width:46px; height:46px; font-size:22px;"><i class="fas fa-tree"></i></div>
+                <h2 style="font-family:var(--font-display); font-size:26px; color:#fff; font-weight:700; margin-bottom:6px;">Welcome to TouristAI</h2>
+                <p style="color:var(--text-muted); font-size:14px;">Sign in to save custom trips, manage itineraries, and view history.</p>
             </div>
 
-            <div class="auth-error" id="authError"></div>
-            <div class="auth-success" id="authSuccess"></div>
+            <div id="authAlert" style="display:none; padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:18px;"></div>
 
-            <form id="loginForm">
-                <div class="form-group">
+            <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+                <div class="form-field">
                     <label for="username"><i class="fas fa-user"></i> Username</label>
-                    <input type="text" id="username" class="form-control" placeholder="Enter your username" required autofocus>
+                    <input type="text" id="username" class="form-input" placeholder="e.g. demo" required autofocus>
                 </div>
 
-                <div class="form-group">
+                <div class="form-field">
                     <label for="password"><i class="fas fa-lock"></i> Password</label>
-                    <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary" id="submitBtn" style="width:100%; margin-top:10px;">
+                <button type="submit" class="btn btn-primary" id="loginSubmitBtn" style="width:100%; margin-top:8px;">
                     <i class="fas fa-sign-in-alt"></i> Sign In
                 </button>
 
-                <div style="text-align:center; margin:12px 0 8px; font-size:12px; color:var(--slate, #94a3b8);">— OR —</div>
+                <div style="text-align:center; margin:16px 0; font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em;">
+                    Or quick demo access
+                </div>
 
-                <button type="button" class="btn btn-outline" id="demoLoginBtn" style="width:100%; border-color:var(--gold, #d4a24c); color:var(--gold, #d4a24c);">
-                    <i class="fas fa-bolt"></i> 1-Click Demo Login
+                <button type="button" class="btn btn-outline" onclick="fillDemoAndLogin()" style="width:100%; border-color:var(--accent-gold); color:var(--accent-gold);">
+                    <i class="fas fa-bolt"></i> 1-Click Demo Login (demo / demo123)
                 </button>
             </form>
 
-            <div class="auth-footer">
-                Don't have an account? <a href="register.html">Create an Account</a>
+            <div style="text-align:center; margin-top:24px; font-size:13.5px; color:var(--text-muted);">
+                Don't have an account? <a href="register.html" style="color:var(--primary-light); font-weight:600;">Create Account</a>
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- SCRIPTS -->
+    <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('registered') === 'true') {
-                const s = document.getElementById('authSuccess');
-                s.textContent = 'Account created successfully! Please sign in.';
-                s.style.display = 'block';
+            const params = new URLSearchParams(window.location.search);
+            const alertBox = document.getElementById('authAlert');
+            if (params.get('registered') === 'true') {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(16,185,129,0.15)';
+                alertBox.style.color = '#34D399';
+                alertBox.textContent = 'Account registered successfully! Please log in.';
+            } else if (params.get('expired') === 'true') {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(244,63,94,0.15)';
+                alertBox.style.color = '#F43F5E';
+                alertBox.textContent = 'Your session expired. Please sign in again.';
             }
-            if (urlParams.get('expired') === 'true') {
-                const e = document.getElementById('authError');
-                e.textContent = 'Your session has expired. Please log in again.';
-                e.style.display = 'block';
-            }
-
-            const form = document.getElementById('loginForm');
-            const demoBtn = document.getElementById('demoLoginBtn');
-
-            if (demoBtn) {
-                demoBtn.addEventListener('click', () => {
-                    document.getElementById('username').value = 'demo';
-                    document.getElementById('password').value = 'demo123';
-                    form.dispatchEvent(new Event('submit'));
-                });
-            }
-
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const errBox = document.getElementById('authError');
-                const succBox = document.getElementById('authSuccess');
-                const btn = document.getElementById('submitBtn');
-
-                errBox.style.display = 'none';
-                succBox.style.display = 'none';
-
-                const username = document.getElementById('username').value.trim();
-                const password = document.getElementById('password').value;
-
-                if (!username || !password) {
-                    errBox.textContent = 'Please enter both username and password.';
-                    errBox.style.display = 'block';
-                    return;
-                }
-
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
-
-                try {
-                    await Auth.login(username, password);
-                    succBox.textContent = 'Login successful! Redirecting…';
-                    succBox.style.display = 'block';
-
-                    const redirect = urlParams.get('redirect') || 'chatbot.html';
-                    setTimeout(() => {
-                        window.location.href = redirect;
-                    }, 600);
-                } catch (err) {
-                    errBox.textContent = err.message || 'Invalid username or password.';
-                    errBox.style.display = 'block';
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
-                }
-            });
         });
+
+        function fillDemoAndLogin() {
+            document.getElementById('username').value = 'demo';
+            document.getElementById('password').value = 'demo123';
+            handleLoginSubmit(new Event('submit'));
+        }
+
+        async function handleLoginSubmit(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            const alertBox = document.getElementById('authAlert');
+            alertBox.style.display = 'none';
+
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value;
+            const btn = document.getElementById('loginSubmitBtn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
+
+            try {
+                await Auth.login(u, p);
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(16,185,129,0.15)';
+                alertBox.style.color = '#34D399';
+                alertBox.textContent = 'Welcome back! Redirecting…';
+
+                const params = new URLSearchParams(window.location.search);
+                const redirect = params.get('redirect') || 'dashboard.html';
+                setTimeout(() => {
+                    window.location.href = redirect;
+                }, 400);
+            } catch (err) {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(244,63,94,0.15)';
+                alertBox.style.color = '#F43F5E';
+                alertBox.textContent = err.message || 'Invalid username or password.';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+            }
+        }
     </script>
 </body>
 </html>

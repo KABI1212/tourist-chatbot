@@ -1,24 +1,34 @@
+
 /* ==========================================================================
-   Responsive Adaptations
+   RESPONSIVE ADAPTATIONS — SPACIOUS TOURIST CHATBOT
    ========================================================================== */
 
+/* TABLETS AND SMALL LAPTOPS */
 @media (max-width: 992px) {
+
     .grid-3 {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
     }
-    
+
     .about-inner {
         grid-template-columns: 1fr;
         gap: 40px;
     }
 
+    /* Mobile sidebar */
     .sidebar {
         position: fixed;
         top: 70px;
         left: 0;
         bottom: 0;
+        width: min(320px, 85vw);
+        max-width: 100%;
+        overflow-y: auto;
         transform: translateX(-100%);
         box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+        transition: transform 0.3s ease;
+        z-index: 1000;
     }
 
     .sidebar.open {
@@ -27,10 +37,53 @@
 
     .mobile-menu-btn {
         display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .messages-wrap {
+        padding: 28px 24px 36px;
+    }
+
+    .msg-row {
+        gap: 12px;
+        margin-bottom: 30px;
+    }
+
+    .bubble {
+        max-width: 90%;
+        padding: 20px 22px;
+        line-height: 1.85;
+    }
+
+    .dest-card {
+        padding: 24px;
+        margin: 24px auto;
+    }
+
+    .dest-section {
+        margin-bottom: 20px;
+    }
+
+    .dest-section-body {
+        padding: 20px;
+        line-height: 1.85;
+    }
+
+    .image-gallery {
+        gap: 14px;
+    }
+
+    .map-box {
+        height: 300px;
     }
 }
 
+
+/* MOBILE DEVICES */
 @media (max-width: 768px) {
+
+    /* Navigation */
     .nav-inner {
         padding: 0 16px;
     }
@@ -42,18 +95,21 @@
     .nav-links.open {
         display: flex;
         flex-direction: column;
+        align-items: stretch;
         position: absolute;
         top: 70px;
         left: 0;
         right: 0;
+        padding: 24px 20px;
+        gap: 16px;
         background: #120e0b;
         border-bottom: 1px solid var(--border);
-        padding: 20px;
-        gap: 12px;
+        z-index: 1001;
     }
 
+    /* Hero section */
     .hero {
-        padding: 100px 20px 60px;
+        padding: 100px 20px 64px;
         text-align: center;
     }
 
@@ -63,14 +119,18 @@
 
     .hero-actions {
         justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
     }
 
+    /* General grids */
     .grid-3 {
         grid-template-columns: 1fr;
+        gap: 20px;
     }
 
     .stats-inner {
-        gap: 30px;
+        gap: 24px;
     }
 
     .stat-item {
@@ -79,22 +139,231 @@
 
     .form-row {
         grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    /* Chat layout */
+    .chat-layout {
+        height: calc(100dvh - 60px);
+        margin-top: 60px;
+    }
+
+    .chat-topbar {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    .messages-wrap {
+        padding: 22px 14px 30px;
+    }
+
+    /* Welcome message */
+    .welcome-card {
+        padding: 30px 20px;
+        margin: 12px auto 36px;
+        border-radius: 16px;
+    }
+
+    .welcome-card h2 {
+        font-size: 25px;
+        line-height: 1.4;
+        margin-bottom: 16px;
+    }
+
+    .welcome-card p {
+        font-size: 14px;
+        line-height: 1.85;
+    }
+
+    .welcome-suggestions {
+        gap: 10px;
+        margin-top: 24px;
+    }
+
+    .suggestion-chip {
+        padding: 10px 14px;
+        font-size: 12px;
+    }
+
+    /* Chat messages */
+    .msg-row {
+        gap: 10px;
+        margin-bottom: 26px;
+    }
+
+    .msg-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
     }
 
     .bubble {
-        max-width: 92%;
+        max-width: calc(100% - 42px);
+        min-width: 0;
+        padding: 16px 18px;
+        font-size: 14px;
+        line-height: 1.85;
+        border-radius: 14px;
+        overflow-wrap: anywhere;
     }
 
+    /* AI response formatting */
+    .bubble p {
+        margin-bottom: 16px;
+    }
+
+    .bubble h1,
+    .bubble h2,
+    .bubble h3,
+    .bubble h4 {
+        margin: 22px 0 12px;
+        line-height: 1.5;
+    }
+
+    .bubble ul,
+    .bubble ol {
+        padding-left: 22px;
+        margin: 14px 0 20px;
+    }
+
+    .bubble li {
+        margin-bottom: 10px;
+    }
+
+    .bubble pre {
+        max-width: 100%;
+        overflow-x: auto;
+        padding: 14px;
+    }
+
+    .bubble table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .msg-row.bot .msg-meta {
+        padding-left: 42px;
+    }
+
+    /* Destination cards */
+    .dest-card {
+        padding: 18px;
+        margin: 20px auto;
+        border-radius: 16px;
+    }
+
+    .dest-card-header {
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+    }
+
+    .dest-card-title {
+        gap: 10px;
+    }
+
+    .dest-card-title h3 {
+        font-size: 18px;
+        line-height: 1.5;
+    }
+
+    .dest-section {
+        margin-bottom: 18px;
+        border-radius: 12px;
+    }
+
+    .dest-section-header {
+        padding: 14px 16px;
+        gap: 10px;
+    }
+
+    .dest-section-header h4 {
+        font-size: 13px;
+    }
+
+    .dest-section-body {
+        padding: 16px;
+        font-size: 13px;
+        line-height: 1.85;
+    }
+
+    /* Information cards */
     .info-grid {
         grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 480px) {
-    .stat-item {
-        width: 100%;
+        gap: 12px;
     }
 
+    .info-item {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    /* Images */
+    .image-gallery {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+    }
+
+    .image-gallery img {
+        height: 140px;
+        border-radius: 10px;
+    }
+
+    /* Map */
+    .map-box {
+        height: 260px;
+        margin-top: 16px;
+    }
+
+    /* Itinerary */
+    .itinerary-timeline {
+        margin-top: 24px;
+        padding-left: 26px;
+    }
+
+    .timeline-day {
+        margin-bottom: 28px;
+    }
+
+    .timeline-day-title {
+        margin-bottom: 8px;
+        line-height: 1.7;
+    }
+
+    .timeline-day-desc {
+        line-height: 1.85;
+    }
+
+    /* Bottom input */
+    .input-bar {
+        padding: 12px 12px 10px;
+    }
+
+    .input-row {
+        gap: 8px;
+    }
+
+    .chat-input {
+        min-height: 48px;
+        padding: 12px 14px;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .send-btn {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+    }
+
+    .input-meta {
+        margin-top: 8px;
+        gap: 8px;
+    }
+
+    /* Authentication */
     .auth-card {
         padding: 28px 20px;
     }
@@ -102,8 +371,130 @@
     .hero-content h1 {
         font-size: 34px;
     }
+}
+
+
+/* SMALL MOBILE DEVICES */
+@media (max-width: 480px) {
+
+    .stat-item {
+        width: 100%;
+    }
+
+    .hero {
+        padding: 90px 16px 52px;
+    }
+
+    .hero-content h1 {
+        font-size: 30px;
+    }
 
     .welcome-card {
-        padding: 24px 16px;
+        padding: 26px 16px;
+    }
+
+    .messages-wrap {
+        padding: 18px 10px 24px;
+    }
+
+    .msg-row {
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+
+    .msg-avatar {
+        width: 30px;
+        height: 30px;
+    }
+
+    .bubble {
+        max-width: calc(100% - 38px);
+        padding: 14px;
+        font-size: 14px;
+        line-height: 1.8;
+    }
+
+    .dest-card {
+        padding: 14px;
+    }
+
+    .dest-section-body {
+        padding: 14px;
+    }
+
+    .image-gallery img {
+        height: 115px;
+    }
+
+    .map-box {
+        height: 230px;
+    }
+
+    .chat-topbar {
+        padding: 10px 12px;
+    }
+
+    .assistant-info {
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .assistant-name {
+        font-size: 13px;
+    }
+
+    .topbar-actions {
+        gap: 6px;
+    }
+
+    .topbar-btn {
+        padding: 7px 9px;
+        font-size: 11px;
+    }
+
+    .input-bar {
+        padding: 10px;
+    }
+
+    .input-meta {
+        font-size: 10px;
+    }
+}
+
+
+/* EXTRA SMALL SCREENS */
+@media (max-width: 360px) {
+
+    .image-gallery {
+        grid-template-columns: 1fr;
+    }
+
+    .image-gallery img {
+        height: 180px;
+    }
+
+    .welcome-card h2 {
+        font-size: 22px;
+    }
+
+    .bubble {
+        padding: 12px;
+    }
+
+    .dest-card {
+        padding: 12px;
+    }
+}
+
+
+/* ACCESSIBILITY */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }

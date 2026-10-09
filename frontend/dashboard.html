@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Trips &amp; Dashboard — TouristAI</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chatbot.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌴</text></svg>">
+</head>
+<body style="background:var(--bg-dark);">
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="dashNavbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <div class="logo-badge"><i class="fas fa-tree"></i></div>
+                <span>TouristAI</span>
+            </a>
+
+            <div class="nav-links" id="navAuthLinks">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="destinations.html" class="nav-link">Destinations</a>
+                <a href="planner.html" class="nav-link">Plan Trip</a>
+                <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles" style="color:var(--accent-cyan);"></i> AI Chat</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- DASHBOARD LAYOUT (Screen 6 Mockup) -->
+    <div class="dashboard-layout">
+        
+        <!-- Sidebar Menu (Screen 6 Mockup) -->
+        <aside class="dashboard-sidebar">
+            <ul class="dash-menu-list">
+                <li class="dash-menu-item" onclick="switchDashboardView('overview')">
+                    <i class="fas fa-chart-pie"></i> Dashboard
+                </li>
+                <li class="dash-menu-item active" id="menuMyTrips" onclick="switchDashboardView('trips')">
+                    <i class="fas fa-suitcase-rolling"></i> My Trips
+                </li>
+                <li class="dash-menu-item" id="menuSavedPlaces" onclick="switchDashboardView('places')">
+                    <i class="fas fa-heart"></i> Saved Places
+                </li>
+                <li class="dash-menu-item" id="menuChatHistory" onclick="switchDashboardView('chats')">
+                    <i class="fas fa-comments"></i> Chat History
+                </li>
+                <li class="dash-menu-item" id="menuProfile" onclick="switchDashboardView('profile')">
+                    <i class="fas fa-user-gear"></i> Profile
+                </li>
+                <li class="dash-menu-item" onclick="alert('All settings saved to cloud.')">
+                    <i class="fas fa-sliders"></i> Settings
+                </li>
+                <li class="dash-menu-item" onclick="Auth.logout()" style="color:var(--accent-rose); margin-top:20px;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content (Screen 6 Mockup) -->
+        <main class="dashboard-main">
+            
+            <!-- SECTION: MY TRIPS (Screen 6) -->
+            <div id="viewMyTrips">
+                <div class="dashboard-header">
+                    <h1>My Trips</h1>
+                    <button class="btn btn-primary btn-sm" onclick="window.location.href='planner.html'">
+                        <i class="fas fa-plus"></i> Plan New Trip
+                    </button>
+                </div>
+
+                <!-- Tabs: Upcoming Trips vs Past Trips (Screen 6 Mockup) -->
+                <div class="dash-tabs-bar">
+                    <button class="dash-tab active" id="tabUpcoming" onclick="filterTripsTab('upcoming')">Upcoming Trips</button>
+                    <button class="dash-tab" id="tabPast" onclick="filterTripsTab('past')">Past Trips</button>
+                </div>
+
+                <!-- Trips List -->
+                <div class="saved-trips-list" id="savedTripsContainer">
+                    <div style="padding:30px; text-align:center; color:var(--text-muted);">
+                        <i class="fas fa-spinner fa-spin" style="font-size:24px; color:var(--primary-light);"></i>
+                        <p style="margin-top:10px;">Loading your saved adventures…</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: SAVED PLACES -->
+            <div id="viewSavedPlaces" style="display:none;">
+                <div class="dashboard-header">
+                    <h1>Saved Places</h1>
+                    <a href="destinations.html" class="btn btn-outline btn-sm">Explore More Places</a>
+                </div>
+                <div class="dest-cards-grid" id="favoritesGrid"></div>
+            </div>
+
+            <!-- SECTION: CHAT HISTORY -->
+            <div id="viewChatHistory" style="display:none;">
+                <div class="dashboard-header">
+                    <h1>Chat History</h1>
+                    <button class="btn btn-outline btn-sm" onclick="window.location.href='chatbot.html'">
+                        <i class="fas fa-plus"></i> New Chat
+                    </button>
+                </div>
+                <div id="dashboardChatsContainer" class="saved-trips-list"></div>
+            </div>
+
+            <!-- SECTION: PROFILE -->
+            <div id="viewProfile" style="display:none;">
+                <div class="dashboard-header">
+                    <h1>User Profile</h1>
+                </div>
+                <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:32px; max-width:600px;">
+                    <form id="profileForm" onsubmit="saveUserProfile(event)">
+                        <div class="form-field">
+                            <label>Username</label>
+                            <input type="text" class="form-input" id="profUsername" disabled>
+                        </div>
+                        <div class="form-field">
+                            <label>Full Name</label>
+                            <input type="text" class="form-input" id="profFullName" required>
+                        </div>
+                        <div class="form-field">
+                            <label>Email Address</label>
+                            <input type="email" class="form-input" id="profEmail" required>
+                        </div>
+                        <div class="form-field">
+                            <label>Bio / Travel Style</label>
+                            <textarea class="form-input" id="profBio" rows="3" placeholder="Tell us about your travel dreams…"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btnSaveProfile">
+                            <i class="fas fa-check"></i> Save Profile
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- TRIP DETAILS MODAL -->
+    <div id="tripModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; overflow-y:auto; padding:40px 20px;">
+        <div style="max-width:850px; margin:0 auto; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:32px; position:relative;">
+            <button onclick="closeTripModal()" style="position:absolute; top:20px; right:20px; background:transparent; border:none; color:#fff; font-size:20px; cursor:pointer;">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="modalTripContent"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

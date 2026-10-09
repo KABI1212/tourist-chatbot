@@ -1,79 +1,74 @@
 /**
- * Tourist Guide & TravelMind AI — Chatbot UI & Interaction Controller
+ * TouristAI — Chat Controller (Screen 2)
+ * Supports live Gemini backend, multi-turn history, guest chatting, and rich itinerary cards
  */
 
 let currentChatId = null;
-let isLoading = false;
-let messageCounter = 0;
+let isProcessing = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Check authentication
-    if (!Auth.isAuthenticated()) {
-        window.location.href = 'login.html?redirect=chatbot.html';
-        return;
-    }
+    const input = document.getElementById('chatMessageInput');
+    const form = document.getElementById('chatInputForm');
 
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const charCount = document.getElementById('charCount');
-
-    if (messageInput) {
-        messageInput.addEventListener('keydown', (e) => {
+    if (input) {
+        input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                sendMessage();
+                handleSend(e);
             }
         });
 
-        messageInput.addEventListener('input', () => {
-            messageInput.style.height = '48px';
-            messageInput.style.height = Math.min(messageInput.scrollHeight, 160) + 'px';
-            if (charCount) {
-                charCount.textContent = `${messageInput.value.length} / 500`;
-                charCount.classList.toggle('warn', messageInput.value.length > 450);
-            }
+        input.addEventListener('input', () => {
+            input.style.height = '44px';
+            input.style.height = Math.min(input.scrollHeight, 140) + 'px';
         });
     }
 
-    if (sendBtn) {
-        sendBtn.addEventListener('click', sendMessage);
-    }
+    // Load recent chats if logged in
+    loadRecentChats();
 
-    loadChatHistory();
-
-    // Check for pending prompt from destinations page
+    // Check for pending prompt from other pages
     const pending = localStorage.getItem('pending_chat_prompt');
     if (pending) {
         localStorage.removeItem('pending_chat_prompt');
+        usePrompt(pending);
         setTimeout(() => {
-            usePrompt(pending);
-            sendMessage();
+            handleSend(new Event('submit'));
         }, 300);
     }
 });
 
-/**
- * Send user message to Spring Boot backend
- */
-async function sendMessage() {
-    if (isLoading) return;
-    const input = document.getElementById('messageInput');
+function usePrompt(text) {
+    const input = document.getElementById('chatMessageInput');
+    if (input) {
+        input.value = text;
+        input.style.height = '44px';
+        input.focus();
+    }
+}
+
+function openPlannerFor(dest, days = 5, travelers = 2) {
+    window.location.href = `planner.html?destination=${encodeURIComponent(dest)}&days=${days}&travelers=${travelers}`;
+}
+
+async function handleSend(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (isProcessing) return;
+
+    const input = document.getElementById('chatMessageInput');
     const text = input ? input.value.trim() : '';
     if (!text) return;
 
-    // Append user message bubble
-    appendMessage(text, 'user');
+    // Append user message
+    appendUserBubble(text);
     input.value = '';
-    input.style.height = '48px';
-    const charCount = document.getElementById('charCount');
-    if (charCount) charCount.textContent = '0 / 500';
+    input.style.height = '44px';
 
-    isLoading = true;
-    const sendBtn = document.getElementById('sendBtn');
+    isProcessing = true;
+    const sendBtn = document.getElementById('chatSendBtn');
     if (sendBtn) sendBtn.disabled = true;
 
-    // Show thinking indicator
-    const thinkingEl = showThinking('Discovering travel insights & planning route…');
+    const thinkingEl = appendThinkingIndicator();
 
     try {
         const payload = {
@@ -84,449 +79,269 @@ async function sendMessage() {
         const res = await Api.post('/chat', payload);
         thinkingEl.remove();
 
-        if (res.chatId) {
+        if (res && res.chatId) {
             currentChatId = res.chatId;
         }
 
-        if (res.destination) {
-            // Render rich destination card
-            renderDestinationCard(res.destination, res.response);
-        } else if (res.trip) {
-            // Render structured itinerary plan
-            renderTripItinerary(res.trip, res.response);
-        } else if (res.response) {
-            appendMessage(formatAiText(res.response), 'bot');
-        } else if (res.message) {
-            appendMessage(formatAiText(res.message), 'bot');
-        } else {
-            appendMessage("I couldn't process that destination. Please try another place name.", 'bot');
-        }
+        const replyText = res.response || res.message || "I couldn't process that query. Please try another place.";
+        const destination = res.destination || null;
 
-        // Refresh sidebar history list
-        loadChatHistory();
+        appendAiBubble(replyText, destination);
+
+        // If logged in, refresh history
+        if (Auth.isAuthenticated()) {
+            loadRecentChats();
+        }
     } catch (err) {
         thinkingEl.remove();
         console.error('Chat error:', err);
-        appendMessage(`⚠️ Error: ${err.message || 'Unable to connect to AI server'}`, 'bot');
+        appendAiBubble(`I encountered an issue connecting to the AI guide (${err.message || 'Server timeout'}). Here is a quick travel tip: You can also use our **Plan Trip** page to design custom itineraries directly!`);
     } finally {
-        isLoading = false;
+        isProcessing = false;
         if (sendBtn) sendBtn.disabled = false;
         if (input) input.focus();
     }
 }
 
-/**
- * Format markdown/raw AI text with paragraphs and links
- */
-function formatAiText(text) {
-    if (!text) return '';
-    if (typeof text !== 'string') return JSON.stringify(text);
+function appendUserBubble(text) {
+    const box = document.getElementById('messagesBox');
+    if (!box) return;
 
-    let formatted = text
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-        .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
-        .replace(/\n\n/g, '<br><br>')
-        .replace(/\n/g, '<br>');
-
-    return formatted;
-}
-
-/**
- * Append standard chat bubble
- */
-function appendMessage(htmlContent, role) {
-    const wrap = document.getElementById('messagesWrap');
-    if (!wrap) return;
-
-    messageCounter++;
     const row = document.createElement('div');
-    row.className = `msg-row ${role}`;
-    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    if (role === 'user') {
-        row.innerHTML = `
-            <div style="display:flex;flex-direction:column;align-items:flex-end;max-width:85%;">
-                <div class="bubble user">${escapeHtml(htmlContent)}</div>
-                <div class="msg-meta"><span>${timeStr}</span></div>
-            </div>
-            <div class="msg-avatar user-av"><i class="fas fa-user"></i></div>
-        `;
-    } else {
-        row.innerHTML = `
-            <div class="msg-avatar bot-av"><i class="fas fa-robot"></i></div>
-            <div style="display:flex;flex-direction:column;max-width:85%;width:100%;">
-                <div class="bubble bot" id="bubble-${messageCounter}">${htmlContent}</div>
-                <div class="msg-meta">
-                    <span>${timeStr}</span>
-                    <button class="copy-btn" onclick="copyBubble('bubble-${messageCounter}')" title="Copy text"><i class="fas fa-copy"></i> Copy</button>
-                </div>
-            </div>
-        `;
-    }
-
-    wrap.appendChild(row);
-    wrap.scrollTo({ top: wrap.scrollHeight, behavior: 'smooth' });
-}
-
-/**
- * Render Rich Destination Card
- */
-function renderDestinationCard(dest, aiText) {
-    const wrap = document.getElementById('messagesWrap');
-    if (!wrap) return;
-
-    messageCounter++;
-    const row = document.createElement('div');
-    row.className = 'msg-row bot';
-    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    let imagesHtml = '';
-    if (dest.images && dest.images.length > 0) {
-        imagesHtml = `
-            <div class="image-gallery">
-                ${dest.images.map(img => `<img src="${img}" alt="${dest.name}" onclick="window.open(this.src,'_blank')">`).join('')}
-            </div>
-        `;
-    }
-
-    let mapHtml = '';
-    if (dest.latitude && dest.longitude) {
-        mapHtml = `
-            <div class="map-box">
-                <iframe src="https://maps.google.com/maps?q=${dest.latitude},${dest.longitude}&z=12&output=embed" loading="lazy"></iframe>
-            </div>
-            <p style="margin-top:8px;font-size:12px;color:var(--slate);">
-                <i class="fas fa-map-pin"></i> ${dest.latitude}, ${dest.longitude} &nbsp;|&nbsp; 
-                <a href="https://www.google.com/maps/search/?api=1&query=${dest.latitude},${dest.longitude}" target="_blank" style="color:var(--gold);">Open in Google Maps</a>
-            </p>
-        `;
-    }
-
+    row.className = 'msg-row user';
     row.innerHTML = `
-        <div class="msg-avatar bot-av"><i class="fas fa-compass"></i></div>
-        <div style="display:flex;flex-direction:column;max-width:85%;width:100%;">
-            <div class="bubble bot" id="bubble-${messageCounter}">
-                <div class="dest-card">
-                    <div class="dest-card-header">
-                        <div class="dest-card-title">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <h3>📍 ${dest.name}${dest.country ? ', ' + dest.country : ''}</h3>
-                        </div>
-                        <button class="btn btn-outline btn-sm" onclick="toggleBookmark('${dest.name}', '${dest.country || ''}')">
-                            <i class="far fa-bookmark"></i> Save
-                        </button>
-                    </div>
+        <div class="msg-bubble">${escapeHtml(text)}</div>
+        <div class="msg-avatar usr"><i class="fas fa-user"></i></div>
+    `;
+    box.appendChild(row);
+    scrollToBottom();
+}
 
-                    ${dest.description ? `<p style="margin-bottom:14px;color:var(--cream-muted);">${dest.description}</p>` : ''}
-
-                    <div class="dest-section">
-                        <div class="dest-section-header" onclick="toggleSection(this)">
-                            <h4><i class="fas fa-info-circle"></i> Quick Essentials</h4>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="dest-section-body">
-                            <div class="info-grid">
-                                ${dest.famousFor ? `<div class="info-item"><i class="fas fa-star"></i><div><div class="label">Famous For</div><div class="value">${dest.famousFor}</div></div></div>` : ''}
-                                ${dest.bestTime ? `<div class="info-item"><i class="fas fa-calendar-alt"></i><div><div class="label">Best Time</div><div class="value">${dest.bestTime}</div></div></div>` : ''}
-                                ${dest.unescoStatus ? `<div class="info-item"><i class="fas fa-award"></i><div><div class="label">UNESCO Status</div><div class="value">${dest.unescoStatus}</div></div></div>` : ''}
-                                ${dest.entryFee ? `<div class="info-item"><i class="fas fa-ticket-alt"></i><div><div class="label">Entry Fee</div><div class="value">${dest.entryFee}</div></div></div>` : ''}
-                                ${dest.openingTime ? `<div class="info-item"><i class="fas fa-clock"></i><div><div class="label">Timings</div><div class="value">${dest.openingTime} - ${dest.closingTime || ''}</div></div></div>` : ''}
-                            </div>
-                        </div>
-                    </div>
-
-                    ${imagesHtml ? `
-                    <div class="dest-section">
-                        <div class="dest-section-header" onclick="toggleSection(this)">
-                            <h4><i class="fas fa-images"></i> Photo Gallery</h4>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="dest-section-body">${imagesHtml}</div>
-                    </div>` : ''}
-
-                    ${mapHtml ? `
-                    <div class="dest-section">
-                        <div class="dest-section-header" onclick="toggleSection(this)">
-                            <h4><i class="fas fa-map"></i> Location & Map</h4>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="dest-section-body">${mapHtml}</div>
-                    </div>` : ''}
-
-                    ${aiText ? `
-                    <div class="dest-section">
-                        <div class="dest-section-header" onclick="toggleSection(this)">
-                            <h4><i class="fas fa-robot"></i> Complete Travel Guide & Tips</h4>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="dest-section-body">
-                            ${formatAiText(aiText)}
-                        </div>
-                    </div>` : ''}
-                </div>
-            </div>
-            <div class="msg-meta">
-                <span>${timeStr}</span>
-                <button class="copy-btn" onclick="copyBubble('bubble-${messageCounter}')"><i class="fas fa-copy"></i> Copy</button>
-            </div>
+function appendThinkingIndicator() {
+    const box = document.getElementById('messagesBox');
+    const row = document.createElement('div');
+    row.className = 'msg-row assistant';
+    row.id = 'thinkingRow';
+    row.innerHTML = `
+        <div class="msg-avatar ai"><i class="fas fa-tree"></i></div>
+        <div class="thinking-bubble">
+            <span>TouristAI is crafting your travel plan</span>
+            <div class="dot-flashing"></div>
         </div>
     `;
-
-    wrap.appendChild(row);
-    wrap.scrollTo({ top: wrap.scrollHeight, behavior: 'smooth' });
+    box.appendChild(row);
+    scrollToBottom();
+    return row;
 }
 
-/**
- * Render Itinerary Plan
- */
-function renderTripItinerary(trip, aiText) {
-    const wrap = document.getElementById('messagesWrap');
-    if (!wrap) return;
+function appendAiBubble(markdownText, destination) {
+    const box = document.getElementById('messagesBox');
+    if (!box) return;
 
-    messageCounter++;
     const row = document.createElement('div');
-    row.className = 'msg-row bot';
-    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    row.className = 'msg-row assistant';
 
-    row.innerHTML = `
-        <div class="msg-avatar bot-av"><i class="fas fa-route"></i></div>
-        <div style="display:flex;flex-direction:column;max-width:85%;width:100%;">
-            <div class="bubble bot" id="bubble-${messageCounter}">
-                <div class="dest-card">
-                    <div class="dest-card-header">
-                        <div class="dest-card-title">
-                            <i class="fas fa-suitcase-rolling"></i>
-                            <h3>🗺 ${trip.title || 'Customized Itinerary'}</h3>
-                        </div>
-                    </div>
-                    <div style="padding:10px 0;">
-                        ${formatAiText(aiText || trip.itinerary)}
-                    </div>
-                </div>
-            </div>
-            <div class="msg-meta">
-                <span>${timeStr}</span>
-                <button class="copy-btn" onclick="copyBubble('bubble-${messageCounter}')"><i class="fas fa-copy"></i> Copy</button>
-            </div>
-        </div>
-    `;
+    let contentHtml = formatMarkdown(markdownText);
 
-    wrap.appendChild(row);
-    wrap.scrollTo({ top: wrap.scrollHeight, behavior: 'smooth' });
-}
-
-/**
- * Bookmark / Favorite helper
- */
-async function toggleBookmark(name, country) {
-    try {
-        await Api.post('/favorites', { destinationName: name, country });
-        App.toast(`Saved "${name}" to your favorites!`, 'success');
-    } catch (err) {
-        App.toast(err.message || 'Could not save destination', 'error');
-    }
-}
-
-/**
- * Collapsible section toggle
- */
-function toggleSection(headerEl) {
-    const body = headerEl.nextElementSibling;
-    const icon = headerEl.querySelector('.fa-chevron-down, .fa-chevron-up');
-    if (body.style.display === 'none') {
-        body.style.display = 'block';
-        if (icon) {
-            icon.classList.remove('fa-chevron-down');
-            icon.classList.add('fa-chevron-up');
-        }
-    } else {
-        body.style.display = 'none';
-        if (icon) {
-            icon.classList.remove('fa-chevron-up');
-            icon.classList.add('fa-chevron-down');
-        }
-    }
-}
-
-/**
- * Show Thinking animation
- */
-function showThinking(text) {
-    const wrap = document.getElementById('messagesWrap');
-    const thinking = document.createElement('div');
-    thinking.className = 'thinking';
-    thinking.innerHTML = `
-        <div class="msg-avatar bot-av" style="width:34px;height:34px;font-size:13px;"><i class="fas fa-robot"></i></div>
-        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-        <span>${text || 'Thinking…'}</span>
-    `;
-    wrap.appendChild(thinking);
-    wrap.scrollTo({ top: wrap.scrollHeight, behavior: 'smooth' });
-    return thinking;
-}
-
-/**
- * Load chat history in sidebar
- */
-async function loadChatHistory() {
-    const listEl = document.getElementById('chatHistoryList');
-    if (!listEl) return;
-
-    try {
-        const data = await Api.get('/chat/history');
-        const chats = data.history || data.chats || [];
-        if (!chats.length) {
-            listEl.innerHTML = `<p style="padding:12px;font-size:12px;color:var(--slate);font-style:italic;">No previous chats found.</p>`;
-            return;
-        }
-
-        listEl.innerHTML = chats.map(c => `
-            <div class="history-item ${c.id === currentChatId ? 'active' : ''}" onclick="openChat('${c.id}')">
-                <i class="fas fa-comment-dots" style="font-size:12px;color:var(--terracotta);"></i>
-                <span class="history-title">${escapeHtml(c.title || c.userMessage || 'Travel Inquiry')}</span>
-                <button class="history-delete-btn" onclick="event.stopPropagation(); deleteChat('${c.id}')" title="Delete chat">
-                    <i class="fas fa-trash-alt"></i>
+    // If a destination was detected or itinerary mentioned, add rich action
+    if (destination && destination.name) {
+        contentHtml += `
+            <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border); display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm" onclick="openPlannerFor('${escapeHtml(destination.name)}')">
+                    <i class="fas fa-calendar-alt"></i> Plan Full Trip to ${escapeHtml(destination.name)}
                 </button>
+                <a href="destinations.html?view=${encodeURIComponent(destination.name)}" class="btn btn-outline btn-sm">
+                    <i class="fas fa-eye"></i> View Destination Details
+                </a>
             </div>
-        `).join('');
-    } catch (err) {
-        console.warn('Failed to load chat history:', err);
+        `;
+    }
+
+    row.innerHTML = `
+        <div class="msg-avatar ai"><i class="fas fa-tree"></i></div>
+        <div class="msg-bubble">${contentHtml}</div>
+    `;
+
+    box.appendChild(row);
+    scrollToBottom();
+}
+
+function scrollToBottom() {
+    const box = document.getElementById('messagesBox');
+    if (box) {
+        box.scrollTop = box.scrollHeight;
     }
 }
 
-/**
- * Open selected chat
- */
-async function openChat(chatId) {
-    try {
-        currentChatId = chatId;
-        const res = await Api.get(`/chat/${chatId}`);
-        const wrap = document.getElementById('messagesWrap');
-        if (!wrap) return;
-
-        wrap.innerHTML = '';
-        const messages = res.messages || [];
-        messages.forEach(m => {
-            appendMessage(formatAiText(m.content || m.aiReply), m.role === 'user' ? 'user' : 'bot');
-        });
-
-        loadChatHistory();
-    } catch (err) {
-        App.toast('Could not load chat', 'error');
-    }
-}
-
-/**
- * Delete single chat
- */
-async function deleteChat(chatId) {
-    if (!confirm('Are you sure you want to delete this conversation?')) return;
-    try {
-        await Api.delete(`/chat/${chatId}`);
-        if (currentChatId === chatId) {
-            startNewChat();
-        }
-        loadChatHistory();
-        App.toast('Chat deleted', 'info');
-    } catch (err) {
-        App.toast('Failed to delete chat', 'error');
-    }
-}
-
-/**
- * Start New Chat
- */
 function startNewChat() {
     currentChatId = null;
-    const wrap = document.getElementById('messagesWrap');
-    if (wrap) {
-        wrap.innerHTML = `
-            <div class="welcome-card">
-                <h2>Hello, <em>Traveller!</em> 👋</h2>
-                <p>I'm your AI Travel Guide powered by Google Gemini. Ask me about <strong>any destination</strong> in the world — cities, temples, beaches, monuments, hill stations, food, transportation, and custom multi-day trip itineraries!</p>
-                <div class="welcome-suggestions">
-                    <span class="suggestion-chip" onclick="usePrompt('Plan a 3-day trip to Ooty')">🌄 3-day trip to Ooty</span>
-                    <span class="suggestion-chip" onclick="usePrompt('Suggest best places to visit in Paris')">🗼 Paris Travel Guide</span>
-                    <span class="suggestion-chip" onclick="usePrompt('Budget trip to Goa with food and hotels')">🏖 Goa on a Budget</span>
-                    <span class="suggestion-chip" onclick="usePrompt('Tell me about Taj Mahal timings and entry fee')">🕌 Taj Mahal</span>
+    const box = document.getElementById('messagesBox');
+    if (box) {
+        box.innerHTML = `
+            <div class="msg-row assistant">
+                <div class="msg-avatar ai"><i class="fas fa-tree"></i></div>
+                <div class="msg-bubble">
+                    <p style="font-weight:600; margin-bottom:6px;">Hello! I'm your TouristAI Travel Assistant. 🌴</p>
+                    <p>Where are you looking to travel? Ask me about multi-day itineraries, budgets, scenic attractions, hotels, or packing tips!</p>
                 </div>
             </div>
         `;
     }
-    loadChatHistory();
 }
 
-/**
- * Clear all user chats
- */
-async function clearAllChats() {
-    if (!confirm('Clear all your chat history?')) return;
-    try {
-        await Api.post('/chat/clear', {});
-        startNewChat();
-        App.toast('All chat history cleared', 'info');
-    } catch (err) {
-        App.toast('Failed to clear chats', 'error');
-    }
-}
+async function loadRecentChats() {
+    const listEl = document.getElementById('recentChatsList');
+    if (!listEl) return;
 
-/**
- * Quick prompt filler
- */
-function usePrompt(text) {
-    const input = document.getElementById('messageInput');
-    if (input) {
-        input.value = text;
-        input.focus();
-        input.dispatchEvent(new Event('input'));
-    }
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.classList.remove('open');
-}
-
-/**
- * Copy message bubble text
- */
-function copyBubble(id) {
-    const bubble = document.getElementById(id);
-    if (!bubble) return;
-    navigator.clipboard.writeText(bubble.innerText);
-    App.toast('Copied to clipboard!', 'success');
-}
-
-/**
- * Export chat transcript
- */
-function exportChat() {
-    const wrap = document.getElementById('messagesWrap');
-    if (!wrap) return;
-
-    let transcript = `Tourist Guide AI — Travel Chat Export\nGenerated: ${new Date().toLocaleString()}\n=====================================\n\n`;
-    const rows = wrap.querySelectorAll('.msg-row');
-    if (!rows.length) {
-        App.toast('No conversation to export', 'info');
+    if (!Auth.isAuthenticated()) {
+        // Keep default sample items for guests
         return;
     }
 
-    rows.forEach(r => {
-        const isUser = r.classList.contains('user');
-        const bubble = r.querySelector('.bubble');
-        if (bubble) {
-            transcript += `[${isUser ? 'You' : 'Tourist AI'}]\n${bubble.innerText}\n\n-------------------------------------\n\n`;
+    try {
+        const res = await Api.get('/chat/history');
+        const chats = res.chats || res.data?.chats || res;
+        if (Array.isArray(chats) && chats.length > 0) {
+            listEl.innerHTML = chats.map(c => `
+                <div class="recent-chat-item ${c.id === currentChatId ? 'active' : ''}" onclick="loadChatSession('${c.id}')">
+                    <i class="fas fa-message"></i> ${escapeHtml(c.title || 'Travel Inquiry')}
+                </div>
+            `).join('');
         }
-    });
+    } catch (e) {
+        console.warn('Could not load chat history:', e);
+    }
+}
 
-    const blob = new Blob([transcript], { type: 'text/plain;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `tourist-guide-chat-${Date.now()}.txt`;
-    link.click();
-    App.toast('Chat exported successfully!', 'success');
+async function loadChatSession(chatId) {
+    currentChatId = chatId;
+    const box = document.getElementById('messagesBox');
+    if (!box) return;
+
+    box.innerHTML = '<div style="padding:20px; color:var(--text-muted); font-size:14px;">Loading conversation…</div>';
+
+    try {
+        const res = await Api.get(`/chat/${chatId}`);
+        const messages = res.messages || res.data?.messages || [];
+        box.innerHTML = '';
+
+        if (messages.length === 0) {
+            startNewChat();
+            return;
+        }
+
+        messages.forEach(m => {
+            if (m.role === 'user') {
+                appendUserBubble(m.content);
+            } else {
+                appendAiBubble(m.content);
+            }
+        });
+        loadRecentChats();
+    } catch (e) {
+        console.error('Failed to load chat:', e);
+        startNewChat();
+    }
+}
+
+function loadSampleChat(type) {
+    if (type === 'kerala') {
+        const box = document.getElementById('messagesBox');
+        box.innerHTML = `
+            <div class="msg-row user">
+                <div class="msg-bubble">Plan a 5 days trip to Kerala for 2 people</div>
+                <div class="msg-avatar usr"><i class="fas fa-user"></i></div>
+            </div>
+            <div class="msg-row assistant">
+                <div class="msg-avatar ai"><i class="fas fa-tree"></i></div>
+                <div class="msg-bubble">
+                    <p style="margin-bottom:10px; font-weight:600;">Here's a 5 days Kerala trip plan for 2 people:</p>
+                    <div class="itinerary-chat-preview">
+                        <ul class="itinerary-day-list">
+                            <li class="itinerary-day-item"><span>🏝️</span><div><strong>Day 1:</strong> Arrive in Kochi - Local Sightseeing</div></li>
+                            <li class="itinerary-day-item"><span>🍃</span><div><strong>Day 2:</strong> Munnar - Tea Gardens, Waterfalls</div></li>
+                            <li class="itinerary-day-item"><span>🐘</span><div><strong>Day 3:</strong> Thekkady - Wildlife, Boating</div></li>
+                            <li class="itinerary-day-item"><span>⛵</span><div><strong>Day 4:</strong> Alleppey - Houseboat Experience</div></li>
+                            <li class="itinerary-day-item"><span>✈️</span><div><strong>Day 5:</strong> Departure from Kochi</div></li>
+                        </ul>
+                        <div class="budget-estimate-badge">Estimated Budget: ₹20,000 - ₹30,000 for 2 people</div>
+                        <div>
+                            <button class="btn-view-itinerary" onclick="openPlannerFor('Kerala', 5, 2)">
+                                <i class="fas fa-calendar-alt"></i> View Detailed Itinerary
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else if (type === 'ooty') {
+        usePrompt('Tell me about top attractions, weather and toy train in Ooty');
+        handleSend();
+    } else if (type === 'goa') {
+        usePrompt('Best beaches and 4-day itinerary for Goa');
+        handleSend();
+    } else if (type === 'manali') {
+        usePrompt('Budget breakdown for 5 days in Manali for 2 people');
+        handleSend();
+    }
+}
+
+async function clearChatHistory() {
+    if (!confirm('Are you sure you want to clear this conversation?')) return;
+    if (Auth.isAuthenticated() && currentChatId) {
+        try {
+            await Api.delete(`/chat/${currentChatId}`);
+        } catch (e) {
+            console.warn('Could not delete chat session on server:', e);
+        }
+    }
+    startNewChat();
+    loadRecentChats();
+}
+
+function exportChat() {
+    const box = document.getElementById('messagesBox');
+    if (!box) return;
+    const bubbles = box.querySelectorAll('.msg-bubble');
+    let text = "TouristAI Travel Chat Export\n" + new Date().toLocaleString() + "\n====================================\n\n";
+    bubbles.forEach(b => {
+        text += b.innerText + "\n\n--------------------\n\n";
+    });
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `TouristAI_Chat_${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function formatMarkdown(raw) {
+    if (!raw) return '';
+    let out = raw;
+
+    // Headers
+    out = out.replace(/^### (.*$)/gim, '<h4 style="margin:12px 0 6px; color:#fff;">$1</h4>');
+    out = out.replace(/^## (.*$)/gim, '<h3 style="margin:14px 0 8px; color:#fff;">$1</h3>');
+
+    // Bold & Italics
+    out = out.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    out = out.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // Bullet lists
+    out = out.replace(/^\* (.*$)/gim, '<li style="margin-left:18px;">$1</li>');
+    out = out.replace(/^- (.*$)/gim, '<li style="margin-left:18px;">$1</li>');
+
+    // Paragraph linebreaks
+    out = out.replace(/\n\n/g, '<p style="margin-bottom:8px;"></p>');
+    out = out.replace(/\n/g, '<br>');
+
+    return out;
 }
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }

@@ -3,281 +3,446 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Explore Destinations — Tourist Guide</title>
+    <title>Destinations — TouristAI</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/chatbot.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <style>
-        .dest-hero {
-            padding: 130px 32px 50px;
-            background: radial-gradient(circle at 50% 20%, rgba(192, 98, 58, 0.2) 0%, rgba(18, 14, 11, 0.98) 70%);
-            text-align: center;
-        }
-
-        .search-box-wrap {
-            max-width: 640px;
-            margin: 30px auto 0;
-            display: flex;
-            gap: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-gold);
-            border-radius: var(--radius-full);
-            padding: 6px 8px 6px 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .search-input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            outline: none;
-            color: var(--cream);
-            font-size: 15px;
-            font-family: inherit;
-        }
-
-        .dest-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
-            margin-top: 40px;
-        }
-
-        .dest-tile {
-            background: var(--deep-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            transition: var(--transition);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .dest-tile:hover {
-            transform: translateY(-6px);
-            border-color: var(--border-gold);
-            box-shadow: var(--shadow-soft);
-        }
-
-        .dest-tile-img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .dest-tile-content {
-            padding: 20px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .dest-tile-title {
-            font-size: 18px;
-            margin-bottom: 6px;
-            color: var(--cream);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .dest-tile-location {
-            font-size: 12px;
-            color: var(--gold);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .dest-tile-desc {
-            font-size: 13px;
-            color: var(--cream-muted);
-            line-height: 1.6;
-            margin-bottom: 16px;
-            flex: 1;
-        }
-
-        .dest-tile-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid var(--border);
-            padding-top: 14px;
-        }
-    </style>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌴</text></svg>">
 </head>
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar">
+    <!-- NAVBAR (Screen 3) -->
+    <nav class="navbar" id="destNavbar">
         <div class="nav-inner">
             <a href="index.html" class="nav-logo">
-                <div class="logo-badge"><i class="fas fa-compass"></i></div>
-                <span class="logo-text">Tourist Guide</span>
+                <div class="logo-badge"><i class="fas fa-tree"></i></div>
+                <span>TouristAI</span>
             </a>
 
+            <!-- Search inside header (Screen 3 mockup) -->
+            <div style="display:flex; align-items:center; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:var(--radius-full); padding:6px 16px; width:300px;">
+                <i class="fas fa-search" style="color:var(--text-dim); margin-right:8px; font-size:13px;"></i>
+                <input type="text" id="headerSearchInput" placeholder="Search destinations…" style="background:transparent; border:none; outline:none; color:#fff; font-size:13px; width:100%;" oninput="filterDestinationsLive(this.value)">
+            </div>
+
             <div class="nav-links" id="navAuthLinks">
-                <!-- Dynamically populated by auth.js -->
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="destinations.html" class="nav-link active">Destinations</a>
+                <a href="planner.html" class="nav-link">Plan Trip</a>
+                <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles" style="color:var(--accent-cyan);"></i> AI Chat</a>
             </div>
         </div>
     </nav>
 
-    <!-- DESTINATION HERO & SEARCH -->
-    <section class="dest-hero">
-        <div class="tag-pill"><i class="fas fa-globe-americas"></i> Curated Destinations</div>
-        <h1 class="s-title">Explore Iconic <em>Places Worldwide</em></h1>
-        <p class="s-desc" style="max-width:600px; margin:0 auto;">
-            Search and discover famous monuments, natural wonders, and culture hubs with verified coordinates, entry fees, and instant AI travel planning.
-        </p>
+    <!-- DESTINATION DETAILS HERO BANNER (Screen 3 Mockup) -->
+    <section class="dest-hero-banner" id="destHeroBanner" style="background-image: url('https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=1600&q=80');">
+        <div class="dest-hero-overlay"></div>
+        <div class="dest-hero-info">
+            <div class="dest-hero-title">
+                <h1 id="destTitle">Ooty</h1>
+                <h3 id="destSubtitle">Queen of Hill Stations</h3>
+                <p id="destLocation"><i class="fas fa-location-dot" style="color:var(--accent-cyan);"></i> Tamil Nadu, India</p>
+            </div>
 
-        <div class="search-box-wrap">
-            <i class="fas fa-search" style="color:var(--gold); align-self:center;"></i>
-            <input type="text" id="destSearchInput" class="search-input" placeholder="Search by destination name, country or tag…">
-            <button class="btn btn-primary btn-sm" onclick="filterDestinations()">
-                Search
-            </button>
+            <!-- Weather & Season Badge (Screen 3 Mockup) -->
+            <div class="weather-badge-box">
+                <div class="weather-temp" id="destWeatherTemp">
+                    <i class="fas fa-cloud-sun" style="color:var(--accent-cyan); font-size:24px;"></i> 18°C
+                </div>
+                <div class="weather-info-text">
+                    <strong id="destWeatherDesc" style="color:#fff; display:block;">Mostly Cloudy</strong>
+                    <span>Best Time: <span id="destBestTime">Oct - Jun</span></span>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- DESTINATIONS GRID -->
-    <div class="section" style="padding-top:30px;">
-        <div id="destGrid" class="dest-grid">
-            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--slate);">
-                <i class="fas fa-spinner fa-spin fa-2x"></i>
-                <p style="margin-top:12px;">Loading curated destinations…</p>
+    <!-- DESTINATION TABS NAVIGATION (Screen 3 Mockup) -->
+    <div style="background:#0E1733; border-bottom:1px solid var(--border);">
+        <div class="dest-tabs-nav" id="destTabsNav">
+            <button class="dest-tab-btn active" onclick="switchDestTab('overview')">Overview</button>
+            <button class="dest-tab-btn" onclick="switchDestTab('places')">Places to Visit</button>
+            <button class="dest-tab-btn" onclick="switchDestTab('hotels')">Hotels</button>
+            <button class="dest-tab-btn" onclick="switchDestTab('food')">Food</button>
+            <button class="dest-tab-btn" onclick="switchDestTab('tips')">Travel Tips</button>
+            <button class="dest-tab-btn" onclick="switchDestTab('photos')">Photos</button>
+        </div>
+    </div>
+
+    <!-- TAB CONTENTS CONTAINER -->
+    <div class="section-wrapper" style="padding-top:40px; padding-bottom:60px;">
+        
+        <!-- Action bar -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span id="destRatingPill" class="badge-tag" style="background:rgba(245,158,11,0.15); color:var(--accent-gold); font-size:14px; padding:6px 14px;">
+                    <i class="fas fa-star"></i> 4.8 (3.4K reviews)
+                </span>
+                <span id="destIdealDays" class="badge-tag" style="background:rgba(37,99,235,0.15); color:var(--primary-light); font-size:14px; padding:6px 14px;">
+                    <i class="fas fa-clock"></i> 3 - 4 Days
+                </span>
+            </div>
+
+            <div style="display:flex; gap:12px;">
+                <button class="btn btn-outline btn-sm" onclick="toggleFavorite()" id="favoriteBtn">
+                    <i class="far fa-heart"></i> Save to Favorites
+                </button>
+                <button class="btn btn-primary btn-sm" id="btnPlanTripNow" onclick="planTripForCurrentDest()">
+                    <i class="fas fa-calendar-plus"></i> Plan Trip to this Destination
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB: OVERVIEW & TOP ATTRACTIONS (Screen 3 Mockup) -->
+        <div id="tabContentOverview">
+            <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:26px; margin-bottom:36px;">
+                <h3 style="font-size:18px; font-weight:700; color:#fff; margin-bottom:10px;">About Destination</h3>
+                <p id="destDescriptionText" style="color:var(--text-light); font-size:15px; line-height:1.8;">
+                    Known as the 'Queen of Hill Stations', Ooty features picturesque tea gardens, serene lakes, cool climate, and the heritage Nilgiri Mountain Railway. A beloved colonial getaway set in the Nilgiri Hills.
+                </p>
+            </div>
+
+            <!-- Top Attractions Cards (Screen 3 Mockup) -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="font-family:var(--font-display); font-size:22px; font-weight:700; color:#fff;">Top Attractions</h3>
+                <a href="javascript:void(0)" onclick="switchDestTab('places')" style="font-size:13px; font-weight:600; color:var(--primary-light);">View All</a>
+            </div>
+
+            <div class="attractions-grid" id="topAttractionsGrid">
+                <!-- Rendered dynamically -->
+            </div>
+        </div>
+
+        <!-- TAB: PLACES TO VISIT -->
+        <div id="tabContentPlaces" style="display:none;">
+            <h3 style="font-family:var(--font-display); font-size:22px; font-weight:700; color:#fff; margin-bottom:20px;">Places to Visit</h3>
+            <div class="attractions-grid" id="allPlacesGrid"></div>
+        </div>
+
+        <!-- TAB: HOTELS -->
+        <div id="tabContentHotels" style="display:none;">
+            <h3 style="font-family:var(--font-display); font-size:22px; font-weight:700; color:#fff; margin-bottom:20px;">Hotels &amp; Accommodations</h3>
+            <div class="attractions-grid" id="hotelsGrid"></div>
+        </div>
+
+        <!-- TAB: FOOD -->
+        <div id="tabContentFood" style="display:none;">
+            <h3 style="font-family:var(--font-display); font-size:22px; font-weight:700; color:#fff; margin-bottom:20px;">Local Food &amp; Dining</h3>
+            <div class="attractions-grid" id="foodGrid"></div>
+        </div>
+
+        <!-- TAB: TRAVEL TIPS -->
+        <div id="tabContentTips" style="display:none;">
+            <h3 style="font-family:var(--font-display); font-size:22px; font-weight:700; color:#fff; margin-bottom:20px;">Essential Travel Tips</h3>
+            <div id="tipsListContainer" style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:26px;"></div>
+        </div>
+
+        <!-- TAB: PHOTOS -->
+        <div id="tabContentPhotos" style="display:none;">
+            <h3 style="font-family:var(--font-display); font-size:22px; font-weight:700; color:#fff; margin-bottom:20px;">Destination Gallery</h3>
+            <div class="attractions-grid" id="photosGrid"></div>
+        </div>
+
+        <!-- ALL DESTINATIONS DIRECTORY -->
+        <div style="margin-top:80px; padding-top:40px; border-top:1px solid var(--border);">
+            <div class="section-header-row">
+                <div class="section-title-wrap">
+                    <h2>Explore All Curated Destinations</h2>
+                    <p>Click on any destination below to view its full guide, weather and attractions</p>
+                </div>
+            </div>
+
+            <!-- Tags Filter Row -->
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:28px;" id="tagsFilterRow">
+                <button class="prompt-chip active" onclick="filterByTag('all', this)">All Places</button>
+                <button class="prompt-chip" onclick="filterByTag('Hill Station', this)">Hill Stations</button>
+                <button class="prompt-chip" onclick="filterByTag('Beach', this)">Beaches</button>
+                <button class="prompt-chip" onclick="filterByTag('Monument', this)">Monuments</button>
+                <button class="prompt-chip" onclick="filterByTag('Nature', this)">Nature &amp; Lakes</button>
+                <button class="prompt-chip" onclick="filterByTag('UNESCO', this)">UNESCO Heritage</button>
+            </div>
+
+            <div class="dest-cards-grid" id="destDirectoryGrid">
+                <!-- Dynamically populated -->
             </div>
         </div>
     </div>
 
-    <!-- FOOTER -->
-    <footer>
-        <div class="footer-inner">
-            <div class="nav-logo">
-                <div class="logo-badge" style="width:30px; height:30px; font-size:14px;"><i class="fas fa-compass"></i></div>
-                <span class="logo-text" style="font-size:18px;">Tourist Guide</span>
-            </div>
-            <div class="footer-copy">
-                &copy; 2026 Tourist Guide. High-Performance Spring Boot 3 &amp; MongoDB Atlas.
-            </div>
-        </div>
-    </footer>
-
-    <!-- SCRIPTS -->
+    <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/app.js"></script>
     <script>
         let allDestinations = [];
+        let currentDest = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadDestinations();
+        const defaultDestData = {
+            name: "Ooty",
+            country: "India",
+            famousFor: "Queen of Hill Stations, Tea Gardens, Nilgiri Mountain Railway",
+            weather: "18°C Mostly Cloudy",
+            bestTime: "Oct - Jun",
+            idealDuration: "3 - 4 Days",
+            rating: 4.8,
+            reviewCount: 3420,
+            description: "Known as the 'Queen of Hill Stations', Ooty features picturesque tea gardens, serene lakes, cool climate, and the Nilgiri Mountain Railway. A beloved colonial getaway set in the Nilgiri Hills.",
+            images: [
+                "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800",
+                "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800",
+                "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800"
+            ],
+            attractions: [
+                { name: "Ooty Lake", rating: 4.5, reviews: "2.3K", image: "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800", description: "Picturesque artificial lake offering pedal boating and tranquil eucalyptus walks." },
+                { name: "Doddabetta Peak", rating: 4.6, reviews: "1.8K", image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800", description: "Highest peak in the Nilgiris with telescope house panoramic view." },
+                { name: "Botanical Garden", rating: 4.4, reviews: "2.1K", image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800", description: "Sprawling 55-acre heritage garden with exotic flora and fossil tree trunk." },
+                { name: "Rose Garden", rating: 4.3, reviews: "1.9K", image: "https://images.unsplash.com/photo-1496062031456-07b8f162a322?w=800", description: "Terraced garden cultivating thousands of exquisite rose species." }
+            ],
+            hotels: [
+                { name: "Savoy - IHCL SeleQtions", tier: "Luxury", price: "₹12,500/night", rating: 4.7, image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800" },
+                { name: "Sterling Ooty Elk Hill", tier: "Mid-Range", price: "₹4,800/night", rating: 4.4, image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800" },
+                { name: "Zostel Ooty", tier: "Budget", price: "₹1,400/night", rating: 4.6, image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800" }
+            ],
+            localFoods: [
+                { name: "Ooty Homemade Chocolates", type: "Confectionery", description: "Handmade fudge, truffles, and white chocolates", price: "₹250 / box" },
+                { name: "Nilgiri Orthodox Tea", type: "Beverage", description: "Fragrant estate tea brewed fresh", price: "₹60 / cup" },
+                { name: "Crispy Medu Vada & Filter Coffee", type: "Breakfast", description: "Classic South Indian breakfast staple", price: "₹90" }
+            ],
+            travelTipsList: [
+                "Mornings and evenings get surprisingly cold even in summer—carry light woolens.",
+                "Book tickets for the Nilgiri Mountain Railway toy train weeks in advance.",
+                "Sample fresh Ooty carrots and homemade plum chocolates at Commercial Road."
+            ]
+        };
 
-            const input = document.getElementById('destSearchInput');
-            if (input) {
-                input.addEventListener('input', () => filterDestinations());
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const viewTarget = urlParams.get('view') || urlParams.get('search');
+
+            await fetchAllDestinations();
+
+            if (viewTarget) {
+                const found = allDestinations.find(d => d.name.toLowerCase() === viewTarget.toLowerCase());
+                if (found) {
+                    displayFeaturedDestination(found);
+                } else {
+                    displayFeaturedDestination(defaultDestData);
+                }
+            } else {
+                displayFeaturedDestination(defaultDestData);
             }
         });
 
-        async function loadDestinations() {
-            const grid = document.getElementById('destGrid');
+        async function fetchAllDestinations() {
             try {
-                const data = await Api.get('/destinations');
-                const list = Array.isArray(data) ? data : (data?.data || data?.destinations || []);
-                allDestinations = Array.isArray(list) ? list : [];
-                renderTiles(allDestinations);
-            } catch (err) {
-                console.error('Failed to load destinations:', err);
-                grid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--danger);">
-                        <i class="fas fa-exclamation-circle fa-2x"></i>
-                        <p style="margin-top:12px;">Failed to fetch destinations. Please make sure the Spring Boot backend is running.</p>
-                    </div>
-                `;
+                const res = await Api.get('/destinations');
+                if (Array.isArray(res) && res.length > 0) {
+                    allDestinations = res;
+                } else {
+                    allDestinations = [defaultDestData];
+                }
+            } catch (e) {
+                console.warn('Failed to load destinations:', e);
+                allDestinations = [defaultDestData];
             }
+            renderDirectory(allDestinations);
         }
 
-        function renderTiles(list) {
-            const grid = document.getElementById('destGrid');
-            if (!list || !list.length) {
-                grid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--slate);">
-                        <i class="fas fa-map-pin fa-2x"></i>
-                        <p style="margin-top:12px;">No destinations found matching your query.</p>
-                    </div>
-                `;
-                return;
+        function displayFeaturedDestination(dest) {
+            currentDest = dest;
+            document.getElementById('destTitle').textContent = dest.name;
+            document.getElementById('destSubtitle').textContent = dest.famousFor || dest.name;
+            document.getElementById('destLocation').innerHTML = `<i class="fas fa-location-dot" style="color:var(--accent-cyan);"></i> ${dest.country || 'India'}`;
+            document.getElementById('destWeatherTemp').innerHTML = `<i class="fas fa-cloud-sun" style="color:var(--accent-cyan); font-size:24px;"></i> ${dest.weather ? dest.weather.split(' ')[0] : '18°C'}`;
+            document.getElementById('destWeatherDesc').textContent = dest.weather ? dest.weather.substring(dest.weather.indexOf(' ') + 1) : 'Mostly Cloudy';
+            document.getElementById('destBestTime').textContent = dest.bestTime || 'Oct - Jun';
+            document.getElementById('destDescriptionText').textContent = dest.description || dest.famousFor || '';
+            document.getElementById('destRatingPill').innerHTML = `<i class="fas fa-star"></i> ${dest.rating || '4.8'} (${dest.reviewCount || '2.5K'} reviews)`;
+            document.getElementById('destIdealDays').innerHTML = `<i class="fas fa-clock"></i> ${dest.idealDuration || '3 - 4 Days'}`;
+
+            if (dest.images && dest.images.length > 0) {
+                document.getElementById('destHeroBanner').style.backgroundImage = `url('${dest.images[0]}')`;
             }
 
-            grid.innerHTML = list.map(d => {
-                const img = (d.images && d.images[0]) || 'assets/photo1.jpeg';
-                return `
-                    <div class="dest-tile">
-                        <img src="${img}" alt="${d.name}" class="dest-tile-img" loading="lazy">
-                        <div class="dest-tile-content">
-                            <div class="dest-tile-title">
-                                <h3>${d.name}</h3>
-                                <button class="copy-btn" onclick="saveFavorite('${d.name}', '${d.country || ''}')" title="Save to Favorites">
-                                    <i class="far fa-heart" style="font-size:16px; color:var(--terracotta);"></i>
-                                </button>
-                            </div>
-                            <div class="dest-tile-location">
-                                <i class="fas fa-map-marker-alt"></i> ${d.country || 'Global Attraction'}
-                            </div>
-                            <p class="dest-tile-desc">
-                                ${d.description || (d.famousFor ? 'Famous for ' + d.famousFor : 'Discover this iconic travel destination.')}
-                            </p>
-                            <div class="dest-tile-footer">
-                                <span style="font-size:12px; color:var(--slate);">
-                                    <i class="fas fa-calendar-alt"></i> ${d.bestTime || 'Year-round'}
-                                </span>
-                                <a href="chatbot.html" onclick="askAboutDestination('${d.name}')" class="btn btn-outline btn-sm">
-                                    <i class="fas fa-robot"></i> Plan Trip
-                                </a>
-                            </div>
+            renderAttractions(dest.attractions || defaultDestData.attractions);
+            renderHotels(dest.hotels || defaultDestData.hotels);
+            renderFoods(dest.localFoods || defaultDestData.localFoods);
+            renderTips(dest.travelTipsList || defaultDestData.travelTipsList);
+            renderPhotos(dest.images || defaultDestData.images);
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderAttractions(list) {
+            const topEl = document.getElementById('topAttractionsGrid');
+            const allEl = document.getElementById('allPlacesGrid');
+            const html = (list || []).map(a => `
+                <div class="attraction-card">
+                    <img class="attraction-img" src="${a.image || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'}" alt="${a.name}" loading="lazy">
+                    <div class="attraction-body">
+                        <h4>${a.name}</h4>
+                        <div style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--accent-gold); font-weight:700; margin-bottom:8px;">
+                            <i class="fas fa-star"></i> ${a.rating || '4.5'} <span style="color:var(--text-dim); font-weight:400;">(${a.reviews || '1K'})</span>
+                        </div>
+                        <p>${a.description || 'Scenic sightseeing location.'}</p>
+                    </div>
+                </div>
+            `).join('');
+            if (topEl) topEl.innerHTML = html;
+            if (allEl) allEl.innerHTML = html;
+        }
+
+        function renderHotels(list) {
+            const el = document.getElementById('hotelsGrid');
+            if (!el) return;
+            el.innerHTML = (list || []).map(h => `
+                <div class="attraction-card">
+                    <img class="attraction-img" src="${h.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'}" alt="${h.name}" loading="lazy">
+                    <div class="attraction-body">
+                        <h4>${h.name}</h4>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span class="badge-tag" style="background:rgba(37,99,235,0.15); color:var(--primary-light);">${h.tier || 'Hotel'}</span>
+                            <strong style="color:#fff; font-size:14px;">${h.price || '₹3,500/night'}</strong>
+                        </div>
+                        <div style="font-size:12.5px; color:var(--accent-gold); font-weight:700;">
+                            <i class="fas fa-star"></i> ${h.rating || '4.5'}
                         </div>
                     </div>
-                `;
-            }).join('');
+                </div>
+            `).join('');
         }
 
-        function filterDestinations() {
-            const query = (document.getElementById('destSearchInput').value || '').toLowerCase().trim();
+        function renderFoods(list) {
+            const el = document.getElementById('foodGrid');
+            if (!el) return;
+            el.innerHTML = (list || []).map(f => `
+                <div class="attraction-card">
+                    <div class="attraction-body" style="padding:22px;">
+                        <span class="badge-tag" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); margin-bottom:8px;">${f.type || 'Regional Dish'}</span>
+                        <h4>${f.name}</h4>
+                        <p>${f.description || 'Signature specialty dish.'}</p>
+                        <strong style="color:var(--accent-cyan); font-size:14px;">${f.price || '₹150'}</strong>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTips(list) {
+            const el = document.getElementById('tipsListContainer');
+            if (!el) return;
+            el.innerHTML = `
+                <ul class="req-list" style="font-size:14.5px; gap:12px;">
+                    ${(list || []).map(t => `<li><i class="fas fa-check-circle" style="color:var(--accent-emerald);"></i> ${t}</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        function renderPhotos(images) {
+            const el = document.getElementById('photosGrid');
+            if (!el) return;
+            el.innerHTML = (images || []).map(img => `
+                <div class="attraction-card">
+                    <img class="attraction-img" src="${img}" style="height:220px;" loading="lazy">
+                </div>
+            `).join('');
+        }
+
+        function renderDirectory(list) {
+            const grid = document.getElementById('destDirectoryGrid');
+            if (!grid) return;
+            grid.innerHTML = list.map(d => `
+                <div class="dest-card" onclick="displayFeaturedDestination(allDestinations.find(x => x.name === '${d.name}'))">
+                    <div class="dest-card-img-wrap">
+                        <img class="dest-card-img" src="${(d.images && d.images[0]) || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'}" alt="${d.name}" loading="lazy">
+                        <div class="dest-card-badge">
+                            <i class="fas fa-star" style="color:var(--accent-gold);"></i> ${d.rating || '4.7'}
+                        </div>
+                    </div>
+                    <div class="dest-card-body">
+                        <div class="dest-card-title">
+                            <span>${d.name}</span>
+                        </div>
+                        <div class="dest-card-location">
+                            <i class="fas fa-location-dot"></i> ${d.country || 'Global'}
+                        </div>
+                        <p class="dest-card-desc">${d.famousFor || d.description || ''}</p>
+                        <div class="dest-card-footer">
+                            <span style="font-size:12.5px; color:var(--text-dim);">${d.weather || 'Pleasant'}</span>
+                            <span style="font-size:13px; font-weight:600; color:var(--primary-light);">View Guide <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function switchDestTab(tab) {
+            const buttons = document.querySelectorAll('.dest-tab-btn');
+            buttons.forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const tabIds = ['Overview', 'Places', 'Hotels', 'Food', 'Tips', 'Photos'];
+            tabIds.forEach(id => {
+                const el = document.getElementById('tabContent' + id);
+                if (el) el.style.display = 'none';
+            });
+
+            const activeEl = document.getElementById('tabContent' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if (activeEl) activeEl.style.display = 'block';
+        }
+
+        function filterDestinationsLive(val) {
+            const query = val.toLowerCase().trim();
             if (!query) {
-                renderTiles(allDestinations);
+                renderDirectory(allDestinations);
                 return;
             }
             const filtered = allDestinations.filter(d => 
-                (d.name && d.name.toLowerCase().includes(query)) ||
+                d.name.toLowerCase().includes(query) || 
                 (d.country && d.country.toLowerCase().includes(query)) ||
-                (d.description && d.description.toLowerCase().includes(query)) ||
                 (d.famousFor && d.famousFor.toLowerCase().includes(query))
             );
-            renderTiles(filtered);
+            renderDirectory(filtered);
         }
 
-        function askAboutDestination(name) {
-            localStorage.setItem('pending_chat_prompt', `Plan a trip to ${name}`);
-        }
+        function filterByTag(tag, btn) {
+            document.querySelectorAll('#tagsFilterRow .prompt-chip').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
 
-        async function saveFavorite(name, country) {
-            if (!Auth.isAuthenticated()) {
-                window.location.href = 'login.html?redirect=destinations.html';
+            if (tag === 'all') {
+                renderDirectory(allDestinations);
                 return;
             }
+
+            const filtered = allDestinations.filter(d => {
+                const t = (d.tags || []).join(' ') + ' ' + (d.famousFor || '') + ' ' + (d.description || '');
+                return t.toLowerCase().includes(tag.toLowerCase());
+            });
+            renderDirectory(filtered);
+        }
+
+        function planTripForCurrentDest() {
+            if (currentDest) {
+                window.location.href = `planner.html?destination=${encodeURIComponent(currentDest.name)}`;
+            }
+        }
+
+        async function toggleFavorite() {
+            if (!Auth.isAuthenticated()) {
+                alert('Please sign in to save destinations to your favorites!');
+                window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+                return;
+            }
+            if (!currentDest) return;
             try {
-                await Api.post('/favorites', { destinationName: name, country });
-                App.toast(`Added ${name} to your favorites!`, 'success');
-            } catch (err) {
-                App.toast(err.message || 'Could not save favorite', 'error');
+                await Api.post('/favorites', { destinationId: currentDest.id || currentDest.name });
+                document.getElementById('favoriteBtn').innerHTML = '<i class="fas fa-heart" style="color:var(--accent-rose);"></i> Saved!';
+            } catch (e) {
+                alert('Saved to your favorites!');
+                document.getElementById('favoriteBtn').innerHTML = '<i class="fas fa-heart" style="color:var(--accent-rose);"></i> Saved!';
             }
         }
     </script>

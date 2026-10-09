@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Planner — TouristAI</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chatbot.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌴</text></svg>">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="plannerNavbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <div class="logo-badge"><i class="fas fa-tree"></i></div>
+                <span>TouristAI</span>
+            </a>
+
+            <div class="nav-links" id="navAuthLinks">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="destinations.html" class="nav-link">Destinations</a>
+                <a href="planner.html" class="nav-link active">Plan Trip</a>
+                <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles" style="color:var(--accent-cyan);"></i> AI Chat</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PLANNER MAIN WRAPPER (Screen 4 & 5 Mockup) -->
+    <div class="planner-page-container">
+        
+        <div class="planner-layout-split">
+            <!-- Left Stepper (Screen 4 Mockup) -->
+            <aside class="planner-stepper">
+                <div class="stepper-item active" id="stepIndicator1">
+                    <div class="stepper-circle">1</div>
+                    <div class="stepper-text">
+                        <h4>Trip Details</h4>
+                        <p>Select destination and dates</p>
+                    </div>
+                </div>
+
+                <div class="stepper-item" id="stepIndicator2">
+                    <div class="stepper-circle">2</div>
+                    <div class="stepper-text">
+                        <h4>Preferences</h4>
+                        <p>Choose your interests</p>
+                    </div>
+                </div>
+
+                <div class="stepper-item" id="stepIndicator3">
+                    <div class="stepper-circle">3</div>
+                    <div class="stepper-text">
+                        <h4>Itinerary</h4>
+                        <p>View AI generated plan</p>
+                    </div>
+                </div>
+
+                <div class="stepper-item" id="stepIndicator4">
+                    <div class="stepper-circle">4</div>
+                    <div class="stepper-text">
+                        <h4>Customize</h4>
+                        <p>Edit and save</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right: Plan Your Trip Form (Screen 4 Mockup) -->
+            <main class="planner-form-card" id="plannerFormCard">
+                <h2>Plan Your Trip</h2>
+
+                <form id="tripPlannerForm" onsubmit="generateItinerary(event)">
+                    <!-- Destination & Dates -->
+                    <div class="form-grid-2">
+                        <div class="form-field">
+                            <label for="tripDestination">Destination</label>
+                            <input type="text" class="form-input" id="tripDestination" placeholder="e.g. Manali, Himachal Pradesh" value="Manali, Himachal Pradesh" required>
+                        </div>
+
+                        <div class="form-field">
+                            <label>Travel Dates</label>
+                            <div style="display:flex; gap:10px;">
+                                <input type="date" class="form-input" id="tripStartDate" style="flex:1;" required>
+                                <input type="date" class="form-input" id="tripEndDate" style="flex:1;" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Number of Travelers & Budget -->
+                    <div class="form-grid-2">
+                        <div class="form-field">
+                            <label for="tripTravelers">Number of Travelers</label>
+                            <select class="form-select" id="tripTravelers">
+                                <option value="1">1 Solo Traveler</option>
+                                <option value="2" selected>2 Travelers</option>
+                                <option value="3">3 Friends / Family</option>
+                                <option value="4">4 Group Travelers</option>
+                                <option value="5">5+ Large Group</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="tripBudget">Budget (Optional)</label>
+                            <select class="form-select" id="tripBudget">
+                                <option value="Budget">Budget (₹5K - ₹10K)</option>
+                                <option value="Moderate" selected>Moderate (₹10K - ₹25K)</option>
+                                <option value="Luxury">Luxury (₹25K+)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Your Interests (Screen 4 Mockup) -->
+                    <div class="form-field">
+                        <label>Your Interests</label>
+                        <div class="interests-grid" id="interestsContainer">
+                            <div class="interest-card selected" onclick="toggleInterest(this, 'Sightseeing')">
+                                <i class="fas fa-landmark"></i>
+                                <span>Sightseeing</span>
+                            </div>
+                            <div class="interest-card selected" onclick="toggleInterest(this, 'Adventure')">
+                                <i class="fas fa-hiking"></i>
+                                <span>Adventure</span>
+                            </div>
+                            <div class="interest-card" onclick="toggleInterest(this, 'Food')">
+                                <i class="fas fa-utensils"></i>
+                                <span>Food</span>
+                            </div>
+                            <div class="interest-card selected" onclick="toggleInterest(this, 'Nature')">
+                                <i class="fas fa-leaf"></i>
+                                <span>Nature</span>
+                            </div>
+                            <div class="interest-card" onclick="toggleInterest(this, 'Shopping')">
+                                <i class="fas fa-bag-shopping"></i>
+                                <span>Shopping</span>
+                            </div>
+                            <div class="interest-card" onclick="toggleInterest(this, 'Spiritual')">
+                                <i class="fas fa-om"></i>
+                                <span>Spiritual</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <div style="margin-top:28px; text-align:right;">
+                        <button type="submit" class="btn btn-primary" id="btnGenerateTrip" style="padding:14px 32px; font-size:16px;">
+                            <i class="fas fa-sparkles"></i> Generate Itinerary ✨
+                        </button>
+                    </div>
+                </form>
+            </main>
+        </div>
+
+        <!-- SAMPLE ITINERARY OUTPUT (Screen 5 Mockup) -->
+        <section class="itinerary-output-box" id="itineraryOutputSection" style="display:none;">
+            <div class="itinerary-output-head">
+                <div class="itinerary-head-title">
+                    <h2 id="outItineraryTitle">Your 5 Days Manali Itinerary</h2>
+                    <p id="outItinerarySubtitle">Customised for 2 people • Moderate Budget</p>
+                </div>
+
+                <div class="itinerary-actions">
+                    <button class="btn btn-outline btn-sm btn-action" onclick="exportItineraryPdf()">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </button>
+                    <button class="btn btn-primary btn-sm btn-action" onclick="saveTripToProfile()" id="btnSaveTrip">
+                        <i class="fas fa-bookmark"></i> Save Trip
+                    </button>
+                </div>
+            </div>
+
+            <!-- Day-by-Day Timeline (Screen 5 Mockup) -->
+            <div class="timeline-container" id="timelineContainer">
+                <!-- Days populated dynamically -->
+            </div>
+
+            <!-- Budget Breakdown Summary Box -->
+            <div style="margin-top:40px; background:rgba(14,23,51,0.85); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px;">
+                <h3 style="font-size:18px; font-weight:700; color:#fff; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-coins" style="color:var(--accent-gold);"></i> Estimated Budget Breakdown
+                </h3>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;" id="outBudgetGrid"></div>
+            </div>
+
+            <!-- Travel Advice Box -->
+            <div style="margin-top:24px; background:rgba(14,23,51,0.85); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px;">
+                <h3 style="font-size:18px; font-weight:700; color:#fff; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-circle-info" style="color:var(--accent-cyan);"></i> Practical Travel Advice
+                </h3>
+                <ul class="req-list" id="outTipsList"></ul>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/planner.js"></script>
+</body>
+</html>

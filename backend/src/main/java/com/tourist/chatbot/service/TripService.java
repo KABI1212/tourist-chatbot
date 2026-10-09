@@ -15,6 +15,11 @@ import java.util.List;
 public class TripService {
 
     private final TripRepository tripRepository;
+    private final GeminiService geminiService;
+
+    public com.tourist.chatbot.dto.ItineraryResponse generateItinerary(com.tourist.chatbot.dto.ItineraryGenerateRequest request) {
+        return geminiService.generateStructuredItinerary(request);
+    }
 
     public Trip createTrip(TripRequest request, String userId) {
         Trip trip = Trip.builder()
@@ -26,10 +31,16 @@ public class TripService {
                 .people(request.getPeople() > 0 ? request.getPeople() : 1)
                 .hotelTier(request.getHotelTier() != null ? request.getHotelTier() : "mid")
                 .estimatedBudget(request.getEstimatedBudget())
-                .currency(request.getCurrency() != null ? request.getCurrency() : "USD")
+                .currency(request.getCurrency() != null ? request.getCurrency() : "INR")
                 .budgetBreakdown(request.getBudgetBreakdown())
                 .itinerary(request.getItinerary())
                 .travelTips(request.getTravelTips())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .interests(request.getInterests())
+                .status(request.getStatus() != null ? request.getStatus() : "upcoming")
+                .imageUrl(request.getImageUrl())
+                .daysPlan(request.getDaysPlan())
                 .build();
 
         return tripRepository.save(trip);

@@ -33,7 +33,8 @@ public class ChatController {
             @Valid @RequestBody ChatRequest request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        ChatResponse response = chatService.processMessage(request, userDetails.getUsername());
+        String username = userDetails != null ? userDetails.getUsername() : null;
+        ChatResponse response = chatService.processMessage(request, username);
         return ResponseEntity.ok(response);
     }
 

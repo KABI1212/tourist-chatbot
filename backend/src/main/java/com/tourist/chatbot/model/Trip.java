@@ -46,6 +46,18 @@ public class Trip {
 
     private String itinerary; // text markdown or rich timeline
 
+    private String startDate; // e.g. "2026-12-10"
+
+    private String endDate; // e.g. "2026-12-15"
+
+    private List<String> interests; // e.g. ["Sightseeing", "Adventure", "Nature"]
+
+    private String status; // "upcoming", "completed", "planning"
+
+    private String imageUrl;
+
+    private List<Map<String, Object>> daysPlan; // structured day-by-day activities
+
     private List<String> travelTips;
 
     @CreatedDate

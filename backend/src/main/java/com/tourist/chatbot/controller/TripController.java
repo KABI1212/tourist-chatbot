@@ -30,6 +30,14 @@ public class TripController {
     private final TripService tripService;
     private final UserService userService;
 
+    @PostMapping("/generate")
+    public ResponseEntity<ApiResponse<com.tourist.chatbot.dto.ItineraryResponse>> generateItinerary(
+            @Valid @RequestBody com.tourist.chatbot.dto.ItineraryGenerateRequest request
+    ) {
+        com.tourist.chatbot.dto.ItineraryResponse itinerary = tripService.generateItinerary(request);
+        return ResponseEntity.ok(ApiResponse.success("Itinerary generated successfully", itinerary));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<Trip>> createTrip(
             @Valid @RequestBody TripRequest request,

@@ -66,6 +66,8 @@ public class SecurityConfig {
                                 "/",
                                 "/index.html",
                                 "/chatbot.html",
+                                "/planner.html",
+                                "/dashboard.html",
                                 "/login.html",
                                 "/register.html",
                                 "/destinations.html",
@@ -75,6 +77,9 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/error"
                         ).permitAll()
+                        // Public AI trip generation & public chat message sending
+                        .requestMatchers(HttpMethod.POST, "/api/trips/generate").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/chat").permitAll()
                         // Protected user & travel endpoints
                         .requestMatchers("/api/chat/**").authenticated()
                         .requestMatchers("/api/trips/**").authenticated()

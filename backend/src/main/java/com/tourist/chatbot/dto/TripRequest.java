@@ -35,6 +35,11 @@ public class TripRequest {
     private Map<String, Object> budgetBreakdown;
 
     private String itinerary;
-
     private List<String> travelTips;
+    private String startDate;
+    private String endDate;
+    private List<String> interests;
+    private String status;
+    private String imageUrl;
+    private List<Map<String, Object>> daysPlan;
 }

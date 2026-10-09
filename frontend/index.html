@@ -3,134 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tourist Guide — AI-Powered Travel Planning</title>
+    <title>TouristAI — Explore the World with AI</title>
+    <meta name="description" content="TouristAI is your personal AI travel planning assistant. Generate day-by-day itineraries, explore destinations, estimate budgets, and chat with AI.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/chatbot.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌴</text></svg>">
 </head>
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar">
+    <!-- NAVBAR (Screen 1) -->
+    <nav class="navbar" id="mainNavbar">
         <div class="nav-inner">
-            <a href="index.html" class="nav-logo">
-                <div class="logo-badge"><i class="fas fa-compass"></i></div>
-                <span class="logo-text">Tourist Guide</span>
+            <a href="index.html" class="nav-logo" id="brandLogo">
+                <div class="logo-badge"><i class="fas fa-tree"></i></div>
+                <span>TouristAI</span>
             </a>
 
             <div class="nav-links" id="navAuthLinks">
-                <a href="destinations.html" class="nav-link"><i class="fas fa-compass"></i> Explore</a>
-                <a href="login.html" class="nav-link"><i class="fas fa-sign-in-alt"></i> Login</a>
-                <a href="register.html" class="nav-link cta"><i class="fas fa-user-plus"></i> Register</a>
+                <a href="index.html" class="nav-link active">Home</a>
+                <a href="destinations.html" class="nav-link">Destinations</a>
+                <a href="planner.html" class="nav-link">Plan Trip</a>
+                <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles" style="color:var(--accent-cyan);"></i> AI Chat</a>
+                <a href="login.html" class="nav-btn-login">Login</a>
             </div>
         </div>
     </nav>
 
-    <!-- HERO SECTION -->
-    <section class="hero">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <div class="tag-pill"><i class="fas fa-sparkles"></i> Powered by Google Gemini AI</div>
-            <h1>Your Journey<br>Begins <em>Here</em></h1>
-            <p>Experience intelligent global travel planning. Discover hidden gems, get accurate budget breakdowns, find hotels, transportation, local delicacies, and generate tailored day-by-day itineraries anywhere in the world.</p>
-            <div class="hero-actions">
-                <a href="chatbot.html" class="btn btn-primary"><i class="fas fa-robot"></i> Start Planning with AI</a>
-                <a href="destinations.html" class="btn btn-outline"><i class="fas fa-map-marked-alt"></i> Explore Destinations</a>
+    <!-- HERO SECTION (Screen 1) -->
+    <header class="hero-travel">
+        <div class="hero-travel-content">
+            <div class="hero-pill"><i class="fas fa-sparkles" style="color:var(--accent-emerald);"></i> Powered by Google Gemini AI &amp; Spring Boot</div>
+            <h1>Explore the World<br>with AI</h1>
+            <p>Your Personal Travel Planning Assistant</p>
+
+            <!-- Search Bar inside Hero -->
+            <form class="hero-search-bar" id="heroSearchForm" onsubmit="handleHeroSearch(event)">
+                <input type="text" class="hero-search-input" id="heroSearchInput" placeholder="Where do you want to go?" autocomplete="off" required>
+                <button type="submit" class="hero-search-btn" id="heroSearchBtn" title="Search destination or plan trip">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- 4 Quick Action Floating Cards (Screen 1) -->
+        <div class="hero-quick-cards">
+            <div class="quick-card" onclick="window.location.href='destinations.html'" id="cardFindDestinations">
+                <div class="quick-card-icon"><i class="fas fa-map-location-dot"></i></div>
+                <h4>Find Destinations</h4>
+                <span>Explore 44+ curated locations</span>
             </div>
+
+            <div class="quick-card" onclick="window.location.href='planner.html'" id="cardPlanItinerary">
+                <div class="quick-card-icon"><i class="fas fa-calendar-check"></i></div>
+                <h4>Plan Itinerary</h4>
+                <span>Generate custom day-by-day plan</span>
+            </div>
+
+            <div class="quick-card" onclick="openChatWithPrompt('What are essential travel tips for hill stations and mountains?')" id="cardGetTips">
+                <div class="quick-card-icon"><i class="fas fa-lightbulb"></i></div>
+                <h4>Get Travel Tips</h4>
+                <span>Packing, transit &amp; cultural advice</span>
+            </div>
+
+            <div class="quick-card" onclick="openChatWithPrompt('Provide local guide info with best food, timings and safety rules')" id="cardLocalGuide">
+                <div class="quick-card-icon"><i class="fas fa-compass"></i></div>
+                <h4>Local Guide Info</h4>
+                <span>Authentic food, costs &amp; maps</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- POPULAR DESTINATIONS SECTION -->
+    <section class="section-wrapper">
+        <div class="section-header-row">
+            <div class="section-title-wrap">
+                <h2>Top Travel Destinations</h2>
+                <p>Discover hand-picked iconic places with live weather, coordinates and attractions</p>
+            </div>
+            <a href="destinations.html" class="btn btn-outline btn-sm">View All Destinations <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        <div class="dest-cards-grid" id="popularDestGrid">
+            <!-- Rendered dynamically from backend or curated seed -->
         </div>
     </section>
 
-    <!-- STATS BAR -->
-    <div class="stats-bar">
-        <div class="stats-inner">
-            <div class="stat-item">
-                <strong>190+</strong>
-                <span>Countries Covered</span>
-            </div>
-            <div class="stat-item">
-                <strong>10,000+</strong>
-                <span>Attractions & Gems</span>
-            </div>
-            <div class="stat-item">
-                <strong>3.2s</strong>
-                <span>Instant AI Response</span>
-            </div>
-            <div class="stat-item">
-                <strong>100%</strong>
-                <span>Tailored Itineraries</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- FEATURES SECTION -->
-    <section class="section">
-        <div class="section-head">
-            <div class="s-label">Smart Travel Suite</div>
-            <h2 class="s-title">Everything You Need for <em>Effortless Travel</em></h2>
-            <p class="s-desc">Anticipate every detail of your journey before taking the first step with our production-grade Spring Boot & Gemini AI engine.</p>
+    <!-- MAIN REQUIREMENTS BAR (Matching bottom infographic) -->
+    <section class="requirements-strip">
+        <div style="max-width:1360px; margin:0 auto 32px; text-align:center;">
+            <h2 style="font-family:var(--font-display); font-size:26px; color:#fff; margin-bottom:8px;">Main Capabilities of TouristAI</h2>
+            <p style="color:var(--text-muted); font-size:14px;">End-to-end intelligence built for modern travelers</p>
         </div>
 
-        <div class="grid-3">
-            <div class="feature-card">
-                <div class="f-icon"><i class="fas fa-map-location-dot"></i></div>
-                <h3>Global Destination Explorer</h3>
-                <p>Lookup any valid location worldwide. Instantly access verified coordinates, curated photography, UNESCO statuses, best visit times, and timings.</p>
+        <div class="req-grid">
+            <!-- 1. User Management -->
+            <div class="req-card">
+                <div class="req-head">
+                    <div class="req-icon" style="background:rgba(245,158,11,0.15); color:var(--accent-gold);"><i class="fas fa-user-shield"></i></div>
+                    <h4>1. User Management</h4>
+                </div>
+                <ul class="req-list">
+                    <li><i class="fas fa-check"></i> User Registration &amp; Login</li>
+                    <li><i class="fas fa-check"></i> Profile Management</li>
+                    <li><i class="fas fa-check"></i> Secure JWT Authentication</li>
+                    <li><i class="fas fa-check"></i> Save Trips &amp; Chat History</li>
+                </ul>
             </div>
 
-            <div class="feature-card">
-                <div class="f-icon"><i class="fas fa-route"></i></div>
-                <h3>Multi-Day Itinerary Builder</h3>
-                <p>Ask for a "3-day trip to Ooty" and receive an hour-by-hour itinerary with attractions, food spots, local transport modes, and rest intervals.</p>
+            <!-- 2. AI Chat Assistant -->
+            <div class="req-card">
+                <div class="req-head">
+                    <div class="req-icon" style="background:rgba(37,99,235,0.15); color:var(--primary-light);"><i class="fas fa-robot"></i></div>
+                    <h4>2. AI Chat Assistant</h4>
+                </div>
+                <ul class="req-list">
+                    <li><i class="fas fa-check"></i> Natural Language Travel Chat</li>
+                    <li><i class="fas fa-check"></i> Destination Recommendations</li>
+                    <li><i class="fas fa-check"></i> Itinerary Suggestions</li>
+                    <li><i class="fas fa-check"></i> Multi-Turn Memory</li>
+                </ul>
             </div>
 
-            <div class="feature-card">
-                <div class="f-icon"><i class="fas fa-calculator"></i></div>
-                <h3>Estimated Budget Calculator</h3>
-                <p>Receive realistic travel budgets covering fuel, tolls, budget-to-luxury stays, dining, admission tickets, and emergency buffers.</p>
+            <!-- 3. Destinations & Places -->
+            <div class="req-card">
+                <div class="req-head">
+                    <div class="req-icon" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald);"><i class="fas fa-map-marked-alt"></i></div>
+                    <h4>3. Destinations &amp; Places</h4>
+                </div>
+                <ul class="req-list">
+                    <li><i class="fas fa-check"></i> Instant Search &amp; Filter</li>
+                    <li><i class="fas fa-check"></i> Curated Attractions &amp; Highlights</li>
+                    <li><i class="fas fa-check"></i> Photos, Ratings &amp; Reviews</li>
+                    <li><i class="fas fa-check"></i> Google Maps &amp; Coordinates</li>
+                </ul>
             </div>
 
-            <div class="feature-card">
-                <div class="f-icon"><i class="fas fa-utensils"></i></div>
-                <h3>Authentic Food & Dining</h3>
-                <p>Discover famous street food, regional signature dishes, vegetarian/non-vegetarian dining spots, and average per-meal dining expenses.</p>
+            <!-- 4. Trip Planning & Itinerary -->
+            <div class="req-card">
+                <div class="req-head">
+                    <div class="req-icon" style="background:rgba(244,63,94,0.15); color:var(--accent-rose);"><i class="fas fa-calendar-alt"></i></div>
+                    <h4>4. Trip Planning &amp; Itinerary</h4>
+                </div>
+                <ul class="req-list">
+                    <li><i class="fas fa-check"></i> Custom AI Itinerary Generation</li>
+                    <li><i class="fas fa-check"></i> Dates, Travelers &amp; Budget Tiers</li>
+                    <li><i class="fas fa-check"></i> Day-wise Travel Timeline</li>
+                    <li><i class="fas fa-check"></i> Export &amp; Download as PDF</li>
+                </ul>
             </div>
 
-            <div class="feature-card">
-                <div class="f-icon"><i class="fas fa-train-subway"></i></div>
-                <h3>Multi-Modal Transport</h3>
-                <p>Calculate optimal travel paths using trains, flights, intercity buses, metros, cabs, and self-drive car/bike rentals with travel times.</p>
+            <!-- 5. Travel Services Info -->
+            <div class="req-card">
+                <div class="req-head">
+                    <div class="req-icon" style="background:rgba(139,92,246,0.15); color:var(--accent-purple);"><i class="fas fa-hotel"></i></div>
+                    <h4>5. Travel Services Info</h4>
+                </div>
+                <ul class="req-list">
+                    <li><i class="fas fa-check"></i> Hotel &amp; Resort Suggestions</li>
+                    <li><i class="fas fa-check"></i> Transportation Options</li>
+                    <li><i class="fas fa-check"></i> Local Food &amp; Restaurants</li>
+                    <li><i class="fas fa-check"></i> Realistic Cost Breakdown</li>
+                </ul>
             </div>
 
-            <div class="feature-card">
-                <div class="f-icon"><i class="fas fa-shield-halved"></i></div>
-                <h3>Safety, Visa & Local Tips</h3>
-                <p>Stay informed with country-specific visa rules, emergency contact numbers, medical facilities, local customs, and trusted safety advice.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- ABOUT VIDEO SPLIT -->
-    <section class="about-split">
-        <div class="about-inner">
-            <div>
-                <div class="s-label">Immersive Exploration</div>
-                <h2 class="s-title" style="color:var(--cream);">Designed for <em>Modern Wanderers</em></h2>
-                <p style="color:var(--cream-muted); margin-bottom:20px; font-size:15px; line-height:1.8;">
-                    Traveling shouldn't be about juggling tabs across blogs, flight aggregators, and map apps. Our conversational AI synthesizes deep geographic insights into clear, actionable travel roadmaps in seconds.
-                </p>
-                <a href="chatbot.html" class="btn btn-gold"><i class="fas fa-comments"></i> Chat with AI Assistant</a>
+            <!-- 6. Travel Tips & Support -->
+            <div class="req-card">
+                <div class="req-head">
+                    <div class="req-icon" style="background:rgba(6,182,212,0.15); color:var(--accent-cyan);"><i class="fas fa-lightbulb"></i></div>
+                    <h4>6. Travel Tips &amp; Support</h4>
+                </div>
+                <ul class="req-list">
+                    <li><i class="fas fa-check"></i> Best Time to Visit &amp; Seasons</li>
+                    <li><i class="fas fa-check"></i> Weather Information</li>
+                    <li><i class="fas fa-check"></i> Travel Do's &amp; Don'ts</li>
+                    <li><i class="fas fa-check"></i> 24/7 AI Travel Planning</li>
+                </ul>
             </div>
 
-            <div class="video-box">
-                <video autoplay muted loop playsinline>
-                    <source src="assets/video1.mp4" type="video/mp4">
-                    Your browser does not support HTML5 video.
-                </video>
+            <!-- 7. System & Technical -->
+            <div class="req-card">
+                <div class="req-head">
+                    <div class="req-icon" style="background:rgba(59,130,246,0.15); color:#60A5FA;"><i class="fas fa-cogs"></i></div>
+                    <h4>7. System &amp; Technical</h4>
+                </div>
+                <ul class="req-list">
+                    <li><i class="fas fa-check"></i> Responsive Web UI</li>
+                    <li><i class="fas fa-check"></i> Java 17 + Spring Boot 3.3.4</li>
+                    <li><i class="fas fa-check"></i> MongoDB Atlas Database</li>
+                    <li><i class="fas fa-check"></i> Google Gemini AI Engine</li>
+                </ul>
             </div>
         </div>
     </section>
@@ -139,19 +206,132 @@
     <footer>
         <div class="footer-inner">
             <div class="nav-logo">
-                <div class="logo-badge" style="width:30px; height:30px; font-size:14px;"><i class="fas fa-compass"></i></div>
-                <span class="logo-text" style="font-size:18px;">Tourist Guide</span>
+                <div class="logo-badge"><i class="fas fa-tree"></i></div>
+                <span>TouristAI</span>
             </div>
             <div class="footer-copy">
-                &copy; 2026 Tourist Guide. Powered by Java 17, Spring Boot 3.x, MongoDB Atlas & Google Gemini.
+                &copy; 2026 TouristAI. Built with Java 17, Spring Boot, MongoDB Atlas &amp; Google Gemini AI.
             </div>
         </div>
     </footer>
 
-    <!-- SCRIPTS -->
+    <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/app.js"></script>
+    <script>
+        function handleHeroSearch(e) {
+            e.preventDefault();
+            const q = document.getElementById('heroSearchInput').value.trim();
+            if (!q) return;
+            // Direct to destinations search or planner
+            window.location.href = `destinations.html?search=${encodeURIComponent(q)}`;
+        }
+
+        function openChatWithPrompt(prompt) {
+            localStorage.setItem('pending_chat_prompt', prompt);
+            window.location.href = 'chatbot.html';
+        }
+
+        async function loadFeaturedDestinations() {
+            const container = document.getElementById('popularDestGrid');
+            if (!container) return;
+
+            const fallbackList = [
+                {
+                    name: 'Ooty',
+                    country: 'India',
+                    famousFor: 'Queen of Hill Stations, Tea Gardens, Toy Train',
+                    rating: 4.8,
+                    reviewCount: '3.4K',
+                    weather: '18°C Mostly Cloudy',
+                    images: ['https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800']
+                },
+                {
+                    name: 'Manali',
+                    country: 'India',
+                    famousFor: 'Solang Valley, Snow Sports, Rohtang Pass',
+                    rating: 4.8,
+                    reviewCount: '4.2K',
+                    weather: '14°C Sunny & Crisp',
+                    images: ['https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800']
+                },
+                {
+                    name: 'Kerala',
+                    country: 'India',
+                    famousFor: 'Backwaters, Alleppey Houseboats, Munnar',
+                    rating: 4.9,
+                    reviewCount: '5.1K',
+                    weather: '26°C Tropical Warmth',
+                    images: ['https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800']
+                },
+                {
+                    name: 'Goa',
+                    country: 'India',
+                    famousFor: 'Golden Beaches, Nightlife, Water Sports',
+                    rating: 4.7,
+                    reviewCount: '4.8K',
+                    weather: '28°C Sunny Coastal',
+                    images: ['https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800']
+                },
+                {
+                    name: 'Paris',
+                    country: 'France',
+                    famousFor: 'Eiffel Tower, Louvre Museum, Gastronomy',
+                    rating: 4.8,
+                    reviewCount: '6.2K',
+                    weather: '19°C Pleasant',
+                    images: ['https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800']
+                },
+                {
+                    name: 'Taj Mahal',
+                    country: 'India',
+                    famousFor: 'Mughal Architecture, Wonder of the World',
+                    rating: 4.9,
+                    reviewCount: '7.8K',
+                    weather: 'Sunny & Historic',
+                    images: ['https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800']
+                }
+            ];
+
+            try {
+                const res = await Api.get('/destinations');
+                const list = (Array.isArray(res) && res.length > 0) ? res.slice(0, 6) : fallbackList;
+                renderCards(list);
+            } catch (err) {
+                renderCards(fallbackList);
+            }
+
+            function renderCards(destList) {
+                container.innerHTML = destList.map(d => `
+                    <div class="dest-card" onclick="window.location.href='destinations.html?view=${encodeURIComponent(d.name)}'">
+                        <div class="dest-card-img-wrap">
+                            <img class="dest-card-img" src="${(d.images && d.images[0]) || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'}" alt="${d.name}" loading="lazy">
+                            <div class="dest-card-badge">
+                                <i class="fas fa-star" style="color:var(--accent-gold);"></i> ${d.rating || '4.8'}
+                            </div>
+                        </div>
+                        <div class="dest-card-body">
+                            <div class="dest-card-title">
+                                <span>${d.name}</span>
+                            </div>
+                            <div class="dest-card-location">
+                                <i class="fas fa-location-dot"></i> ${d.country || 'Global'}
+                            </div>
+                            <p class="dest-card-desc">${d.famousFor || d.description || 'Scenic highlights and cultural treasures.'}</p>
+                            <div class="dest-card-footer">
+                                <div class="rating-pill">
+                                    <i class="fas fa-cloud-sun"></i> <span>${d.weather || 'Pleasant'}</span>
+                                </div>
+                                <span style="font-size:13px; font-weight:600; color:var(--primary-light);">Explore <i class="fas fa-arrow-right"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadFeaturedDestinations);
+    </script>
 </body>
 </html>

@@ -131,67 +131,139 @@ public class DataInitializer implements ApplicationRunner {
                         .continent("Asia")
                         .description("Known as the 'Queen of Hill Stations', Ooty features picturesque tea gardens, serene lakes, cool climate, and the Nilgiri Mountain Railway.")
                         .famousFor("Tea Gardens, Ooty Lake, Botanical Gardens, Nilgiri Toy Train, Doddabetta Peak")
-                        .bestTime("March to June & September to November")
+                        .bestTime("Oct - Jun")
                         .peakSeason("April - May")
                         .offSeason("July - August (Monsoon)")
-                        .weather("Pleasant, 10°C - 25°C")
+                        .weather("18°C Mostly Cloudy")
                         .idealDuration("3 to 4 Days")
                         .unescoStatus("Nilgiri Mountain Railway UNESCO World Heritage")
                         .openingTime("08:30 AM")
                         .closingTime("06:30 PM")
                         .entryFee("₹30 - ₹50 for gardens")
+                        .rating(4.8)
+                        .reviewCount(3420)
                         .latitude(11.4102)
                         .longitude(76.6950)
                         .mapsLink("https://www.google.com/maps/search/?api=1&query=11.4102,76.6950")
                         .images(List.of(
                                 "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800",
-                                "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800"
+                                "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800",
+                                "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800"
                         ))
                         .tags(List.of("Hill Station", "Nature", "Tea Gardens", "Couples", "Family"))
                         .officialWebsite("https://www.tamilnadutourism.tn.gov.in/")
                         .travelTip("Book the Nilgiri toy train tickets weeks in advance. Carry warm clothes for chilly evenings.")
+                        .attractions(List.of(
+                                Map.of("name", "Ooty Lake", "rating", 4.5, "reviews", "2.3K", "image", "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800", "description", "Picturesque artificial lake offering pedal boating and tranquil eucalyptus walks."),
+                                Map.of("name", "Doddabetta Peak", "rating", 4.6, "reviews", "1.8K", "image", "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800", "description", "Highest peak in the Nilgiris with telescope house panoramic view."),
+                                Map.of("name", "Botanical Garden", "rating", 4.4, "reviews", "2.1K", "image", "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800", "description", "Sprawling 55-acre heritage garden with exotic flora and fossil tree trunk."),
+                                Map.of("name", "Rose Garden", "rating", 4.3, "reviews", "1.9K", "image", "https://images.unsplash.com/photo-1496062031456-07b8f162a322?w=800", "description", "Terraced garden cultivating thousands of exquisite rose species.")
+                        ))
+                        .hotels(List.of(
+                                Map.of("name", "Savoy - IHCL SeleQtions", "tier", "Luxury", "price", "₹12,500/night", "rating", 4.7, "image", "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"),
+                                Map.of("name", "Sterling Ooty Elk Hill", "tier", "Mid-Range", "price", "₹4,800/night", "rating", 4.4, "image", "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800"),
+                                Map.of("name", "Zostel Ooty", "tier", "Budget", "price", "₹1,400/night", "rating", 4.6, "image", "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800")
+                        ))
+                        .localFoods(List.of(
+                                Map.of("name", "Ooty Homemade Chocolates", "type", "Confectionery", "description", "Rich handmade fudge, truffles, and white chocolates", "price", "₹250 / box"),
+                                Map.of("name", "Nilgiri Orthodox Tea", "type", "Beverage", "description", "Fresh high-grown fragrant estate tea", "price", "₹60 / cup"),
+                                Map.of("name", "Crispy Medu Vada & Filter Coffee", "type", "Traditional Breakfast", "description", "Classic South Indian breakfast staple", "price", "₹90")
+                        ))
+                        .travelTipsList(List.of(
+                                "Mornings and evenings get surprisingly cold even in summer—carry light woolens.",
+                                "Hire a certified local cab for Doddabetta and Pykara Lake circuits.",
+                                "Sample fresh Ooty carrots and homemade plum chocolates at Commercial Road."
+                        ))
                         .build(),
 
                 Destination.builder()
-                        .name("Taj Mahal")
+                        .name("Manali")
                         .country("India")
                         .continent("Asia")
-                        .description("An ivory-white marble mausoleum on the south bank of the Yamuna river in Agra, commissioned in 1632 by the Mughal emperor Shah Jahan.")
-                        .famousFor("Mughal Architecture, Symbol of Love, Wonder of the World")
-                        .bestTime("October to March")
-                        .peakSeason("November - February")
-                        .weather("Sunny in winter, 12°C - 26°C")
-                        .idealDuration("1 Day")
-                        .unescoStatus("UNESCO World Heritage Site")
-                        .openingTime("Sunrise (approx 06:00 AM)")
-                        .closingTime("Sunset (approx 06:30 PM), Closed Fridays")
-                        .entryFee("₹50 (Indian), ₹1100 (Foreigners)")
-                        .latitude(27.1751)
-                        .longitude(78.0421)
-                        .mapsLink("https://www.google.com/maps/search/?api=1&query=27.1751,78.0421")
+                        .description("High-altitude Himalayan resort town renowned for snow adventures, pine-scented valleys, hot springs, and mountain trekking.")
+                        .famousFor("Solang Valley, Rohtang Pass, Hadimba Temple, Paragliding, River Rafting")
+                        .bestTime("Oct - Jun")
+                        .peakSeason("May - June & Dec - Jan")
+                        .offSeason("July - August")
+                        .weather("14°C Sunny & Crisp")
+                        .idealDuration("4 to 5 Days")
+                        .entryFee("Free for town; permits for Rohtang")
+                        .rating(4.8)
+                        .reviewCount(4210)
+                        .latitude(32.2432)
+                        .longitude(77.1892)
+                        .mapsLink("https://www.google.com/maps/search/?api=1&query=32.2432,77.1892")
                         .images(List.of(
-                                "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800",
-                                "https://images.unsplash.com/photo-1599858769708-7c1ff5b6e47c?w=800"
+                                "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800",
+                                "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800"
                         ))
-                        .tags(List.of("Monument", "UNESCO", "Architecture", "Romantic"))
-                        .officialWebsite("https://www.tajmahal.gov.in/")
-                        .travelTip("Visit at sunrise for minimal crowds and spectacular golden reflections on marble.")
+                        .tags(List.of("Himalayas", "Snow", "Adventure", "Hill Station", "Trekking"))
+                        .officialWebsite("https://himachaltourism.gov.in/")
+                        .travelTip("Rohtang Pass permits must be booked in advance online. Carry thermal layers.")
+                        .attractions(List.of(
+                                Map.of("name", "Solang Valley", "rating", 4.7, "reviews", "3.2K", "image", "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800", "description", "Adrenaline hub for paragliding, skiing, zorbing and snow quad biking."),
+                                Map.of("name", "Rohtang Pass", "rating", 4.8, "reviews", "4.1K", "image", "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800", "description", "Breathtaking mountain pass connecting Kullu with Lahaul and Spiti Valleys."),
+                                Map.of("name", "Hadimba Temple", "rating", 4.6, "reviews", "2.8K", "image", "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800", "description", "Ancient pagoda-style wooden temple nestled in towering cedar forests."),
+                                Map.of("name", "Mall Road", "rating", 4.4, "reviews", "2.5K", "image", "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800", "description", "Vibrant pedestrian promenade with cafes, woolens, and handicrafts.")
+                        ))
+                        .hotels(List.of(
+                                Map.of("name", "The Himalayan Resort", "tier", "Luxury", "price", "₹14,000/night", "rating", 4.8, "image", "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"),
+                                Map.of("name", "Snow Valley Resorts", "tier", "Mid-Range", "price", "₹4,200/night", "rating", 4.5, "image", "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800"),
+                                Map.of("name", "Zostel Old Manali", "tier", "Budget", "price", "₹1,100/night", "rating", 4.6, "image", "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800")
+                        ))
+                        .localFoods(List.of(
+                                Map.of("name", "Himachali Siddu", "type", "Local Bread", "description", "Steamed wheat bun stuffed with spiced walnuts and poppy seeds", "price", "₹120"),
+                                Map.of("name", "Trout Fish Fry", "type", "Non-Veg Specialty", "description", "Fresh caught river trout pan-fried in mountain herbs", "price", "₹380"),
+                                Map.of("name", "Tibetan Thukpa & Momos", "type", "Comfort Food", "description", "Steaming noodle soup and juicy handmade dumplings", "price", "₹150")
+                        ))
+                        .travelTipsList(List.of(
+                                "Stay in Old Manali for quiet cafes and bohemian riverside vibes.",
+                                "Book adventure sports only through authorized operators at Solang.",
+                                "Acclimate for a few hours before ascending towards Rohtang Pass."
+                        ))
+                        .build(),
+
+                Destination.builder()
+                        .name("Kerala")
+                        .country("India")
+                        .continent("Asia")
+                        .description("Known as 'God's Own Country', celebrated for emerald backwaters, misty tea plantations, Ayurvedic wellness, and palm-fringed coastlines.")
+                        .famousFor("Alleppey Houseboats, Munnar Tea Valleys, Kovalam Beach, Kathakali, Ayurveda")
+                        .bestTime("Sep - Mar")
+                        .peakSeason("Nov - Feb")
+                        .weather("26°C Tropical Breeze")
+                        .idealDuration("5 to 7 Days")
+                        .rating(4.9)
+                        .reviewCount(5120)
+                        .latitude(9.4981)
+                        .longitude(76.3388)
+                        .mapsLink("https://www.google.com/maps/search/?api=1&query=9.4981,76.3388")
+                        .images(List.of(
+                                "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800",
+                                "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=800"
+                        ))
+                        .tags(List.of("Backwaters", "Nature", "Beaches", "Ayurveda", "Houseboats"))
+                        .officialWebsite("https://www.keralatourism.org/")
+                        .travelTip("Spend at least one overnight journey on a traditional Alleppey kettuvallam houseboat.")
+                        .attractions(List.of(
+                                Map.of("name", "Alleppey Backwaters", "rating", 4.9, "reviews", "4.5K", "image", "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800", "description", "Tranquil maze of canals and lagoons navigated by traditional thatched houseboats."),
+                                Map.of("name", "Munnar Tea Estates", "rating", 4.8, "reviews", "3.9K", "image", "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=800", "description", "Rolling verdant tea hills, misty waterfalls and Anamudi mountain peak."),
+                                Map.of("name", "Periyar Wildlife Sanctuary", "rating", 4.5, "reviews", "2.1K", "image", "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800", "description", "Elephant and tiger reserve surrounding a serene lake in Thekkady."),
+                                Map.of("name", "Fort Kochi", "rating", 4.6, "reviews", "2.7K", "image", "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800", "description", "Colonial seaside heritage hub with cantilevered Chinese fishing nets.")
+                        ))
                         .build(),
 
                 Destination.builder()
                         .name("Goa")
                         .country("India")
                         .continent("Asia")
-                        .description("India's pocket-sized paradise on the southwest coast, famed for golden sandy beaches, vibrant nightlife, Portuguese heritage churches, and fresh seafood.")
+                        .description("India's pocket-sized coastal haven, famed for golden beaches, water sports, Portuguese churches, vibrant flea markets, and fresh seafood.")
                         .famousFor("Beaches, Water Sports, Nightclubs, Seafood, Portuguese Architecture")
-                        .bestTime("November to February")
-                        .peakSeason("December - January")
-                        .weather("Tropical, 22°C - 32°C")
+                        .bestTime("Nov - Feb")
+                        .weather("28°C Sunny Coastal")
                         .idealDuration("4 to 5 Days")
-                        .unescoStatus("Churches and Convents of Goa UNESCO Site")
-                        .openingTime("Open 24 Hours (Beaches)")
-                        .closingTime("Varies by club & monument")
-                        .entryFee("Free for public beaches")
+                        .rating(4.7)
+                        .reviewCount(4890)
                         .latitude(15.2993)
                         .longitude(74.1240)
                         .mapsLink("https://www.google.com/maps/search/?api=1&query=15.2993,74.1240")
@@ -199,20 +271,28 @@ public class DataInitializer implements ApplicationRunner {
                                 "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800",
                                 "https://images.unsplash.com/photo-1614082242765-7c98ca0f3df3?w=800"
                         ))
-                        .tags(List.of("Beach", "Party", "Water Sports", "Relaxation", "Seafood"))
+                        .tags(List.of("Beach", "Nightlife", "Water Sports", "Relaxation", "Seafood"))
                         .officialWebsite("https://goatourism.gov.in/")
-                        .travelTip("Rent a scooter to explore the scenic coastal roads of North and South Goa conveniently.")
+                        .travelTip("Rent a two-wheeler to hop between North Goa nightlife and South Goa tranquility.")
+                        .attractions(List.of(
+                                Map.of("name", "Baga Beach", "rating", 4.5, "reviews", "3.8K", "image", "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800", "description", "Lively shoreline packed with water sports, beach shacks and sunset vibes."),
+                                Map.of("name", "Basilica of Bom Jesus", "rating", 4.8, "reviews", "2.9K", "image", "https://images.unsplash.com/photo-1614082242765-7c98ca0f3df3?w=800", "description", "UNESCO heritage Baroque church holding the mortal remains of St. Francis Xavier."),
+                                Map.of("name", "Dudhsagar Falls", "rating", 4.7, "reviews", "2.4K", "image", "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800", "description", "Four-tiered milky cascade nestled deep in the Western Ghats jungle."),
+                                Map.of("name", "Palolem Beach", "rating", 4.7, "reviews", "2.1K", "image", "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800", "description", "Scenic crescent bay in South Goa with calm swimming waters and silent discos.")
+                        ))
                         .build(),
 
                 Destination.builder()
                         .name("Paris")
                         .country("France")
                         .continent("Europe")
-                        .description("France's capital, is a major European city and a global center for art, fashion, gastronomy and culture with iconic 19th-century cityscapes.")
-                        .famousFor("Eiffel Tower, Louvre Museum, Notre-Dame, French Cuisine, Fashion")
-                        .bestTime("April to June & September to November")
-                        .weather("Mild, 15°C - 25°C")
+                        .description("France's capital and global capital of art, gastronomy, culture and fashion, set along the romantic Seine River.")
+                        .famousFor("Eiffel Tower, Louvre Museum, Notre-Dame, French Haute Cuisine, Montmartre")
+                        .bestTime("Apr - Oct")
+                        .weather("19°C Pleasant")
                         .idealDuration("4 to 5 Days")
+                        .rating(4.8)
+                        .reviewCount(6200)
                         .latitude(48.8566)
                         .longitude(2.3522)
                         .mapsLink("https://www.google.com/maps/search/?api=1&query=48.8566,2.3522")
@@ -222,13 +302,33 @@ public class DataInitializer implements ApplicationRunner {
                         ))
                         .tags(List.of("Romance", "Museums", "Culinary", "Fashion", "Culture"))
                         .officialWebsite("https://en.parisinfo.com/")
-                        .travelTip("Purchase a Paris Museum Pass and Navigo Easy metro card for seamless travel.")
+                        .travelTip("Book Louvre tickets in advance online and use the Metro for speedy citywide transit.")
+                        .attractions(List.of(
+                                Map.of("name", "Eiffel Tower", "rating", 4.8, "reviews", "7.5K", "image", "https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=800", "description", "Iconic 330m wrought-iron lattice tower on the Champ de Mars."),
+                                Map.of("name", "Louvre Museum", "rating", 4.8, "reviews", "6.1K", "image", "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800", "description", "World's largest art museum housing Leonardo's Mona Lisa and Venus de Milo."),
+                                Map.of("name", "Arc de Triomphe", "rating", 4.7, "reviews", "3.4K", "image", "https://images.unsplash.com/photo-1511739001486-6bfe10cec9e4?w=800", "description", "Heroic triumphal arch honoring French military victories at the Champs-Élysées."),
+                                Map.of("name", "Sacré-Cœur", "rating", 4.7, "reviews", "3.1K", "image", "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800", "description", "White domed basilica atop the hill of Montmartre with sweeping city panoramas.")
+                        ))
                         .build()
         );
 
         for (Destination d : featured) {
-            if (destinationRepository.findByNameIgnoreCase(d.getName()).isEmpty()) {
+            java.util.Optional<Destination> existing = destinationRepository.findByNameIgnoreCase(d.getName());
+            if (existing.isEmpty()) {
                 destinationRepository.save(d);
+            } else {
+                Destination dest = existing.get();
+                if (dest.getAttractions() == null || dest.getAttractions().isEmpty()) {
+                    dest.setAttractions(d.getAttractions());
+                    dest.setHotels(d.getHotels());
+                    dest.setLocalFoods(d.getLocalFoods());
+                    dest.setTravelTipsList(d.getTravelTipsList());
+                    dest.setRating(d.getRating());
+                    dest.setReviewCount(d.getReviewCount());
+                    dest.setWeather(d.getWeather());
+                    dest.setBestTime(d.getBestTime());
+                    destinationRepository.save(dest);
+                }
             }
         }
     }
