@@ -220,6 +220,39 @@ button, input, select, textarea {
     box-shadow: 0 4px 14px rgba(197, 164, 109, 0.35);
 }
 
+/* Brand Asset Logo Variants */
+.brand-logo-img {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    object-fit: contain;
+    transition: var(--transition);
+    display: inline-block;
+    vertical-align: middle;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.brand-logo-img.large {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+}
+
+/* Active Theme Display Controls for Logo Variants */
+:root .brand-logo-light {
+    display: none !important;
+}
+:root .brand-logo-dark {
+    display: inline-block !important;
+}
+
+[data-theme="light"] .brand-logo-dark {
+    display: none !important;
+}
+[data-theme="light"] .brand-logo-light {
+    display: inline-block !important;
+}
+
 .nav-links {
     display: flex;
     align-items: center;

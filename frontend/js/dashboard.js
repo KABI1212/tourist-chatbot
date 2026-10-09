@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TouristAI — User Dashboard & Saved Trips Controller (Screen 6)
  */

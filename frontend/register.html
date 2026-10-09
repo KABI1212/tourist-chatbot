@@ -12,7 +12,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/chatbot.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌴</text></svg>">
+    <!-- Favicon & Web App Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-light-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-dark-16x16.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/brand/icon-192x192.png">
+    <meta name="theme-color" content="#11110F">
     <!-- Theme Switcher -->
     <script src="js/theme.js"></script>
 </head>
@@ -22,7 +27,8 @@
     <nav class="navbar">
         <div class="nav-inner">
             <a href="index.html" class="nav-logo">
-                <div class="logo-badge"><i class="fas fa-compass"></i></div>
+                <img src="assets/brand/logo-dark.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-dark">
+                <img src="assets/brand/logo-light.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-light">
                 <span>TouristAI</span>
             </a>
             <div class="nav-links">
@@ -44,7 +50,8 @@
         <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px; max-width:520px; width:100%; box-shadow:var(--shadow-lg);">
             
             <div style="text-align:center; margin-bottom:28px;">
-                <div class="logo-badge" style="margin:0 auto 14px; width:46px; height:46px; font-size:22px;"><i class="fas fa-compass"></i></div>
+                <img src="assets/brand/logo-dark.png" alt="TouristAI Logo" class="brand-logo-img large brand-logo-dark" style="margin:0 auto 14px; display:block;">
+                <img src="assets/brand/logo-light.png" alt="TouristAI Logo" class="brand-logo-img large brand-logo-light" style="margin:0 auto 14px; display:block;">
                 <h2 style="font-family:var(--font-display); font-size:28px; color:var(--text-main); font-weight:700; margin-bottom:6px;">Join TouristAI</h2>
                 <p style="color:var(--text-muted); font-size:14px;">Create your personal account to save custom itineraries, bookmark destinations, and plan trips effortlessly.</p>
             </div>

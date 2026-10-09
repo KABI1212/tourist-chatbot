@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TouristAI — Itinerary Planner Controller (Screen 4 & 5)
  * Luxury Travel Editorial Architecture & Leaflet Route Visualizer

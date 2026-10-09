@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tourist Guide & TravelMind AI — Production & Deployment Configuration
  *

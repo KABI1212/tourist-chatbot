@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TouristAI — Chat Controller (Screen 2)
  * Supports live Gemini backend, multi-turn history, guest chatting, and rich itinerary cards
