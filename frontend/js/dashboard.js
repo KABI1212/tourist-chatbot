@@ -94,7 +94,7 @@ function renderTrips() {
         container.innerHTML = `
             <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:40px; text-align:center;">
                 <i class="fas fa-suitcase" style="font-size:36px; color:var(--text-dim); margin-bottom:14px;"></i>
-                <h3 style="color:#fff; font-size:18px; margin-bottom:6px;">No ${currentFilter} trips found</h3>
+                <h3 style="color:var(--text-main); font-size:18px; margin-bottom:6px;">No ${currentFilter} trips found</h3>
                 <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">Ready to create an unforgettable travel experience?</p>
                 <a href="planner.html" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Plan Your First Trip</a>
             </div>
@@ -110,7 +110,7 @@ function renderTrips() {
         return `
             <div class="saved-trip-row-card">
                 <div class="trip-card-left">
-                    <img class="trip-thumb-img" src="${img}" alt="${escapeHtml(t.title)}" loading="lazy">
+                    <img class="trip-thumb-img" src="${img}" alt="${escapeHtml(t.title)}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'" loading="lazy">
                     <div class="trip-info-texts">
                         <h3>${escapeHtml(t.title || ('Trip to ' + t.destination))}</h3>
                         <div class="trip-info-meta">
@@ -143,12 +143,12 @@ function openTripModal(tripId) {
 
     const days = trip.daysPlan || [];
     const daysHtml = days.map(d => `
-        <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:12px;">
+        <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:12px;">
             <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                <strong style="color:#60A5FA;">Day ${d.dayNumber || ''}</strong>
+                <strong style="color:var(--accent-gold);">Day ${d.dayNumber || ''}</strong>
                 <span style="font-size:12px; color:var(--text-dim);">${d.location || ''}</span>
             </div>
-            <h4 style="color:#fff; font-size:16px; margin-bottom:8px;">${escapeHtml(d.title)}</h4>
+            <h4 style="color:var(--text-main); font-size:16px; margin-bottom:8px;">${escapeHtml(d.title)}</h4>
             <ul style="list-style:disc; margin-left:20px; font-size:13.5px; color:var(--text-light);">
                 ${(d.activities || []).map(a => `<li>${escapeHtml(a)}</li>`).join('')}
             </ul>
@@ -156,13 +156,13 @@ function openTripModal(tripId) {
     `).join('');
 
     content.innerHTML = `
-        <h2 style="font-family:var(--font-display); font-size:26px; color:#fff; margin-bottom:6px;">${escapeHtml(trip.title)}</h2>
+        <h2 style="font-family:var(--font-display); font-size:26px; color:var(--text-main); margin-bottom:6px;">${escapeHtml(trip.title)}</h2>
         <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">
             ${trip.destination} • ${trip.people || 2} Travelers • ${trip.days || 5} Days
         </p>
 
         <div style="margin-bottom:24px;">
-            <h3 style="color:#fff; font-size:18px; margin-bottom:12px;">Itinerary Schedule</h3>
+            <h3 style="color:var(--text-main); font-size:18px; margin-bottom:12px;">Itinerary Schedule</h3>
             ${daysHtml.length > 0 ? daysHtml : '<p style="color:var(--text-dim);">Detailed schedule saved.</p>'}
         </div>
 

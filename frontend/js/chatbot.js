@@ -1,58 +1,72 @@
 // @ts-nocheck
 /**
  * TouristAI — Chat Controller (Screen 2)
- * Supports live Gemini backend, multi-turn history, guest chatting, and rich itinerary cards
+ * Supports live Gemini backend, multi-turn history, guest chatting, deduplication, and rich itinerary cards
  */
 
 let currentChatId = null;
 let isProcessing = false;
+let lastUserMessage = '';
 
 document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('chatMessageInput');
-    const form = document.getElementById('chatInputForm');
+    const form = document.getElementById('chatForm') || document.getElementById('chatInputForm');
 
     if (input) {
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend(e);
-            }
-        });
-
         input.addEventListener('input', () => {
-            input.style.height = '44px';
+            input.style.height = '38px';
             input.style.height = Math.min(input.scrollHeight, 140) + 'px';
         });
+    }
+
+    if (form) {
+        form.addEventListener('submit', handleChatSubmit);
     }
 
     // Load recent chats if logged in
     loadRecentChats();
 
-    // Check for pending prompt from other pages
-    const pending = localStorage.getItem('pending_chat_prompt');
-    if (pending) {
-        localStorage.removeItem('pending_chat_prompt');
-        usePrompt(pending);
+    // Check for query param prompt or pending prompt
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryPrompt = urlParams.get('prompt');
+    const pendingPrompt = localStorage.getItem('pending_chat_prompt');
+
+    const initialPrompt = queryPrompt || pendingPrompt;
+    if (initialPrompt) {
+        if (pendingPrompt) localStorage.removeItem('pending_chat_prompt');
+        usePrompt(decodeURIComponent(initialPrompt));
         setTimeout(() => {
-            handleSend(new Event('submit'));
-        }, 300);
+            handleChatSubmit(new Event('submit'));
+        }, 350);
     }
 });
+
+function handleInputKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleChatSubmit(e);
+    }
+}
 
 function usePrompt(text) {
     const input = document.getElementById('chatMessageInput');
     if (input) {
         input.value = text;
-        input.style.height = '44px';
+        input.style.height = '38px';
         input.focus();
     }
+}
+
+function useSuggestedChip(text) {
+    usePrompt(text);
+    handleChatSubmit(new Event('submit'));
 }
 
 function openPlannerFor(dest, days = 5, travelers = 2) {
     window.location.href = `planner.html?destination=${encodeURIComponent(dest)}&days=${days}&travelers=${travelers}`;
 }
 
-async function handleSend(e) {
+async function handleChatSubmit(e) {
     if (e && e.preventDefault) e.preventDefault();
     if (isProcessing) return;
 
@@ -60,13 +74,20 @@ async function handleSend(e) {
     const text = input ? input.value.trim() : '';
     if (!text) return;
 
-    // Append user message
-    appendUserBubble(text);
-    input.value = '';
-    input.style.height = '44px';
-
+    // Atomic lock to prevent duplicate submission
     isProcessing = true;
-    const sendBtn = document.getElementById('chatSendBtn');
+    lastUserMessage = text;
+
+    // Reset input immediately
+    if (input) {
+        input.value = '';
+        input.style.height = '38px';
+    }
+
+    // Append user message with deduplication
+    appendUserBubble(text);
+
+    const sendBtn = document.getElementById('sendBtn') || document.getElementById('chatSendBtn');
     if (sendBtn) sendBtn.disabled = true;
 
     const thinkingEl = appendThinkingIndicator();
@@ -104,9 +125,24 @@ async function handleSend(e) {
     }
 }
 
+// Backward compatibility alias
+function handleSend(e) {
+    return handleChatSubmit(e);
+}
+
 function appendUserBubble(text) {
     const box = document.getElementById('messagesBox');
     if (!box) return;
+
+    // Deduplication guard
+    const lastMsg = box.lastElementChild;
+    if (lastMsg && lastMsg.classList.contains('user')) {
+        const lastBubble = lastMsg.querySelector('.msg-bubble');
+        if (lastBubble && lastBubble.textContent.trim() === text.trim()) {
+            console.warn('Duplicate user prompt prevented:', text);
+            return;
+        }
+    }
 
     const row = document.createElement('div');
     row.className = 'msg-row user';
@@ -124,7 +160,7 @@ function appendThinkingIndicator() {
     row.className = 'msg-row assistant';
     row.id = 'thinkingRow';
     row.innerHTML = `
-        <div class="msg-avatar ai"><i class="fas fa-tree"></i></div>
+        <div class="msg-avatar ai"><i class="fas fa-compass"></i></div>
         <div class="thinking-bubble">
             <span>TouristAI is crafting your travel plan</span>
             <div class="dot-flashing"></div>
@@ -138,6 +174,16 @@ function appendThinkingIndicator() {
 function appendAiBubble(markdownText, destination) {
     const box = document.getElementById('messagesBox');
     if (!box) return;
+
+    // Deduplication guard for AI response
+    const lastMsg = box.lastElementChild;
+    if (lastMsg && lastMsg.classList.contains('assistant') && !lastMsg.id) {
+        const lastBubble = lastMsg.querySelector('.msg-bubble');
+        if (lastBubble && lastBubble.textContent.trim() === markdownText.trim()) {
+            console.warn('Duplicate AI message prevented');
+            return;
+        }
+    }
 
     const row = document.createElement('div');
     row.className = 'msg-row assistant';
@@ -159,12 +205,52 @@ function appendAiBubble(markdownText, destination) {
     }
 
     row.innerHTML = `
-        <div class="msg-avatar ai"><i class="fas fa-tree"></i></div>
-        <div class="msg-bubble">${contentHtml}</div>
+        <div class="msg-avatar ai"><i class="fas fa-compass"></i></div>
+        <div class="msg-bubble">
+            ${contentHtml}
+            <div class="msg-actions-row" style="margin-top:12px; display:flex; gap:10px;">
+                <button class="msg-action-btn" onclick="copyAiResponse(this)"><i class="fas fa-copy"></i> Copy</button>
+                <button class="msg-action-btn" onclick="retryAiResponse()"><i class="fas fa-rotate-right"></i> Retry</button>
+                <button class="msg-action-btn" onclick="shareAiResponse()"><i class="fas fa-share-nodes"></i> Share</button>
+            </div>
+        </div>
     `;
 
     box.appendChild(row);
     scrollToBottom();
+}
+
+function copyAiResponse(btn) {
+    const bubble = btn.closest('.msg-bubble');
+    if (!bubble) return;
+    const textToCopy = bubble.innerText;
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => { btn.innerHTML = orig; }, 1500);
+    }).catch(() => {
+        alert('Copied response to clipboard.');
+    });
+}
+
+function retryAiResponse() {
+    if (lastUserMessage && !isProcessing) {
+        usePrompt(lastUserMessage);
+        handleChatSubmit(new Event('submit'));
+    }
+}
+
+function shareAiResponse() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'TouristAI Travel Plan',
+            text: lastUserMessage ? `AI Itinerary for: ${lastUserMessage}` : 'Check out this bespoke AI travel plan on TouristAI!'
+        }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Page link copied to clipboard!');
+        });
+    }
 }
 
 function scrollToBottom() {
@@ -180,10 +266,10 @@ function startNewChat() {
     if (box) {
         box.innerHTML = `
             <div class="msg-row assistant">
-                <div class="msg-avatar ai"><i class="fas fa-tree"></i></div>
+                <div class="msg-avatar ai"><i class="fas fa-compass"></i></div>
                 <div class="msg-bubble">
-                    <p style="font-weight:600; margin-bottom:6px;">Hello! I'm your TouristAI Travel Assistant. 🌴</p>
-                    <p>Where are you looking to travel? Ask me about multi-day itineraries, budgets, scenic attractions, hotels, or packing tips!</p>
+                    <p style="font-weight:600; margin-bottom:6px; color:var(--text-main);">Hello! I'm your TouristAI Travel Concierge. 🌴</p>
+                    <p style="color:var(--text-muted);">Where are you looking to travel? Ask me about multi-day itineraries, budgets, transit options, scenic attractions, or packing tips!</p>
                 </div>
             </div>
         `;
@@ -195,7 +281,6 @@ async function loadRecentChats() {
     if (!listEl) return;
 
     if (!Auth.isAuthenticated()) {
-        // Keep default sample items for guests
         return;
     }
 
@@ -246,44 +331,18 @@ async function loadChatSession(chatId) {
 }
 
 function loadSampleChat(type) {
-    if (type === 'kerala') {
-        const box = document.getElementById('messagesBox');
-        box.innerHTML = `
-            <div class="msg-row user">
-                <div class="msg-bubble">Plan a 5 days trip to Kerala for 2 people</div>
-                <div class="msg-avatar usr"><i class="fas fa-user"></i></div>
-            </div>
-            <div class="msg-row assistant">
-                <div class="msg-avatar ai"><i class="fas fa-tree"></i></div>
-                <div class="msg-bubble">
-                    <p style="margin-bottom:10px; font-weight:600;">Here's a 5 days Kerala trip plan for 2 people:</p>
-                    <div class="itinerary-chat-preview">
-                        <ul class="itinerary-day-list">
-                            <li class="itinerary-day-item"><span>🏝️</span><div><strong>Day 1:</strong> Arrive in Kochi - Local Sightseeing</div></li>
-                            <li class="itinerary-day-item"><span>🍃</span><div><strong>Day 2:</strong> Munnar - Tea Gardens, Waterfalls</div></li>
-                            <li class="itinerary-day-item"><span>🐘</span><div><strong>Day 3:</strong> Thekkady - Wildlife, Boating</div></li>
-                            <li class="itinerary-day-item"><span>⛵</span><div><strong>Day 4:</strong> Alleppey - Houseboat Experience</div></li>
-                            <li class="itinerary-day-item"><span>✈️</span><div><strong>Day 5:</strong> Departure from Kochi</div></li>
-                        </ul>
-                        <div class="budget-estimate-badge">Estimated Budget: ₹20,000 - ₹30,000 for 2 people</div>
-                        <div>
-                            <button class="btn-view-itinerary" onclick="openPlannerFor('Kerala', 5, 2)">
-                                <i class="fas fa-calendar-alt"></i> View Detailed Itinerary
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    } else if (type === 'ooty') {
-        usePrompt('Tell me about top attractions, weather and toy train in Ooty');
-        handleSend();
-    } else if (type === 'goa') {
-        usePrompt('Best beaches and 4-day itinerary for Goa');
-        handleSend();
+    if (type === 'ooty_budget') {
+        usePrompt('Plan a 3-day trip from Chennai to Ooty for two people under ₹8,000, including transportation, hotels, food, sightseeing, and a complete itinerary.');
+        handleChatSubmit(new Event('submit'));
+    } else if (type === 'kerala') {
+        usePrompt('5 Days Kerala Backwaters itinerary for 2 people with houseboat experience and budget breakdown');
+        handleChatSubmit(new Event('submit'));
     } else if (type === 'manali') {
-        usePrompt('Budget breakdown for 5 days in Manali for 2 people');
-        handleSend();
+        usePrompt('Manali Adventure Budget for 5 days: snow sports, Rohtang Pass, stay and transport from Delhi');
+        handleChatSubmit(new Event('submit'));
+    } else if (type === 'goa') {
+        usePrompt('4 Days Goa Heritage & Beaches itinerary with couple friendly budget stays');
+        handleChatSubmit(new Event('submit'));
     }
 }
 
@@ -321,17 +380,17 @@ function formatMarkdown(raw) {
     if (!raw) return '';
     let out = raw;
 
-    // Headers
-    out = out.replace(/^### (.*$)/gim, '<h4 style="margin:12px 0 6px; color:#fff;">$1</h4>');
-    out = out.replace(/^## (.*$)/gim, '<h3 style="margin:14px 0 8px; color:#fff;">$1</h3>');
+    // Headers with theme-aware contrast
+    out = out.replace(/^### (.*$)/gim, '<h4 style="margin:12px 0 6px; color:var(--text-main); font-weight:700;">$1</h4>');
+    out = out.replace(/^## (.*$)/gim, '<h3 style="margin:14px 0 8px; color:var(--text-main); font-family:var(--font-display); font-size:20px; font-weight:700;">$1</h3>');
 
     // Bold & Italics
     out = out.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     out = out.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     // Bullet lists
-    out = out.replace(/^\* (.*$)/gim, '<li style="margin-left:18px;">$1</li>');
-    out = out.replace(/^- (.*$)/gim, '<li style="margin-left:18px;">$1</li>');
+    out = out.replace(/^\* (.*$)/gim, '<li style="margin-left:18px; margin-bottom:4px;">$1</li>');
+    out = out.replace(/^- (.*$)/gim, '<li style="margin-left:18px; margin-bottom:4px;">$1</li>');
 
     // Paragraph linebreaks
     out = out.replace(/\n\n/g, '<p style="margin-bottom:8px;"></p>');
@@ -346,3 +405,16 @@ function escapeHtml(str) {
     div.textContent = str;
     return div.innerHTML;
 }
+
+// Global exposure for inline events
+window.handleChatSubmit = handleChatSubmit;
+window.handleInputKeydown = handleInputKeydown;
+window.useSuggestedChip = useSuggestedChip;
+window.copyAiResponse = copyAiResponse;
+window.retryAiResponse = retryAiResponse;
+window.shareAiResponse = shareAiResponse;
+window.startNewChat = startNewChat;
+window.clearChatHistory = clearChatHistory;
+window.exportChat = exportChat;
+window.loadSampleChat = loadSampleChat;
+window.loadChatSession = loadChatSession;

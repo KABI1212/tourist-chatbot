@@ -407,7 +407,7 @@
                 const img = (dest.images && dest.images.length > 0) ? dest.images[0] : 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800';
                 card.innerHTML = `
                     <div class="dest-card-img-wrap">
-                        <img src="${img}" alt="${dest.name}" class="dest-card-img" loading="lazy">
+                        <img src="${img}" alt="${dest.name}" class="dest-card-img" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'" loading="lazy">
                         <div class="dest-card-badge">
                             <i class="fas fa-star" style="color:var(--accent-gold);"></i> ${dest.rating || '4.8'}
                         </div>

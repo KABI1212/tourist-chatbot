@@ -143,7 +143,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.08) 0%, rgba(11, 19, 43, 1) 75%);
+    background: var(--bg-dark);
     position: relative;
     overflow: hidden;
 }
@@ -151,7 +151,7 @@
 .chat-stage-header {
     padding: 16px 28px;
     border-bottom: 1px solid var(--border);
-    background: rgba(11, 19, 43, 0.7);
+    background: var(--bg-surface);
     backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
@@ -161,7 +161,7 @@
 .assistant-headline h2 {
     font-size: 18px;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
 }
 
 .assistant-headline p {
@@ -240,8 +240,8 @@
 
 /* Rich Structured Itinerary Cards within AI Bubble */
 .itinerary-chat-preview {
-    background: rgba(14, 23, 51, 0.85);
-    border: 1px solid var(--border-light);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 18px 20px;
     margin: 12px 0;
@@ -264,7 +264,7 @@
 }
 
 .itinerary-day-item strong {
-    color: #fff;
+    color: var(--text-main);
     min-width: 55px;
 }
 
@@ -300,19 +300,25 @@
     transform: translateY(-1px);
 }
 
-/* Suggested Prompts row */
-.prompts-quick-strip {
+/* Suggested Prompts row & Chips Tray */
+.prompts-quick-strip, .prompt-chips-tray {
     display: flex;
     gap: 10px;
     overflow-x: auto;
-    padding: 8px 24px;
+    padding: 8px 4px;
     max-width: 960px;
     width: 100%;
     margin: 0 auto;
+    scrollbar-width: none;
+}
+
+.prompt-chips-tray::-webkit-scrollbar,
+.prompts-quick-strip::-webkit-scrollbar {
+    display: none;
 }
 
 .prompt-chip {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
     padding: 7px 16px;
@@ -321,56 +327,66 @@
     cursor: pointer;
     white-space: nowrap;
     transition: var(--transition);
+    flex-shrink: 0;
 }
 
 .prompt-chip:hover {
-    background: rgba(37, 99, 235, 0.15);
-    border-color: var(--primary-light);
-    color: #fff;
+    background: rgba(197, 164, 109, 0.15);
+    border-color: var(--accent-gold);
+    color: var(--text-main);
 }
 
-/* Chat Input Bar at Bottom */
-.chat-bottom-input-wrap {
+/* Chat Input Bar at Bottom (ChatGPT Style Dock) */
+.chat-bottom-input-wrap, .chat-footer-dock {
     padding: 12px 24px 22px;
     max-width: 960px;
     width: 100%;
     margin: 0 auto;
-}
-
-.chat-input-box {
-    background: rgba(19, 28, 56, 0.95);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-xl);
-    padding: 8px 10px 8px 20px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+    background: transparent;
+    z-index: 30;
+    flex-shrink: 0;
+}
+
+.chat-input-box, .chat-input-row {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 8px 12px 8px 20px;
+    display: flex;
+    align-items: flex-end;
     gap: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--shadow-md);
     transition: var(--transition);
+    width: 100%;
 }
 
-.chat-input-box:focus-within {
-    border-color: var(--primary-light);
-    box-shadow: 0 10px 35px var(--primary-glow);
+.chat-input-box:focus-within, .chat-input-row:focus-within {
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(197, 164, 109, 0.2), var(--shadow-md);
 }
 
-.chat-textarea {
+.chat-textarea, #chatMessageInput {
     flex: 1;
     background: transparent;
     border: none;
     outline: none;
-    color: #fff;
+    color: var(--text-main);
     font-size: 15px;
+    font-family: var(--font-sans);
     resize: none;
-    height: 44px;
+    height: 38px;
+    min-height: 24px;
     max-height: 140px;
-    padding-top: 10px;
+    padding: 6px 0;
     line-height: 1.5;
 }
 
 .chat-send-btn {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: var(--primary);
     color: #fff;
@@ -378,10 +394,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 17px;
+    font-size: 15px;
     cursor: pointer;
     flex-shrink: 0;
     transition: var(--transition);
+    margin-bottom: 2px;
 }
 
 .chat-send-btn:hover:not(:disabled) {
@@ -439,7 +456,11 @@
 .dest-hero-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(11, 19, 43, 0.2) 0%, rgba(11, 19, 43, 0.95) 100%);
+    background: linear-gradient(180deg, rgba(17, 17, 15, 0.3) 0%, rgba(17, 17, 15, 0.95) 100%);
+}
+
+[data-theme="light"] .dest-hero-overlay {
+    background: linear-gradient(180deg, rgba(247, 244, 237, 0.3) 0%, rgba(247, 244, 237, 0.95) 100%);
 }
 
 .dest-hero-info {
@@ -459,7 +480,7 @@
     font-family: var(--font-display);
     font-size: 46px;
     font-weight: 800;
-    color: #fff;
+    color: var(--text-main);
     line-height: 1.1;
     margin-bottom: 6px;
 }
@@ -467,7 +488,7 @@
 .dest-hero-title h3 {
     font-size: 18px;
     font-weight: 500;
-    color: var(--accent-cyan);
+    color: var(--accent-gold);
     margin-bottom: 8px;
 }
 
@@ -480,7 +501,7 @@
 }
 
 .weather-badge-box {
-    background: rgba(19, 28, 56, 0.85);
+    background: var(--bg-surface);
     backdrop-filter: blur(12px);
     border: 1px solid var(--border);
     padding: 14px 22px;
@@ -494,7 +515,7 @@
 .weather-temp {
     font-size: 28px;
     font-weight: 800;
-    color: #fff;
+    color: var(--text-main);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -507,7 +528,7 @@
 
 /* Destination Nav Tabs */
 .dest-tabs-nav {
-    background: #0E1733;
+    background: var(--bg-surface);
     border-bottom: 1px solid var(--border);
     display: flex;
     gap: 6px;
@@ -531,7 +552,7 @@
 }
 
 .dest-tab-btn:hover {
-    color: #fff;
+    color: var(--text-main);
 }
 
 .dest-tab-btn.active {
@@ -574,7 +595,7 @@
 .attraction-body h4 {
     font-size: 16px;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
     margin-bottom: 6px;
 }
 
@@ -667,7 +688,7 @@
 .stepper-text h4 {
     font-size: 15px;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
     margin-bottom: 2px;
 }
 
@@ -689,7 +710,7 @@
     font-family: var(--font-display);
     font-size: 26px;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
     margin-bottom: 28px;
 }
 
@@ -718,7 +739,7 @@
     border: 1px solid var(--border-light);
     border-radius: var(--radius-sm);
     padding: 12px 16px;
-    color: #fff;
+    color: var(--text-main);
     font-size: 14.5px;
     outline: none;
     transition: var(--transition);
@@ -727,12 +748,12 @@
 .form-input:focus, .form-select:focus {
     border-color: var(--primary-light);
     background: var(--bg-input-focus);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 0 0 3px rgba(197, 164, 109, 0.2);
 }
 
 .form-select option {
-    background: #131C38;
-    color: #fff;
+    background: var(--bg-surface);
+    color: var(--text-main);
 }
 
 /* Interests Multi-Select Chips */
@@ -809,7 +830,7 @@
     font-family: var(--font-display);
     font-size: 28px;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
     margin-bottom: 6px;
 }
 
@@ -857,17 +878,18 @@
 }
 
 .day-card {
-    background: rgba(14, 23, 51, 0.7);
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 22px;
     display: flex;
     gap: 22px;
     transition: var(--transition);
+    position: relative;
 }
 
 .day-card:hover {
-    border-color: rgba(37, 99, 235, 0.4);
+    border-color: var(--accent-gold);
     box-shadow: var(--shadow-md);
 }
 
@@ -877,6 +899,9 @@
     border-radius: 10px;
     object-fit: cover;
     flex-shrink: 0;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .day-content {
@@ -893,7 +918,7 @@
 .day-badge {
     font-size: 12px;
     font-weight: 700;
-    color: var(--accent-cyan);
+    color: var(--accent-gold);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -901,7 +926,7 @@
 .day-content h3 {
     font-size: 18px;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
     margin-bottom: 10px;
 }
 
@@ -965,12 +990,12 @@
 }
 
 .dash-menu-item:hover, .dash-menu-item.active {
-    background: rgba(255, 255, 255, 0.06);
-    color: #fff;
+    background: var(--bg-input-focus);
+    color: var(--text-main);
 }
 
 .dash-menu-item.active {
-    background: rgba(37, 99, 235, 0.15);
+    background: rgba(197, 164, 109, 0.15);
     color: var(--primary-light);
     border-left: 3px solid var(--primary);
 }
@@ -991,7 +1016,7 @@
     font-family: var(--font-display);
     font-size: 30px;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
 }
 
 .dash-tabs-bar {
@@ -1014,7 +1039,7 @@
 }
 
 .dash-tab.active {
-    color: #fff;
+    color: var(--text-main);
     border-bottom-color: var(--primary);
 }
 
@@ -1052,12 +1077,15 @@
     height: 70px;
     border-radius: 10px;
     object-fit: cover;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .trip-info-texts h3 {
     font-size: 17px;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
     margin-bottom: 4px;
 }
 
@@ -1079,6 +1107,86 @@
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+/* Interactive Itinerary Stop Management & Cost Summary */
+.btn-remove-day {
+    background: transparent;
+    border: 1px solid rgba(244, 63, 94, 0.25);
+    color: var(--accent-rose);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-remove-day:hover {
+    background: rgba(244, 63, 94, 0.12);
+    border-color: var(--accent-rose);
+}
+
+.trip-cost-summary-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-md);
+}
+
+.cost-hero-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 18px;
+}
+
+.cost-hero-total {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent-gold);
+}
+
+.cost-pill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.cost-pill-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+}
+
+.cost-pill-label {
+    font-size: 11.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cost-pill-val {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-top: 4px;
+    font-family: var(--font-display);
 }
 
 /* RESPONSIVE BREAKPOINTS */

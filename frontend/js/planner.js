@@ -1,7 +1,7 @@
 // @ts-nocheck
 /**
  * TouristAI — Itinerary Planner Controller (Screen 4 & 5)
- * Luxury Travel Editorial Architecture & Leaflet Route Visualizer
+ * Luxury Travel Editorial Architecture, Dynamic Trip Cost Engine & Leaflet Satellite Route Visualizer
  */
 
 let selectedInterests = ['Sightseeing', 'Adventure', 'Nature'];
@@ -41,6 +41,32 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (budget === 'luxury') budgetSel.value = 'Luxury';
         else budgetSel.value = 'Moderate';
     }
+
+    // Dynamic cost update on parameter changes
+    const travelersInput = document.getElementById('tripTravelers');
+    if (travelersInput) {
+        travelersInput.addEventListener('change', () => {
+            if (currentGeneratedItinerary) {
+                currentGeneratedItinerary.travelers = parseInt(travelersInput.value) || 2;
+                recalculateAndRenderTripCost();
+            }
+        });
+    }
+
+    const budgetInput = document.getElementById('tripBudget');
+    if (budgetInput) {
+        budgetInput.addEventListener('change', () => {
+            if (currentGeneratedItinerary) {
+                currentGeneratedItinerary.budgetTier = budgetInput.value || 'Moderate';
+                recalculateAndRenderTripCost();
+            }
+        });
+    }
+
+    // Invalidate map size on theme switch
+    window.addEventListener('themeChanged', () => {
+        if (plannerMap) plannerMap.invalidateSize();
+    });
 });
 
 function toggleInterest(el, interestName) {
@@ -94,6 +120,7 @@ async function generateItinerary(e) {
 
         currentGeneratedItinerary = data;
         renderItineraryOutput(data);
+        recalculateAndRenderTripCost();
         setStepActive(4);
 
         // Scroll down to results
@@ -117,61 +144,9 @@ async function generateItinerary(e) {
 function renderItineraryOutput(itinerary) {
     document.getElementById('outItineraryTitle').textContent = itinerary.title || `Your Trip to ${itinerary.destination}`;
     document.getElementById('outItinerarySubtitle').textContent = 
-        `Customised for ${itinerary.travelers || 2} travelers • ${itinerary.budgetTier || 'Moderate'} Budget (${itinerary.estimatedBudget || 'Estimated'})`;
+        `Customised for ${itinerary.travelers || 2} travelers • ${itinerary.budgetTier || 'Moderate'} Budget • Real-time Cost Estimation`;
 
-    const timeline = document.getElementById('timelineContainer');
-    timeline.innerHTML = '';
-
-    const days = itinerary.daysPlan || [];
-    days.forEach((day, idx) => {
-        const node = document.createElement('div');
-        node.className = 'timeline-day-node';
-
-        const dayImg = day.imageUrl || itinerary.imageUrl || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800';
-        const activitiesHtml = (day.activities || []).map(act => `<li>${escapeHtml(act)}</li>`).join('');
-
-        node.innerHTML = `
-            <div class="timeline-dot"></div>
-            <div class="day-card">
-                <img class="day-thumbnail" src="${dayImg}" alt="${escapeHtml(day.title)}" loading="lazy">
-                <div class="day-content">
-                    <div class="day-header">
-                        <span class="day-badge">Day ${day.dayNumber || (idx + 1)} • ${escapeHtml(day.date || ('Day ' + (idx + 1)))}</span>
-                        <span style="font-size:12.5px; color:var(--text-dim);"><i class="fas fa-location-pin"></i> ${escapeHtml(day.location || itinerary.destination)}</span>
-                    </div>
-                    <h3>${escapeHtml(day.title)}</h3>
-                    <ul class="day-activities-list">
-                        ${activitiesHtml}
-                    </ul>
-                </div>
-            </div>
-        `;
-        timeline.appendChild(node);
-    });
-
-    // Budget Grid
-    const budgetGrid = document.getElementById('outBudgetGrid');
-    if (itinerary.budgetBreakdown) {
-        const b = itinerary.budgetBreakdown;
-        budgetGrid.innerHTML = `
-            <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
-                <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-hotel" style="color:var(--accent-gold);"></i> Lodging &amp; Stays</span>
-                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">${b.lodging || '₹10,500'}</h4>
-            </div>
-            <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
-                <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-train" style="color:var(--accent-cyan);"></i> Transit &amp; Cabs</span>
-                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">${b.transit || '₹6,000'}</h4>
-            </div>
-            <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
-                <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-utensils" style="color:#F59E0B;"></i> Food &amp; Dining</span>
-                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">${b.food || '₹7,500'}</h4>
-            </div>
-            <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
-                <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-ticket-alt" style="color:var(--accent-emerald);"></i> Sightseeing &amp; Entry</span>
-                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">${b.activities || '₹4,000'}</h4>
-            </div>
-        `;
-    }
+    renderTimelineNodesOnly();
 
     // Travel Tips
     const tipsList = document.getElementById('outTipsList');
@@ -182,11 +157,181 @@ function renderItineraryOutput(itinerary) {
     }
 }
 
+function renderTimelineNodesOnly() {
+    if (!currentGeneratedItinerary) return;
+    const timeline = document.getElementById('timelineContainer');
+    if (!timeline) return;
+
+    timeline.innerHTML = '';
+    const days = currentGeneratedItinerary.daysPlan || [];
+
+    days.forEach((day, idx) => {
+        const node = document.createElement('div');
+        node.className = 'timeline-day-node';
+
+        const dayImg = day.imageUrl || currentGeneratedItinerary.imageUrl || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800';
+        const activitiesHtml = (day.activities || []).map(act => `<li>${escapeHtml(act)}</li>`).join('');
+
+        node.innerHTML = `
+            <div class="timeline-dot"></div>
+            <div class="day-card">
+                <img class="day-thumbnail" src="${dayImg}" alt="${escapeHtml(day.title)}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'" loading="lazy">
+                <div class="day-content">
+                    <div class="day-header">
+                        <span class="day-badge">Day ${day.dayNumber || (idx + 1)} • ${escapeHtml(day.date || ('Day ' + (idx + 1)))}</span>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <span style="font-size:12.5px; color:var(--text-dim);"><i class="fas fa-location-pin"></i> ${escapeHtml(day.location || currentGeneratedItinerary.destination)}</span>
+                            <button type="button" class="btn-remove-day" onclick="removeItineraryDay(${idx})" title="Remove this day stop">
+                                <i class="fas fa-trash-can"></i> Remove Stop
+                            </button>
+                        </div>
+                    </div>
+                    <h3>${escapeHtml(day.title)}</h3>
+                    <ul class="day-activities-list">
+                        ${activitiesHtml}
+                    </ul>
+                </div>
+            </div>
+        `;
+        timeline.appendChild(node);
+    });
+}
+
+// Requirement 6: Dynamic Trip Cost Engine with 10% Emergency Contingency
+function recalculateAndRenderTripCost() {
+    if (!currentGeneratedItinerary) return;
+
+    const daysCount = (currentGeneratedItinerary.daysPlan && currentGeneratedItinerary.daysPlan.length) || parseInt(currentGeneratedItinerary.days) || 3;
+    const travelersCount = parseInt(document.getElementById('tripTravelers')?.value) || parseInt(currentGeneratedItinerary.travelers) || 2;
+    const budgetTier = document.getElementById('tripBudget')?.value || currentGeneratedItinerary.budgetTier || 'Moderate';
+    const isInternational = (currentGeneratedItinerary.destination || '').toLowerCase().includes('paris') || (currentGeneratedItinerary.destination || '').toLowerCase().includes('international');
+
+    let baseDailyStay = 2200;
+    let baseDailyFood = 800;
+    let baseTransit = 1800;
+    let baseActivities = 400;
+    let baseDailyLocalTransit = 400;
+
+    if (budgetTier === 'Budget') {
+        baseDailyStay = 1200;
+        baseDailyFood = 500;
+        baseTransit = 900;
+        baseActivities = 250;
+        baseDailyLocalTransit = 250;
+    } else if (budgetTier === 'Luxury') {
+        baseDailyStay = 6500;
+        baseDailyFood = 2200;
+        baseTransit = 5000;
+        baseActivities = 1000;
+        baseDailyLocalTransit = 1200;
+    }
+
+    if (isInternational) {
+        baseDailyStay *= 3.5;
+        baseDailyFood *= 3.5;
+        baseTransit = 28000;
+    }
+
+    const roomsNeeded = Math.ceil(travelersCount / 2);
+    const lodgingTotal = Math.round(baseDailyStay * Math.max(1, daysCount - 1) * roomsNeeded);
+    const transitTotal = Math.round(baseTransit * travelersCount);
+    const localTransitTotal = Math.round(baseDailyLocalTransit * daysCount * Math.ceil(travelersCount / 3));
+    const foodTotal = Math.round(baseDailyFood * daysCount * travelersCount);
+    const activitiesTotal = Math.round(baseActivities * daysCount * travelersCount);
+
+    const subTotal = lodgingTotal + transitTotal + localTransitTotal + foodTotal + activitiesTotal;
+    const contingency = Math.round(subTotal * 0.10);
+    const grandTotal = subTotal + contingency;
+    const perPerson = Math.round(grandTotal / travelersCount);
+
+    // Update banner summary elements
+    const totalEl = document.getElementById('costHeroTotal');
+    if (totalEl) totalEl.textContent = '₹' + grandTotal.toLocaleString('en-IN');
+    const perPersonEl = document.getElementById('costPerPerson');
+    if (perPersonEl) perPersonEl.textContent = '₹' + perPerson.toLocaleString('en-IN');
+    const travelersEl = document.getElementById('costTravelersCount');
+    if (travelersEl) travelersEl.textContent = travelersCount;
+    const daysEl = document.getElementById('costDaysCount');
+    if (daysEl) daysEl.textContent = daysCount;
+
+    // Update pill values
+    const setPill = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '₹' + val.toLocaleString('en-IN');
+    };
+    setPill('pillTransit', transitTotal);
+    setPill('pillLocalTransit', localTransitTotal);
+    setPill('pillLodging', lodgingTotal);
+    setPill('pillFood', foodTotal);
+    setPill('pillActivities', activitiesTotal);
+    setPill('pillContingency', contingency);
+
+    // Update bottom budget breakdown cards
+    const budgetGrid = document.getElementById('outBudgetGrid');
+    if (budgetGrid) {
+        budgetGrid.innerHTML = `
+            <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
+                <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-hotel" style="color:var(--accent-gold);"></i> Lodging &amp; Stays</span>
+                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">₹${lodgingTotal.toLocaleString('en-IN')}</h4>
+            </div>
+            <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
+                <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-plane-departure" style="color:var(--accent-cyan);"></i> Intercity Transit</span>
+                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">₹${transitTotal.toLocaleString('en-IN')}</h4>
+            </div>
+            <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
+                <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-taxi" style="color:var(--accent-gold);"></i> Local Transit</span>
+                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">₹${localTransitTotal.toLocaleString('en-IN')}</h4>
+            </div>
+            <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
+                <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-utensils" style="color:#F59E0B;"></i> Food &amp; Dining</span>
+                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">₹${foodTotal.toLocaleString('en-IN')}</h4>
+            </div>
+            <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
+                <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-ticket-alt" style="color:var(--accent-emerald);"></i> Sightseeing &amp; Activities</span>
+                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">₹${activitiesTotal.toLocaleString('en-IN')}</h4>
+            </div>
+            <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
+                <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-shield-halved" style="color:var(--accent-rose);"></i> Emergency Contingency (10%)</span>
+                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">₹${contingency.toLocaleString('en-IN')}</h4>
+            </div>
+        `;
+    }
+
+    currentGeneratedItinerary.estimatedBudget = '₹' + grandTotal.toLocaleString('en-IN');
+}
+
+// Requirement 8: Interactive Map & Itinerary Synchronization
+function removeItineraryDay(dayIdx) {
+    if (!currentGeneratedItinerary || !currentGeneratedItinerary.daysPlan) return;
+    if (currentGeneratedItinerary.daysPlan.length <= 1) {
+        alert('Your itinerary must contain at least 1 day stop.');
+        return;
+    }
+
+    // Remove day
+    currentGeneratedItinerary.daysPlan.splice(dayIdx, 1);
+
+    // Renumber remaining days
+    currentGeneratedItinerary.daysPlan.forEach((d, i) => {
+        d.dayNumber = i + 1;
+    });
+    currentGeneratedItinerary.days = currentGeneratedItinerary.daysPlan.length;
+
+    // Smoothly re-render timeline nodes without full page reload
+    renderTimelineNodesOnly();
+
+    // Recalculate trip cost dynamically
+    recalculateAndRenderTripCost();
+
+    // Redraw map route markers and polyline
+    updatePlannerRouteMap(currentGeneratedItinerary);
+}
+
+// Requirement 7: Leaflet Standard Map & Satellite View Layer Switcher
 function initPlannerRouteMap(itinerary) {
     const mapEl = document.getElementById('itineraryRouteMap');
     if (!mapEl) return;
 
-    // Approximate Coordinates table for popular destinations
     const coordsMap = {
         'ooty': [11.4102, 76.6950],
         'manali': [32.2432, 77.1892],
@@ -202,19 +347,58 @@ function initPlannerRouteMap(itinerary) {
     const center = coordsMap[destKey] || [11.4102, 76.6950];
 
     if (!plannerMap) {
-        plannerMap = L.map('itineraryRouteMap').setView(center, 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // Standard OSM Layer
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(plannerMap);
+        });
+
+        // Esri Satellite Imagery Layer (Free, no API key required)
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        });
+
+        plannerMap = L.map('itineraryRouteMap', {
+            center: center,
+            zoom: 12,
+            layers: [osmLayer]
+        });
+
+        const baseLayers = {
+            "Standard Map": osmLayer,
+            "Satellite View": satelliteLayer
+        };
+
+        L.control.layers(baseLayers, null, { position: 'topright' }).addTo(plannerMap);
     } else {
         plannerMap.invalidateSize();
         plannerMap.setView(center, 12);
     }
 
-    // Clear old markers
+    updatePlannerRouteMap(itinerary);
+}
+
+function updatePlannerRouteMap(itinerary) {
+    if (!plannerMap) return;
+
+    // Clear old markers and polylines
     routeMarkers.forEach(m => plannerMap.removeLayer(m));
     routeMarkers = [];
+
+    const coordsMap = {
+        'ooty': [11.4102, 76.6950],
+        'manali': [32.2432, 77.1892],
+        'goa': [15.2993, 74.1240],
+        'kerala': [9.9312, 76.2673],
+        'paris': [48.8566, 2.3522],
+        'tokyo': [35.6762, 139.6503],
+        'jaipur': [26.9124, 75.7873],
+        'shimla': [31.1048, 77.1734]
+    };
+
+    const destKey = (itinerary.destination || '').toLowerCase().split(',')[0].trim();
+    const center = coordsMap[destKey] || [11.4102, 76.6950];
 
     const latlngs = [];
     const days = itinerary.daysPlan || [];
@@ -234,6 +418,8 @@ function initPlannerRouteMap(itinerary) {
         const polyline = L.polyline(latlngs, { color: '#C5A46D', weight: 4, dashArray: '6, 8' }).addTo(plannerMap);
         routeMarkers.push(polyline);
         plannerMap.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+    } else if (latlngs.length === 1) {
+        plannerMap.setView(latlngs[0], 13);
     }
 }
 
@@ -331,3 +517,11 @@ function escapeHtml(str) {
     div.textContent = str;
     return div.innerHTML;
 }
+
+// Global exposure
+window.removeItineraryDay = removeItineraryDay;
+window.toggleInterest = toggleInterest;
+window.generateItinerary = generateItinerary;
+window.copyItineraryText = copyItineraryText;
+window.exportItineraryPdf = exportItineraryPdf;
+window.saveTripToProfile = saveTripToProfile;
