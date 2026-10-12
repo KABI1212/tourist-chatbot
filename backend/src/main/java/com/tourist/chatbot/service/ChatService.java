@@ -9,7 +9,6 @@ import com.tourist.chatbot.model.Destination;
 import com.tourist.chatbot.model.User;
 import com.tourist.chatbot.repository.ChatMessageRepository;
 import com.tourist.chatbot.repository.ChatRepository;
-import com.tourist.chatbot.repository.DestinationRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +29,9 @@ public class ChatService {
 
     private final ChatRepository chatRepository;
     private final ChatMessageRepository chatMessageRepository;
-    private final DestinationRepository destinationRepository;
     private final GeminiService geminiService;
     private final UserService userService;
+    private final DestinationMatcher destinationMatcher;
 
     public ChatResponse processMessage(ChatRequest request, String username) {
         User user = (username != null && !username.isBlank()) ? userService.getUserByUsername(username) : null;
@@ -65,13 +64,15 @@ public class ChatService {
             conversationHistory = chatMessageRepository.findByChatId(chat.getId(), Sort.by(Sort.Direction.ASC, "timestamp"));
         }
 
-        // 3. Check for matching curated destination in catalog
-        Optional<Destination> matchedDest = findDestinationInMessage(message);
-
-        // 4. Generate AI response from Google Gemini with full conversation context and requested language
+        // 3. Generate AI response from Google Gemini with full conversation context and requested language
         String aiResponseText = (request.getLanguage() != null && !request.getLanguage().isBlank())
                 ? geminiService.generateResponse(conversationHistory, message, request.getLanguage())
                 : geminiService.generateResponse(conversationHistory, message);
+
+        // 4. Match catalog destination: check user message first, then the AI reply
+        Optional<Destination> matchedDest = destinationMatcher.find(message)
+                .or(() -> destinationMatcher.find(aiResponseText));
+
 
         // 5. Persist Assistant Message if authenticated
         if (chat != null && userId != null) {
@@ -102,26 +103,6 @@ public class ChatService {
                 .title(title)
                 .build();
         return chatRepository.save(chat);
-    }
-
-    private Optional<Destination> findDestinationInMessage(String message) {
-        String lower = message.toLowerCase().trim();
-        List<Destination> all = destinationRepository.findAll();
-        for (Destination d : all) {
-            if (d.getName() == null || d.getName().isBlank()) continue;
-            String destLower = d.getName().toLowerCase();
-
-            // Ignore if the word is an origin point: e.g. "from kerala"
-            if (lower.contains("from " + destLower) || lower.startsWith("from " + destLower)) {
-                continue;
-            }
-
-            // Check if the destination is explicitly mentioned as a word
-            if (lower.matches(".*\\b" + java.util.regex.Pattern.quote(destLower) + "\\b.*")) {
-                return Optional.of(d);
-            }
-        }
-        return Optional.empty();
     }
 
     public List<Chat> getUserChatHistory(String username) {

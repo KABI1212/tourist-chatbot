@@ -89,12 +89,19 @@ GEMINI_API_KEY=your_gemini_api_key_here
 MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/tourist_chatbot?retryWrites=true&w=majority
 DATABASE_NAME=tourist_chatbot
 
-# JWT Secret Key (HMAC-SHA256 256-bit key)
-JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+# JWT Secret Key (HMAC-SHA256 at least 32 bytes / 256 bits)
+# Generate with: openssl rand -base64 48
+JWT_SECRET=your_generated_jwt_secret_here
+
+# Opt-in demo user seeding (default: false, set to true to seed demo account)
+SEED_DEMO=false
 
 # Server Port
 SERVER_PORT=8080
 ```
+
+> **Note on Demo Account:** The `demo / demo123` account is strictly opt-in and disabled by default. To enable demo seeding for local development or testing, set `SEED_DEMO=true` in `.env` or `-Dapp.seed-demo=true`.
+
 
 ---
 

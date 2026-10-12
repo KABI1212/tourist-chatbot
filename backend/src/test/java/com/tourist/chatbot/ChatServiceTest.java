@@ -5,8 +5,8 @@ import com.tourist.chatbot.dto.ChatResponse;
 import com.tourist.chatbot.model.Destination;
 import com.tourist.chatbot.repository.ChatMessageRepository;
 import com.tourist.chatbot.repository.ChatRepository;
-import com.tourist.chatbot.repository.DestinationRepository;
 import com.tourist.chatbot.service.ChatService;
+import com.tourist.chatbot.service.DestinationMatcher;
 import com.tourist.chatbot.service.GeminiService;
 import com.tourist.chatbot.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -16,9 +16,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,13 +34,13 @@ public class ChatServiceTest {
     private ChatMessageRepository chatMessageRepository;
 
     @Mock
-    private DestinationRepository destinationRepository;
-
-    @Mock
     private GeminiService geminiService;
 
     @Mock
     private UserService userService;
+
+    @Mock
+    private DestinationMatcher destinationMatcher;
 
     @InjectMocks
     private ChatService chatService;
@@ -47,7 +50,9 @@ public class ChatServiceTest {
         ChatRequest req = ChatRequest.builder().message("Tell me about visiting Ooty").build();
 
         Destination ooty = Destination.builder().name("Ooty").description("Queen of Hill stations").build();
-        when(destinationRepository.findAll()).thenReturn(List.of(ooty));
+
+        // DestinationMatcher.find(userMessage) → ooty; second call not needed
+        when(destinationMatcher.find("Tell me about visiting Ooty")).thenReturn(Optional.of(ooty));
         when(geminiService.generateResponse(any(), eq("Tell me about visiting Ooty")))
                 .thenReturn("Ooty is a gorgeous hill station with tea gardens and lakes.");
 

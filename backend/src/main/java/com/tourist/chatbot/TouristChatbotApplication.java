@@ -13,6 +13,7 @@ import java.util.List;
 
 @SpringBootApplication
 @EnableMongoAuditing
+@org.springframework.scheduling.annotation.EnableScheduling
 public class TouristChatbotApplication {
 
     private static final Logger log = LoggerFactory.getLogger(TouristChatbotApplication.class);

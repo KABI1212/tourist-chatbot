@@ -60,6 +60,9 @@ public class Destination {
 
     private List<String> tags;
 
+    /** Alternate names / spellings for matching (e.g. "Udhagamandalam", "Ootacamund" for Ooty). */
+    private List<String> aliases;
+
     private String officialWebsite;
 
     private String travelTip;

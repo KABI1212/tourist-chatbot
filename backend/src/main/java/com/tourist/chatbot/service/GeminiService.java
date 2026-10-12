@@ -23,7 +23,7 @@ import java.util.Map;
 public class GeminiService {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
-    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s";
+    private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent";
 
     @Value("${gemini.api.key:}")
     private String apiKey;
@@ -211,12 +211,9 @@ public class GeminiService {
         return contents;
     }
 
-    private String callGeminiApiWithContents(String model, List<Map<String, Object>> contents, String activeKey) throws Exception {
-        return callGeminiApiWithContents(model, contents, activeKey, SYSTEM_INSTRUCTION);
-    }
-
     private String callGeminiApiWithContents(String model, List<Map<String, Object>> contents, String activeKey, String systemInstruction) throws Exception {
-        String endpoint = String.format(GEMINI_API_URL, model, activeKey.trim());
+        // Key goes in the header, never in the URL, so it cannot leak into logged exception messages.
+        String endpoint = String.format(GEMINI_BASE_URL, model);
 
         Map<String, Object> requestBody = new HashMap<>();
 
@@ -240,22 +237,30 @@ public class GeminiService {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(endpoint))
                 .header("Content-Type", "application/json")
-                .timeout(Duration.ofSeconds(60))
+                .header("x-goog-api-key", activeKey.trim())
+                .timeout(Duration.ofSeconds(25))
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(java.nio.charset.StandardCharsets.UTF_8));
 
         if (response.statusCode() != 200) {
-            throw new RuntimeException("Gemini API (" + model + ") returned status " + response.statusCode() + ": " + response.body());
+            throw new RuntimeException("Gemini API (" + model + ") returned status " + response.statusCode());
         }
 
         JsonNode root = objectMapper.readTree(response.body());
         JsonNode candidates = root.path("candidates");
         if (candidates.isArray() && !candidates.isEmpty()) {
-            JsonNode parts = candidates.get(0).path("content").path("parts");
+            JsonNode candidate = candidates.get(0);
+            JsonNode parts = candidate.path("content").path("parts");
             if (parts.isArray() && !parts.isEmpty()) {
-                return parts.get(0).path("text").asText();
+                String text = parts.get(0).path("text").asText();
+                // Detect truncated responses and prompt the user to continue
+                String finishReason = candidate.path("finishReason").asText("");
+                if ("MAX_TOKENS".equals(finishReason)) {
+                    text += "\n\n_(The response was cut short due to length. Reply \"continue\" to get the rest.)_";
+                }
+                return text;
             }
         }
 
@@ -505,18 +510,18 @@ public class GeminiService {
      * Fallback travel guide when AI service is unavailable or rate-limited
      */
     private String generateLocalFallback(String query) {
+        // Do NOT interpolate the raw query into HTML/Markdown — use a safe, generic message.
         return """
-                ### 🌍 Global Travel Assistant Recommendation
-                I noticed you're exploring **""" + query + """
-                **!
+                ### 🌍 Travel Assistant Offline
 
-                Here are general travel planning essentials:
+                Our AI guide is temporarily unavailable. Here are general travel planning essentials you can rely on:
+
                 * **Best Time to Visit:** Check seasonal weather patterns and local festival dates before booking.
                 * **Transportation:** Compare direct express trains, flights, or intercity state buses for the most cost-effective transit.
-                * **Accommodation:** Choose central locations near transit hubs for convenience, or nature resorts on outskirts for quiet stays.
-                * **Budgeting Tip:** Allocate roughly 35% for stay, 25% for transit, 25% for dining & activities, and 15% for miscellaneous expenses.
+                * **Accommodation:** Choose central locations near transit hubs for convenience, or nature resorts on the outskirts for quiet stays.
+                * **Budgeting Tip:** Allocate roughly 35% for accommodation, 25% for transit, 25% for dining & activities, and 15% for miscellaneous expenses.
 
-                *(Note: For live real-time AI itineraries, ensure GEMINI_API_KEY is configured in your backend environment).*
+                *(The AI service will be back shortly. Please try again in a moment.)*
                 """;
     }
 }

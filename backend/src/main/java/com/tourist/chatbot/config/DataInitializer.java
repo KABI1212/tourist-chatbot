@@ -35,6 +35,9 @@ public class DataInitializer implements ApplicationRunner {
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @org.springframework.beans.factory.annotation.Value("${app.seed-demo:false}")
+    private boolean seedDemo;
+
     @Override
     public void run(ApplicationArguments args) {
         try {
@@ -53,6 +56,9 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void seedDemoUser() {
+        if (!seedDemo) {
+            return;
+        }
         try {
             if (userRepository.findByUsername("demo").isEmpty()) {
                 User demoUser = User.builder()
@@ -64,7 +70,7 @@ public class DataInitializer implements ApplicationRunner {
                         .roles(Set.of("ROLE_USER"))
                         .build();
                 userRepository.save(demoUser);
-                log.info("Seed demo account created: username='demo', password='demo123'");
+                log.info("Seed demo account created.");
             }
         } catch (Exception e) {
             log.warn("Could not seed demo account: {}", e.getMessage());

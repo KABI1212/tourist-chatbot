@@ -123,12 +123,33 @@ async function handleChatSubmit(e) {
     } catch (err) {
         thinkingEl.remove();
         console.error('Chat error:', err);
-        appendAiBubble(`I encountered an issue connecting to the AI guide (${err.message || 'Server timeout'}). Here is a quick travel tip: You can also use our **Plan Trip** page to design custom itineraries directly!`);
+        const friendlyMsg = getFriendlyError(err);
+        appendAiBubble(friendlyMsg);
     } finally {
         isProcessing = false;
         if (sendBtn) sendBtn.disabled = false;
         if (input) input.focus();
     }
+}
+
+/** M8: Map network/API errors to friendly user-facing text. Technical details are only in the console. */
+function getFriendlyError(err) {
+    if (!err) return '🌐 Something went wrong. Please try again in a moment.';
+    const status = err.status || (err.response && err.response.status);
+    if (status === 401 || status === 403) {
+        return '🔒 Your session has expired. Please [log in](login.html) again to continue chatting.';
+    }
+    if (status === 429) {
+        return '⏳ The AI guide is receiving a lot of requests right now. Please wait a moment and try again.';
+    }
+    if (status >= 500) {
+        return '🛠️ The server ran into an issue. Please try again in a minute.';
+    }
+    const msg = (err.message || '').toLowerCase();
+    if (msg.includes('timeout') || msg.includes('aborted') || msg.includes('network')) {
+        return '📡 Couldn\'t reach the AI guide — please check your connection and try again.';
+    }
+    return '🌐 Something went wrong. Please try again or use the **Plan Trip** page for offline itineraries.';
 }
 
 // Backward compatibility alias
@@ -153,9 +174,11 @@ function appendUserBubble(text) {
     const row = document.createElement('div');
     row.className = 'msg-row user';
     row.innerHTML = `
-        <div class="msg-bubble">${escapeHtml(text)}</div>
+        <div class="msg-bubble"></div>
         <div class="msg-avatar usr"><i class="fas fa-user"></i></div>
     `;
+    const bubble = row.querySelector('.msg-bubble');
+    if (bubble) bubble.textContent = text;
     box.appendChild(row);
     scrollToBottom();
 }
@@ -201,12 +224,12 @@ function appendAiBubble(markdownText, destination) {
         const destImg = (destination.images && destination.images[0]) || (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(destination.name) : 'assets/dash.jpg');
         contentHtml += `
             <div class="chat-dest-preview-card" style="margin-top:14px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; background:var(--bg-surface);">
-                <img src="${destImg}" alt="${escapeHtml(destination.name)}" style="width:100%; height:160px; object-fit:cover; display:block;" onerror="window.handleImageError(this, '${escapeHtml(destination.name)}');" loading="lazy">
+                <img src="${escapeHtml(destImg)}" alt="${escapeHtml(destination.name)}" style="width:100%; height:160px; object-fit:cover; display:block;" data-dest="${escapeHtml(destination.name)}" loading="lazy">
                 <div style="padding:14px;">
                     <h4 style="margin:0 0 6px 0; color:var(--text-main); font-size:15px; font-weight:700;"><i class="fas fa-location-dot" style="color:var(--accent-gold);"></i> ${escapeHtml(destination.name)}</h4>
                     ${destination.famousFor || destination.description ? `<p style="margin:0 0 12px 0; font-size:13px; color:var(--text-muted); line-height:1.5;">${escapeHtml(destination.famousFor || destination.description)}</p>` : ''}
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <button class="btn btn-primary btn-sm" onclick="openPlannerFor('${escapeHtml(destination.name)}')">
+                        <button type="button" class="btn btn-primary btn-sm js-plan-dest" data-dest="${escapeHtml(destination.name)}">
                             <i class="fas fa-calendar-alt"></i> Plan Full Trip to ${escapeHtml(destination.name)}
                         </button>
                         <a href="destinations.html?view=${encodeURIComponent(destination.name)}" class="btn btn-outline btn-sm">
@@ -223,15 +246,34 @@ function appendAiBubble(markdownText, destination) {
         <div class="msg-bubble">
             ${contentHtml}
             <div class="msg-actions-row" style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="msg-action-btn tts-speak-btn" onclick="Voice.toggleSpeech(this)" title="Read Aloud"><i class="fas fa-volume-up"></i> Listen</button>
-                <button class="msg-action-btn" onclick="copyAiResponse(this)"><i class="fas fa-copy"></i> Copy</button>
-                <button class="msg-action-btn" onclick="retryAiResponse()"><i class="fas fa-rotate-right"></i> Retry</button>
-                <button class="msg-action-btn" onclick="shareAiResponse()"><i class="fas fa-share-nodes"></i> Share</button>
+                <button type="button" class="msg-action-btn tts-speak-btn" onclick="Voice.toggleSpeech(this)" title="Read Aloud"><i class="fas fa-volume-up"></i> Listen</button>
+                <button type="button" class="msg-action-btn" onclick="copyAiResponse(this)"><i class="fas fa-copy"></i> Copy</button>
+                <button type="button" class="msg-action-btn" onclick="retryAiResponse()"><i class="fas fa-rotate-right"></i> Retry</button>
+                <button type="button" class="msg-action-btn" onclick="shareAiResponse()"><i class="fas fa-share-nodes"></i> Share</button>
             </div>
         </div>
     `;
 
     box.appendChild(row);
+
+    // Attach click listeners to destination planner buttons
+    row.querySelectorAll('.js-plan-dest').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const dest = btn.dataset.dest;
+            if (dest) openPlannerFor(dest);
+        });
+    });
+
+    // Attach image error fallback listener safely
+    const cardImg = row.querySelector('.chat-dest-preview-card img');
+    if (cardImg) {
+        cardImg.addEventListener('error', () => {
+            if (typeof window.handleImageError === 'function') {
+                window.handleImageError(cardImg, cardImg.dataset.dest);
+            }
+        });
+    }
+
     scrollToBottom();
 }
 
@@ -303,11 +345,20 @@ async function loadRecentChats() {
         const res = await Api.get('/chat/history');
         const chats = res.chats || res.data?.chats || res;
         if (Array.isArray(chats) && chats.length > 0) {
-            listEl.innerHTML = chats.map(c => `
-                <div class="recent-chat-item ${c.id === currentChatId ? 'active' : ''}" onclick="loadChatSession('${c.id}')">
-                    <i class="fas fa-message"></i> ${escapeHtml(c.title || 'Travel Inquiry')}
-                </div>
-            `).join('');
+            listEl.innerHTML = '';
+            chats.forEach(c => {
+                const item = document.createElement('div');
+                item.className = `recent-chat-item ${c.id === currentChatId ? 'active' : ''}`;
+                item.dataset.chatId = c.id || '';
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-message';
+                item.appendChild(icon);
+                item.appendChild(document.createTextNode(' ' + (c.title || 'Travel Inquiry')));
+                item.addEventListener('click', () => {
+                    if (item.dataset.chatId) loadChatSession(item.dataset.chatId);
+                });
+                listEl.appendChild(item);
+            });
         }
     } catch (e) {
         console.warn('Could not load chat history:', e);
@@ -393,25 +444,25 @@ function exportChat() {
 
 function formatMarkdown(raw) {
     if (!raw) return '';
-    let out = raw;
+    let html = '';
+    if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
+        html = marked.parse(String(raw), { breaks: true, gfm: true });
+    } else {
+        html = escapeHtml(String(raw));
+    }
 
-    // Headers with theme-aware contrast
-    out = out.replace(/^### (.*$)/gim, '<h4 style="margin:12px 0 6px; color:var(--text-main); font-weight:700;">$1</h4>');
-    out = out.replace(/^## (.*$)/gim, '<h3 style="margin:14px 0 8px; color:var(--text-main); font-family:var(--font-display); font-size:20px; font-weight:700;">$1</h3>');
+    if (typeof DOMPurify !== 'undefined' && typeof DOMPurify.sanitize === 'function') {
+        return DOMPurify.sanitize(html, {
+            ALLOWED_TAGS: [
+                'h1', 'h2', 'h3', 'h4', 'p', 'br', 'strong', 'em',
+                'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+                'a', 'code', 'pre', 'blockquote', 'hr'
+            ],
+            ALLOWED_ATTR: ['href', 'title', 'target', 'rel']
+        });
+    }
 
-    // Bold & Italics
-    out = out.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    out = out.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-    // Bullet lists
-    out = out.replace(/^\* (.*$)/gim, '<li style="margin-left:18px; margin-bottom:4px;">$1</li>');
-    out = out.replace(/^- (.*$)/gim, '<li style="margin-left:18px; margin-bottom:4px;">$1</li>');
-
-    // Paragraph linebreaks
-    out = out.replace(/\n\n/g, '<p style="margin-bottom:8px;"></p>');
-    out = out.replace(/\n/g, '<br>');
-
-    return out;
+    return html;
 }
 
 function escapeHtml(str) {
@@ -433,36 +484,29 @@ window.clearChatHistory = clearChatHistory;
 window.exportChat = exportChat;
 window.loadSampleChat = loadSampleChat;
 window.loadChatSession = loadChatSession;
+window.formatMarkdown = formatMarkdown;
 
 function updatePromptChips() {
     const tray = document.getElementById('chipsTray');
     if (!tray || typeof I18n === 'undefined') return;
 
-    const p1 = I18n.t('chat_prompt_1', '🏔️ Plan a 3-day trip from Chennai to Ooty for 2 people under ₹8,000');
-    const p2 = I18n.t('chat_prompt_2', '🌴 Best hidden beaches and backwaters in Kerala');
-    const p3 = I18n.t('chat_prompt_3', '⛷️ 3-Day Manali itinerary for adventure lovers with budget');
-    const p4 = I18n.t('chat_prompt_4', '🏖️ Best budget beach stay options in Goa for couples');
-    const p5 = I18n.t('chat_prompt_5', '🚂 How to reach Ooty by train from Chennai or Bangalore?');
+    const prompts = [
+        I18n.t('chat_prompt_1', '🏔️ Plan a 3-day trip from Chennai to Ooty for 2 people under ₹8,000'),
+        I18n.t('chat_prompt_2', '🌴 Best hidden beaches and backwaters in Kerala'),
+        I18n.t('chat_prompt_3', '⛷️ 3-Day Manali itinerary for adventure lovers with budget'),
+        I18n.t('chat_prompt_4', '🏖️ Best budget beach stay options in Goa for couples'),
+        I18n.t('chat_prompt_5', '🚂 How to reach Ooty by train from Chennai or Bangalore?')
+    ];
 
-    const escapeParam = (s) => s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-
-    tray.innerHTML = `
-        <button class="prompt-chip" onclick="useSuggestedChip('${escapeParam(p1)}')">
-            ${escapeHtml(p1)}
-        </button>
-        <button class="prompt-chip" onclick="useSuggestedChip('${escapeParam(p2)}')">
-            ${escapeHtml(p2)}
-        </button>
-        <button class="prompt-chip" onclick="useSuggestedChip('${escapeParam(p3)}')">
-            ${escapeHtml(p3)}
-        </button>
-        <button class="prompt-chip" onclick="useSuggestedChip('${escapeParam(p4)}')">
-            ${escapeHtml(p4)}
-        </button>
-        <button class="prompt-chip" onclick="useSuggestedChip('${escapeParam(p5)}')">
-            ${escapeHtml(p5)}
-        </button>
-    `;
+    tray.innerHTML = '';
+    prompts.forEach(p => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'prompt-chip';
+        btn.textContent = p;
+        btn.addEventListener('click', () => useSuggestedChip(p));
+        tray.appendChild(btn);
+    });
 }
 
 window.addEventListener('languageChanged', () => {
