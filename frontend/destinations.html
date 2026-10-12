@@ -50,11 +50,18 @@
             </div>
 
             <div class="nav-links" id="navAuthLinks">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="destinations.html" class="nav-link active">Destinations</a>
-                <a href="planner.html" class="nav-link">Plan Trip</a>
+                <a href="index.html" class="nav-link" data-i18n="nav_home">Home</a>
+                <a href="destinations.html" class="nav-link active" data-i18n="nav_destinations">Destinations</a>
+                <a href="planner.html" class="nav-link" data-i18n="nav_planner">Plan Trip</a>
                 <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles"
-                        style="color:var(--accent-gold);"></i> AI Chat</a>
+                        style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Chat</span></a>
+
+                <!-- Language Selector -->
+                <button type="button" class="lang-selector-trigger" id="langSelectorBtn" title="Change Language">
+                    <span class="lang-selector-flag" id="currentLangFlag">🌐</span>
+                    <span id="currentLangLabel">Language</span>
+                    <i class="fas fa-chevron-down" style="font-size:10px; opacity:0.7;"></i>
+                </button>
 
                 <!-- Theme Toggle Button -->
                 <button type="button" class="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
@@ -464,17 +471,59 @@
             });
         });
 
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+        window.escapeHtml = escapeHtml;
+
+        function getDefaultDestinationsList() {
+            return [
+                defaultDestData,
+                { name: "Manali", country: "India", famousFor: "Snow Peaks, Solang Valley, Rohtang Pass", weather: "12°C", rating: 4.7, reviewCount: 2890, idealDuration: "3 - 5 Days", images: ["https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800"] },
+                { name: "Kerala Backwaters", country: "India", famousFor: "Houseboats, Alleppey Lagoons & Munnar Hills", weather: "26°C", rating: 4.9, reviewCount: 4120, idealDuration: "4 - 6 Days", images: ["https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800"] },
+                { name: "Goa", country: "India", famousFor: "Pristine Beaches, Portuguese Forts & Seafood", weather: "29°C", rating: 4.6, reviewCount: 3800, idealDuration: "3 - 5 Days", images: ["https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800"] },
+                { name: "Paris", country: "France", famousFor: "Eiffel Tower, Louvre Museum, French Bistros", weather: "16°C", rating: 4.9, reviewCount: 6500, idealDuration: "4 - 6 Days", images: ["https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800"] },
+                { name: "Kyoto", country: "Japan", famousFor: "Historic Shrines, Bamboo Groves, Geisha Culture", weather: "20°C", rating: 4.9, reviewCount: 5200, idealDuration: "4 - 5 Days", images: ["https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800"] },
+                { name: "Taj Mahal", country: "India", famousFor: "UNESCO World Wonder, Mughal Architecture, Marble Inlay", weather: "28°C", rating: 4.9, reviewCount: 7800, idealDuration: "1 - 2 Days", images: ["https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800"] },
+                { name: "Jaipur", country: "India", famousFor: "Pink City, Amber Fort, Hawa Mahal & Royal Heritage", weather: "27°C", rating: 4.7, reviewCount: 3600, idealDuration: "2 - 3 Days", images: ["https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800"] },
+                { name: "Ladakh", country: "India", famousFor: "High Passes, Pangong Lake, Monasteries & Stargazing", weather: "10°C", rating: 4.8, reviewCount: 2400, idealDuration: "5 - 7 Days", images: ["https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=800"] },
+                { name: "Santorini", country: "Greece", famousFor: "Caldera Sunsets, Whitewashed Villages & Aegean Sea", weather: "24°C", rating: 4.9, reviewCount: 4900, idealDuration: "3 - 5 Days", images: ["https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800"] },
+                { name: "Colosseum", country: "Italy", famousFor: "Ancient Roman Amphitheatre, Gladiators & Forum", weather: "22°C", rating: 4.8, reviewCount: 6200, idealDuration: "2 - 4 Days", images: ["https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800"] },
+                { name: "Statue of Liberty", country: "United States", famousFor: "Icon of Freedom, New York Harbor & Ellis Island", weather: "19°C", rating: 4.8, reviewCount: 5700, idealDuration: "2 - 4 Days", images: ["https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800"] },
+                { name: "Machu Picchu", country: "Peru", famousFor: "Ancient Inca Citadel, Andes Mountains & Sun Gate", weather: "17°C", rating: 4.9, reviewCount: 4600, idealDuration: "3 - 5 Days", images: ["https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=800"] },
+                { name: "Great Wall of China", country: "China", famousFor: "Historic UNESCO Ramparts, Mutianyu & Mountain Views", weather: "18°C", rating: 4.8, reviewCount: 6100, idealDuration: "2 - 3 Days", images: ["https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800"] },
+                { name: "Varanasi", country: "India", famousFor: "Ganges Ghats, Evening Aarti, Ancient Temples & Silk", weather: "26°C", rating: 4.7, reviewCount: 3100, idealDuration: "2 - 3 Days", images: ["https://images.unsplash.com/photo-1561359313-0639aad49ca6?w=800"] },
+                { name: "Shimla", country: "India", famousFor: "Colonial Mall Road, Ridge, Kalka Toy Train & Pines", weather: "15°C", rating: 4.6, reviewCount: 2950, idealDuration: "2 - 4 Days", images: ["https://images.unsplash.com/photo-1597074866923-dc0589150358?w=800"] },
+                { name: "Darjeeling", country: "India", famousFor: "Kanchenjunga Views, Tiger Hill Sunrise & Tea Estates", weather: "14°C", rating: 4.7, reviewCount: 2700, idealDuration: "3 - 4 Days", images: ["https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800"] },
+                { name: "Munnar", country: "India", famousFor: "Endless Tea Estates, Anamudi Peak & Misty Valleys", weather: "19°C", rating: 4.8, reviewCount: 3300, idealDuration: "2 - 4 Days", images: ["https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=800"] },
+                { name: "Mysore", country: "India", famousFor: "Grand Mysore Palace, Chamundi Hill & Royal Heritage", weather: "25°C", rating: 4.6, reviewCount: 2800, idealDuration: "1 - 3 Days", images: ["https://images.unsplash.com/photo-1590766940554-634a7ed41450?w=800"] },
+                { name: "Pondicherry", country: "India", famousFor: "French Quarter, Promenade Beach, Auroville & Cafes", weather: "28°C", rating: 4.7, reviewCount: 3400, idealDuration: "2 - 3 Days", images: ["https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800"] },
+                { name: "Rishikesh", country: "India", famousFor: "Ganga Rafting, Yoga Capital, Laxman Jhula & Ashrams", weather: "22°C", rating: 4.8, reviewCount: 3900, idealDuration: "2 - 4 Days", images: ["https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800"] },
+                { name: "Hampi", country: "India", famousFor: "Vijayanagara Ruins, Stone Chariot, Boulder Landscapes", weather: "29°C", rating: 4.8, reviewCount: 2600, idealDuration: "2 - 3 Days", images: ["https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=800"] },
+                { name: "Dubai", country: "United Arab Emirates", famousFor: "Burj Khalifa, Desert Safari, Marina & Luxury Shopping", weather: "31°C", rating: 4.8, reviewCount: 6800, idealDuration: "4 - 6 Days", images: ["https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800"] },
+                { name: "London", country: "United Kingdom", famousFor: "Big Ben, Tower Bridge, Buckingham Palace & West End", weather: "15°C", rating: 4.8, reviewCount: 6400, idealDuration: "4 - 6 Days", images: ["https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800"] },
+                { name: "Bali", country: "Indonesia", famousFor: "Ubud Rice Terraces, Uluwatu Sunsets & Sacred Temples", weather: "28°C", rating: 4.9, reviewCount: 5900, idealDuration: "5 - 7 Days", images: ["https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800"] },
+                { name: "Tokyo", country: "Japan", famousFor: "Shibuya Crossing, Mount Fuji Views, Sushi & Akihabara", weather: "18°C", rating: 4.9, reviewCount: 7100, idealDuration: "5 - 7 Days", images: ["https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800"] },
+                { name: "Sydney", country: "Australia", famousFor: "Opera House, Harbour Bridge, Bondi Beach & Coastal Walks", weather: "21°C", rating: 4.8, reviewCount: 5100, idealDuration: "4 - 6 Days", images: ["https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800"] },
+                { name: "Singapore", country: "Singapore", famousFor: "Marina Bay Sands, Gardens by the Bay, Jewel Changi", weather: "30°C", rating: 4.9, reviewCount: 6300, idealDuration: "3 - 5 Days", images: ["https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800"] },
+                { name: "Bangkok", country: "Thailand", famousFor: "Grand Palace, Wat Arun, Street Food & Floating Markets", weather: "32°C", rating: 4.7, reviewCount: 5400, idealDuration: "3 - 5 Days", images: ["https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=800"] }
+            ];
+        }
+
         async function fetchAllDestinations() {
             try {
                 const res = await Api.get('/destinations');
                 if (Array.isArray(res) && res.length > 0) {
                     allDestinations = res;
                 } else {
-                    allDestinations = [defaultDestData];
+                    allDestinations = getDefaultDestinationsList();
                 }
             } catch (e) {
-                console.warn('Failed to load destinations:', e);
-                allDestinations = [defaultDestData];
+                console.warn('Failed to load destinations from backend, using curated dataset:', e);
+                allDestinations = getDefaultDestinationsList();
             }
             filteredDestinations = allDestinations;
             renderDirectory();
@@ -521,13 +570,13 @@
             const allEl = document.getElementById('allPlacesGrid');
             const html = (list || []).map(a => `
                 <div class="attraction-card">
-                    <img class="attraction-img" src="${a.image || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'}" alt="${a.name}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'" loading="lazy">
+                    <img class="attraction-img" src="${a.image || window.getDestinationImage(a.name)}" alt="${escapeHtml(a.name)}" onerror="window.handleImageError(this, '${escapeHtml(a.name)}');" loading="lazy">
                     <div class="attraction-body">
-                        <h4>${a.name}</h4>
+                        <h4>${escapeHtml(a.name)}</h4>
                         <div style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--accent-gold); font-weight:700; margin-bottom:8px;">
                             <i class="fas fa-star"></i> ${a.rating || '4.5'} <span style="color:var(--text-dim); font-weight:400;">(${a.reviews || '1K'})</span>
                         </div>
-                        <p>${a.description || 'Scenic sightseeing location.'}</p>
+                        <p>${escapeHtml(a.description || 'Scenic sightseeing location.')}</p>
                     </div>
                 </div>
             `).join('');
@@ -540,9 +589,9 @@
             if (!el) return;
             el.innerHTML = (list || []).map(h => `
                 <div class="attraction-card">
-                    <img class="attraction-img" src="${h.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'}" alt="${h.name}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'" loading="lazy">
+                    <img class="attraction-img" src="${h.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'}" alt="${escapeHtml(h.name)}" onerror="window.handleImageError(this, '${escapeHtml(currentDest ? currentDest.name : 'hotel')}');" loading="lazy">
                     <div class="attraction-body">
-                        <h4>${h.name}</h4>
+                        <h4>${escapeHtml(h.name)}</h4>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                             <span class="badge-tag" style="background:rgba(197,164,109,0.15); color:var(--accent-gold);">${h.tier || 'Hotel'}</span>
                             <strong style="color:var(--text-main); font-size:14px;">${h.price || '₹3,500/night'}</strong>
@@ -562,8 +611,8 @@
                 <div class="attraction-card">
                     <div class="attraction-body" style="padding:22px;">
                         <span class="badge-tag" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); margin-bottom:8px;">${f.type || 'Regional Dish'}</span>
-                        <h4>${f.name}</h4>
-                        <p>${f.description || 'Signature specialty dish.'}</p>
+                        <h4>${escapeHtml(f.name)}</h4>
+                        <p>${escapeHtml(f.description || 'Signature specialty dish.')}</p>
                         <strong style="color:var(--accent-gold); font-size:14px;">${f.price || '₹150'}</strong>
                     </div>
                 </div>
@@ -575,7 +624,7 @@
             if (!el) return;
             el.innerHTML = `
                 <ul class="req-list" style="font-size:14.5px; gap:12px;">
-                    ${(list || []).map(t => `<li><i class="fas fa-check-circle" style="color:var(--accent-emerald);"></i> ${t}</li>`).join('')}
+                    ${(list || []).map(t => `<li><i class="fas fa-check-circle" style="color:var(--accent-emerald);"></i> ${escapeHtml(t)}</li>`).join('')}
                 </ul>
             `;
         }
@@ -585,7 +634,7 @@
             if (!el) return;
             el.innerHTML = (images || []).map(img => `
                 <div class="attraction-card">
-                    <img class="attraction-img" src="${img}" style="height:220px;" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'" loading="lazy">
+                    <img class="attraction-img" src="${img}" style="height:220px;" onerror="window.handleImageError(this, '${escapeHtml(currentDest ? currentDest.name : 'scenic')}');" loading="lazy">
                 </div>
             `).join('');
         }
@@ -607,27 +656,29 @@
             if (emptyEl) emptyEl.style.display = 'none';
 
             const toShow = filteredDestinations.slice(0, displayedCount);
-            grid.innerHTML = toShow.map(d => `
+            grid.innerHTML = toShow.map((d, idx) => {
+                const img = (d.images && d.images[0]) || (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(d.name) : 'assets/dash.jpg');
+                return `
                 <div class="dest-card">
                     <div class="dest-card-img-wrap">
-                        <img class="dest-card-img" src="${(d.images && d.images[0]) || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'}" alt="${d.name}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'" loading="lazy">
+                        <img class="dest-card-img" src="${img}" alt="${escapeHtml(d.name)}" onerror="window.handleImageError(this, '${escapeHtml(d.name)}');" loading="lazy">
                         <div class="dest-card-badge">
                             <i class="fas fa-star" style="color:var(--accent-gold);"></i> ${d.rating || '4.7'}
                         </div>
                     </div>
                     <div class="dest-card-body">
                         <div class="dest-card-title">
-                            <span>${d.name}</span>
+                            <span>${escapeHtml(d.name)}</span>
                             <span style="font-size:12px; color:var(--accent-gold); font-weight:600;">${d.weather ? d.weather.split(' ')[0] : 'Pleasant'}</span>
                         </div>
                         <div class="dest-card-location">
-                            <i class="fas fa-location-dot"></i> ${d.country || 'Global'}
+                            <i class="fas fa-location-dot"></i> ${escapeHtml(d.country || 'Global')}
                         </div>
                         <p style="font-size:13.5px; color:var(--text-muted); line-height:1.6; margin-bottom:14px; flex:1;">
-                            ${d.famousFor || d.description || 'Scenic highlights and cultural experiences.'}
+                            ${escapeHtml(d.famousFor || d.description || 'Scenic highlights and cultural experiences.')}
                         </p>
                         <div style="display:flex; gap:10px; margin-top:auto;">
-                            <button class="btn btn-outline btn-sm" style="flex:1; justify-content:center;" onclick="displayFeaturedDestination(allDestinations.find(x => x.name === '${escapeHtml(d.name)}'))">
+                            <button class="btn btn-outline btn-sm" style="flex:1; justify-content:center;" onclick="displayFeaturedDestination(filteredDestinations[${idx}])">
                                 <i class="fas fa-eye"></i> Details
                             </button>
                             <a href="planner.html?dest=${encodeURIComponent(d.name)}" class="btn btn-primary btn-sm" style="flex:1; justify-content:center;">
@@ -636,7 +687,8 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
             if (loadMoreWrap) {
                 if (displayedCount < filteredDestinations.length) {
@@ -723,20 +775,23 @@
             const fallbackGrid = document.getElementById('recommendedFallbackGrid');
             if (!fallbackGrid) return;
             const top3 = allDestinations.slice(0, 3);
-            fallbackGrid.innerHTML = top3.map(d => `
+            fallbackGrid.innerHTML = top3.map((d, idx) => {
+                const img = (d.images && d.images[0]) || (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(d.name) : 'assets/dash.jpg');
+                return `
                 <div class="dest-card">
                     <div class="dest-card-img-wrap">
-                        <img class="dest-card-img" src="${(d.images && d.images[0]) || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'}" alt="${d.name}" loading="lazy">
+                        <img class="dest-card-img" src="${img}" alt="${escapeHtml(d.name)}" onerror="window.handleImageError(this, '${escapeHtml(d.name)}');" loading="lazy">
                     </div>
                     <div class="dest-card-body">
-                        <div class="dest-card-title"><span>${d.name}</span></div>
-                        <div class="dest-card-location"><i class="fas fa-location-dot"></i> ${d.country || 'India'}</div>
-                        <button class="btn btn-outline btn-sm" style="margin-top:12px; width:100%; justify-content:center;" onclick="displayFeaturedDestination(allDestinations.find(x => x.name === '${escapeHtml(d.name)}'))">
+                        <div class="dest-card-title"><span>${escapeHtml(d.name)}</span></div>
+                        <div class="dest-card-location"><i class="fas fa-location-dot"></i> ${escapeHtml(d.country || 'India')}</div>
+                        <button class="btn btn-outline btn-sm" style="margin-top:12px; width:100%; justify-content:center;" onclick="displayFeaturedDestination(allDestinations[${idx}])">
                             View Guide
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function filterDestinationsLive(val) {

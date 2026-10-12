@@ -104,6 +104,7 @@ async function generateItinerary(e) {
     // Update stepper: Step 3 active
     setStepActive(3);
 
+    const activeLang = (typeof I18n !== 'undefined') ? I18n.getCurrentLanguage() : 'en';
     const payload = {
         destination,
         startDate,
@@ -111,7 +112,8 @@ async function generateItinerary(e) {
         travelers,
         budgetTier,
         currency: 'INR',
-        interests: selectedInterests.length > 0 ? selectedInterests : ['Sightseeing', 'Nature']
+        interests: selectedInterests.length > 0 ? selectedInterests : ['Sightseeing', 'Nature'],
+        language: activeLang
     };
 
     try {
@@ -169,13 +171,14 @@ function renderTimelineNodesOnly() {
         const node = document.createElement('div');
         node.className = 'timeline-day-node';
 
-        const dayImg = day.imageUrl || currentGeneratedItinerary.imageUrl || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800';
+        const locationName = day.location || currentGeneratedItinerary.destination || 'Scenic Destination';
+        const dayImg = day.imageUrl || currentGeneratedItinerary.imageUrl || (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(locationName) : 'assets/dash.jpg');
         const activitiesHtml = (day.activities || []).map(act => `<li>${escapeHtml(act)}</li>`).join('');
 
         node.innerHTML = `
             <div class="timeline-dot"></div>
             <div class="day-card">
-                <img class="day-thumbnail" src="${dayImg}" alt="${escapeHtml(day.title)}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'" loading="lazy">
+                <img class="day-thumbnail" src="${dayImg}" alt="${escapeHtml(day.title)}" onerror="window.handleImageError(this, '${escapeHtml(locationName)}');" loading="lazy">
                 <div class="day-content">
                     <div class="day-header">
                         <span class="day-badge">Day ${day.dayNumber || (idx + 1)} • ${escapeHtml(day.date || ('Day ' + (idx + 1)))}</span>

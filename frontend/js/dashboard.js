@@ -103,14 +103,15 @@ function renderTrips() {
     }
 
     container.innerHTML = filtered.map(t => {
-        const img = t.imageUrl || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800';
+        const destName = t.destination || t.title || 'Travel';
+        const img = t.imageUrl || (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(destName) : 'assets/dash.jpg');
         const dateRange = (t.startDate && t.endDate) ? `${t.startDate} - ${t.endDate}` : `${t.days || 3} Days Trip`;
         const travelersText = `${t.people || 2} Travelers`;
 
         return `
             <div class="saved-trip-row-card">
                 <div class="trip-card-left">
-                    <img class="trip-thumb-img" src="${img}" alt="${escapeHtml(t.title)}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'" loading="lazy">
+                    <img class="trip-thumb-img" src="${img}" alt="${escapeHtml(t.title)}" onerror="window.handleImageError(this, '${escapeHtml(destName)}');" loading="lazy">
                     <div class="trip-info-texts">
                         <h3>${escapeHtml(t.title || ('Trip to ' + t.destination))}</h3>
                         <div class="trip-info-meta">

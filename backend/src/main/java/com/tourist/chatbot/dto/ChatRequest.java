@@ -16,4 +16,6 @@ public class ChatRequest {
     private String message;
 
     private String chatId;
+
+    private String language;
 }

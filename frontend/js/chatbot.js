@@ -93,9 +93,15 @@ async function handleChatSubmit(e) {
     const thinkingEl = appendThinkingIndicator();
 
     try {
+        let sendLang = (typeof I18n !== 'undefined') ? I18n.getCurrentLanguage() : 'auto';
+        if (sendLang === 'auto' && typeof I18n !== 'undefined') {
+            sendLang = I18n.detectLanguage(text);
+        }
+
         const payload = {
             message: text,
-            chatId: currentChatId
+            chatId: currentChatId,
+            language: sendLang
         };
 
         const res = await Api.post('/chat', payload);
@@ -190,16 +196,24 @@ function appendAiBubble(markdownText, destination) {
 
     let contentHtml = formatMarkdown(markdownText);
 
-    // If a destination was detected or itinerary mentioned, add rich action
+    // If a destination was detected or itinerary mentioned, add rich destination card with image
     if (destination && destination.name) {
+        const destImg = (destination.images && destination.images[0]) || (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(destination.name) : 'assets/dash.jpg');
         contentHtml += `
-            <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border); display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn btn-primary btn-sm" onclick="openPlannerFor('${escapeHtml(destination.name)}')">
-                    <i class="fas fa-calendar-alt"></i> Plan Full Trip to ${escapeHtml(destination.name)}
-                </button>
-                <a href="destinations.html?view=${encodeURIComponent(destination.name)}" class="btn btn-outline btn-sm">
-                    <i class="fas fa-eye"></i> View Destination Details
-                </a>
+            <div class="chat-dest-preview-card" style="margin-top:14px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; background:var(--bg-surface);">
+                <img src="${destImg}" alt="${escapeHtml(destination.name)}" style="width:100%; height:160px; object-fit:cover; display:block;" onerror="window.handleImageError(this, '${escapeHtml(destination.name)}');" loading="lazy">
+                <div style="padding:14px;">
+                    <h4 style="margin:0 0 6px 0; color:var(--text-main); font-size:15px; font-weight:700;"><i class="fas fa-location-dot" style="color:var(--accent-gold);"></i> ${escapeHtml(destination.name)}</h4>
+                    ${destination.famousFor || destination.description ? `<p style="margin:0 0 12px 0; font-size:13px; color:var(--text-muted); line-height:1.5;">${escapeHtml(destination.famousFor || destination.description)}</p>` : ''}
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn btn-primary btn-sm" onclick="openPlannerFor('${escapeHtml(destination.name)}')">
+                            <i class="fas fa-calendar-alt"></i> Plan Full Trip to ${escapeHtml(destination.name)}
+                        </button>
+                        <a href="destinations.html?view=${encodeURIComponent(destination.name)}" class="btn btn-outline btn-sm">
+                            <i class="fas fa-eye"></i> View Destination Details
+                        </a>
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -208,7 +222,8 @@ function appendAiBubble(markdownText, destination) {
         <div class="msg-avatar ai"><i class="fas fa-compass"></i></div>
         <div class="msg-bubble">
             ${contentHtml}
-            <div class="msg-actions-row" style="margin-top:12px; display:flex; gap:10px;">
+            <div class="msg-actions-row" style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="msg-action-btn tts-speak-btn" onclick="Voice.toggleSpeech(this)" title="Read Aloud"><i class="fas fa-volume-up"></i> Listen</button>
                 <button class="msg-action-btn" onclick="copyAiResponse(this)"><i class="fas fa-copy"></i> Copy</button>
                 <button class="msg-action-btn" onclick="retryAiResponse()"><i class="fas fa-rotate-right"></i> Retry</button>
                 <button class="msg-action-btn" onclick="shareAiResponse()"><i class="fas fa-share-nodes"></i> Share</button>
@@ -418,3 +433,43 @@ window.clearChatHistory = clearChatHistory;
 window.exportChat = exportChat;
 window.loadSampleChat = loadSampleChat;
 window.loadChatSession = loadChatSession;
+
+function updatePromptChips() {
+    const tray = document.getElementById('chipsTray');
+    if (!tray || typeof I18n === 'undefined') return;
+
+    const p1 = I18n.t('chat_prompt_1', '🏔️ Plan a 3-day trip from Chennai to Ooty for 2 people under ₹8,000');
+    const p2 = I18n.t('chat_prompt_2', '🌴 Best hidden beaches and backwaters in Kerala');
+    const p3 = I18n.t('chat_prompt_3', '⛷️ 3-Day Manali itinerary for adventure lovers with budget');
+    const p4 = I18n.t('chat_prompt_4', '🏖️ Best budget beach stay options in Goa for couples');
+    const p5 = I18n.t('chat_prompt_5', '🚂 How to reach Ooty by train from Chennai or Bangalore?');
+
+    const escapeParam = (s) => s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+    tray.innerHTML = `
+        <button class="prompt-chip" onclick="useSuggestedChip('${escapeParam(p1)}')">
+            ${escapeHtml(p1)}
+        </button>
+        <button class="prompt-chip" onclick="useSuggestedChip('${escapeParam(p2)}')">
+            ${escapeHtml(p2)}
+        </button>
+        <button class="prompt-chip" onclick="useSuggestedChip('${escapeParam(p3)}')">
+            ${escapeHtml(p3)}
+        </button>
+        <button class="prompt-chip" onclick="useSuggestedChip('${escapeParam(p4)}')">
+            ${escapeHtml(p4)}
+        </button>
+        <button class="prompt-chip" onclick="useSuggestedChip('${escapeParam(p5)}')">
+            ${escapeHtml(p5)}
+        </button>
+    `;
+}
+
+window.addEventListener('languageChanged', () => {
+    updatePromptChips();
+});
+
+// Update prompts once DOM loaded
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(updatePromptChips, 100);
+});

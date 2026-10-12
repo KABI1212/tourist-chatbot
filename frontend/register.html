@@ -32,10 +32,17 @@
                 <span>TouristAI</span>
             </a>
             <div class="nav-links">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="destinations.html" class="nav-link">Destinations</a>
-                <a href="planner.html" class="nav-link">Plan Trip</a>
-                <a href="login.html" class="nav-link">Sign In</a>
+                <a href="index.html" class="nav-link" data-i18n="nav_home">Home</a>
+                <a href="destinations.html" class="nav-link" data-i18n="nav_destinations">Destinations</a>
+                <a href="planner.html" class="nav-link" data-i18n="nav_planner">Plan Trip</a>
+                <a href="login.html" class="nav-link" data-i18n="nav_login">Sign In</a>
+
+                <!-- Language Selector -->
+                <button type="button" class="lang-selector-trigger" id="langSelectorBtn" title="Change Language">
+                    <span class="lang-selector-flag" id="currentLangFlag">🌐</span>
+                    <span id="currentLangLabel">Language</span>
+                    <i class="fas fa-chevron-down" style="font-size:10px; opacity:0.7;"></i>
+                </button>
                 
                 <!-- Theme Toggle Button -->
                 <button type="button" class="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
@@ -106,6 +113,7 @@
 
     <!-- Scripts -->
     <script src="js/config.js"></script>
+    <script src="js/i18n.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script>

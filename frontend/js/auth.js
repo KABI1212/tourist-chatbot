@@ -2,7 +2,7 @@
  * Tourist Guide & TravelMind AI — Authentication Service
  */
 
-const Auth = {
+var Auth = window.Auth || {
     getUser() {
         try {
             const data = localStorage.getItem('tourist_user');
@@ -90,11 +90,21 @@ const Auth = {
         const isChat = currentPath.endsWith('chatbot.html');
         const isDash = currentPath.endsWith('dashboard.html');
 
+        const currentLangMeta = (typeof I18n !== 'undefined') ? I18n.getLanguageMeta(I18n.getCurrentLanguage()) : { code: 'auto', nativeName: 'Language', flag: '🌐' };
+        const langLabel = currentLangMeta.code === 'auto' ? 'Auto Detect' : currentLangMeta.nativeName;
+        const langFlag = currentLangMeta.flag || '🌐';
+
         let html = `
-            <a href="index.html" class="nav-link ${isHome ? 'active' : ''}">Home</a>
-            <a href="destinations.html" class="nav-link ${isDest ? 'active' : ''}">Destinations</a>
-            <a href="planner.html" class="nav-link ${isPlanner ? 'active' : ''}">Plan Trip</a>
-            <a href="chatbot.html" class="nav-link ${isChat ? 'active' : ''}"><i class="fas fa-sparkles" style="color:var(--accent-cyan);"></i> AI Chat</a>
+            <a href="index.html" class="nav-link ${isHome ? 'active' : ''}" data-i18n="nav_home">Home</a>
+            <a href="destinations.html" class="nav-link ${isDest ? 'active' : ''}" data-i18n="nav_destinations">Destinations</a>
+            <a href="planner.html" class="nav-link ${isPlanner ? 'active' : ''}" data-i18n="nav_planner">Plan Trip</a>
+            <a href="chatbot.html" class="nav-link ${isChat ? 'active' : ''}"><i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Chat</span></a>
+
+            <button type="button" class="lang-selector-trigger" id="langSelectorBtn" onclick="typeof I18n !== 'undefined' && I18n.openModal()" title="Change Language">
+                <span class="lang-selector-flag" id="currentLangFlag">${langFlag}</span>
+                <span id="currentLangLabel">${langLabel}</span>
+                <i class="fas fa-chevron-down" style="font-size:10px; opacity:0.7;"></i>
+            </button>
         `;
 
         const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -114,15 +124,18 @@ const Auth = {
                     <div class="user-avatar-pill">${displayName.charAt(0).toUpperCase()}</div>
                     <span>${displayName}</span>
                 </a>
-                <a href="javascript:void(0)" onclick="Auth.logout()" class="nav-link" title="Sign Out"><i class="fas fa-sign-out-alt"></i></a>
+                <a href="javascript:void(0)" onclick="Auth.logout()" class="nav-link" title="Sign Out" data-i18n="nav_logout"><i class="fas fa-sign-out-alt"></i></a>
             `;
         } else {
             html += `
-                <a href="login.html" class="nav-btn-login">Login</a>
+                <a href="login.html" class="nav-btn-login" data-i18n="nav_login">Login</a>
             `;
         }
 
         authContainer.innerHTML = html;
+        if (typeof I18n !== 'undefined') {
+            I18n.applyTranslations();
+        }
     },
 
     requireAuth() {

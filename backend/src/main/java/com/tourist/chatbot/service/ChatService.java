@@ -68,8 +68,10 @@ public class ChatService {
         // 3. Check for matching curated destination in catalog
         Optional<Destination> matchedDest = findDestinationInMessage(message);
 
-        // 4. Generate AI response from Google Gemini with full conversation context
-        String aiResponseText = geminiService.generateResponse(conversationHistory, message);
+        // 4. Generate AI response from Google Gemini with full conversation context and requested language
+        String aiResponseText = (request.getLanguage() != null && !request.getLanguage().isBlank())
+                ? geminiService.generateResponse(conversationHistory, message, request.getLanguage())
+                : geminiService.generateResponse(conversationHistory, message);
 
         // 5. Persist Assistant Message if authenticated
         if (chat != null && userId != null) {

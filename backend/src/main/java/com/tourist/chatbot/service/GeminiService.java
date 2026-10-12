@@ -67,10 +67,29 @@ public class GeminiService {
                - Organize with clear Markdown headers (##, ###), bold highlights, bullet points, and tables.
             """;
 
+    private String buildSystemInstruction(String language) {
+        StringBuilder sb = new StringBuilder(SYSTEM_INSTRUCTION);
+        sb.append("\n6. MULTILINGUAL & SCRIPT DIRECTIVES:\n");
+        sb.append("   - You are a native-fluent multilingual communicator supporting Indian languages (Tamil தமிழ், Hindi हिन्दी, Malayalam മലയാളം, Telugu తెలుగు, Kannada ಕನ್ನಡ, Bengali বাংলা, Marathi मराठी, Gujarati ગુજરાતી, Punjabi ਪੰਜਾਬੀ, Urdu اردو, Odia ଓଡ଼ିଆ, Assamese অসমীয়া, English) and International languages (French Français, Spanish Español, German Deutsch, Italian Italiano, Portuguese Português, Arabic العربية, Chinese 简体中文, Japanese 日本語, Korean 한국어, Russian Русский, Indonesian Bahasa Indonesia, Thai ไทย, Vietnamese Tiếng Việt).\n");
+
+        if (language != null && !language.isBlank() && !"auto".equalsIgnoreCase(language)) {
+            sb.append(String.format("   - ACTIVE LANGUAGE OVERRIDE: The user has selected '%s'. You MUST respond directly and fluently in this language.\n", language));
+            sb.append("   - If the user writes in code-switched dialect (e.g. Tamil-English / Tanglish or Hindi-English / Hinglish), reply in natural, friendly conversational style matching their preference.\n");
+        } else {
+            sb.append("   - INTELLIGENT LANGUAGE DETECTION: Automatically detect the language or script of the user's latest query. If the user writes in Tamil (e.g. 'ஊட்டிக்கு 3 நாள் trip plan பண்ணு' or Tanglish 'Ooty-ku 3 days trip plan pannu'), respond warmly in Tamil/Tanglish. If in Hindi, respond in Hindi. If in Telugu, Malayalam, Spanish, French, etc., respond in that exact language.\n");
+        }
+        sb.append("   - CRITICAL TRAVEL ACCURACY: NEVER mistranslate proper names of places, temples, monuments, bus terminals, railway stations, flight codes, hotels, distances, and prices. Preserve proper place names accurately (with English phonetic transliteration in brackets where helpful for navigation).\n");
+        return sb.toString();
+    }
+
     /**
      * Generate content with conversation history
      */
     public String generateResponse(List<ChatMessage> history, String userPrompt) {
+        return generateResponse(history, userPrompt, null);
+    }
+
+    public String generateResponse(List<ChatMessage> history, String userPrompt, String language) {
         String activeKey = resolveApiKey();
         if (activeKey == null || activeKey.trim().isEmpty()) {
             log.warn("Gemini API key is not configured.");
@@ -79,17 +98,18 @@ public class GeminiService {
 
         List<Map<String, Object>> contents = buildContentsList(history, userPrompt);
         String primaryModel = (modelName != null && !modelName.isEmpty()) ? modelName : "gemini-2.5-flash";
+        String instruction = buildSystemInstruction(language);
 
         try {
-            return callGeminiApiWithContents(primaryModel, contents, activeKey);
+            return callGeminiApiWithContents(primaryModel, contents, activeKey, instruction);
         } catch (Exception e) {
             log.warn("Gemini API failed with model {}, trying fallback to gemini-2.5-flash-lite: {}", primaryModel, e.getMessage());
             try {
-                return callGeminiApiWithContents("gemini-2.5-flash-lite", contents, activeKey);
+                return callGeminiApiWithContents("gemini-2.5-flash-lite", contents, activeKey, instruction);
             } catch (Exception fallbackEx) {
                 log.warn("Fallback to gemini-2.5-flash-lite failed, trying gemini-flash-latest: {}", fallbackEx.getMessage());
                 try {
-                    return callGeminiApiWithContents("gemini-flash-latest", contents, activeKey);
+                    return callGeminiApiWithContents("gemini-flash-latest", contents, activeKey, instruction);
                 } catch (Exception finalEx) {
                     log.error("All Gemini API calls failed: {}", finalEx.getMessage());
                     return generateLocalFallback(userPrompt);
@@ -192,12 +212,17 @@ public class GeminiService {
     }
 
     private String callGeminiApiWithContents(String model, List<Map<String, Object>> contents, String activeKey) throws Exception {
+        return callGeminiApiWithContents(model, contents, activeKey, SYSTEM_INSTRUCTION);
+    }
+
+    private String callGeminiApiWithContents(String model, List<Map<String, Object>> contents, String activeKey, String systemInstruction) throws Exception {
         String endpoint = String.format(GEMINI_API_URL, model, activeKey.trim());
 
         Map<String, Object> requestBody = new HashMap<>();
 
         // System instruction
-        Map<String, Object> systemPart = Map.of("text", SYSTEM_INSTRUCTION);
+        String sysText = (systemInstruction != null && !systemInstruction.isBlank()) ? systemInstruction : SYSTEM_INSTRUCTION;
+        Map<String, Object> systemPart = Map.of("text", sysText);
         requestBody.put("system_instruction", Map.of("parts", List.of(systemPart)));
 
         // Multi-turn contents
@@ -261,6 +286,10 @@ public class GeminiService {
         String currency = (request.getCurrency() != null && !request.getCurrency().isBlank()) ? request.getCurrency() : "INR";
         List<String> interests = (request.getInterests() != null && !request.getInterests().isEmpty()) ? request.getInterests() : List.of("Sightseeing", "Nature", "Food");
 
+        String langDirective = (request.getLanguage() != null && !request.getLanguage().isBlank() && !"en".equalsIgnoreCase(request.getLanguage()) && !"auto".equalsIgnoreCase(request.getLanguage()))
+                ? "- Language: Write all summaries, titles, descriptions, activities, and tips fluently in " + request.getLanguage() + " while retaining proper landmark names.\n"
+                : "";
+
         String activeKey = resolveApiKey();
         if (activeKey != null && !activeKey.trim().isEmpty()) {
             String prompt = String.format("""
@@ -270,7 +299,7 @@ public class GeminiService {
                     - Budget Tier: %s (Currency: %s)
                     - Interests: %s
                     - Start Date: %s
-
+                    %s
                     Respond with ONLY a valid raw JSON object (no markdown code blocks, no ```json, just raw JSON) matching this structure:
                     {
                       "title": "Your %d Days %s Itinerary",
@@ -309,7 +338,7 @@ public class GeminiService {
                     }
                     """,
                     dest, days, travelers, budgetTier, currency, String.join(", ", interests),
-                    request.getStartDate() != null ? request.getStartDate() : "Upcoming",
+                    request.getStartDate() != null ? request.getStartDate() : "Upcoming", langDirective,
                     days, dest, dest, days, travelers, budgetTier, currency
             );
 

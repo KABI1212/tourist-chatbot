@@ -10,7 +10,7 @@
  * 4. file:// protocol -> http://localhost:8080/api (local testing)
  * 5. Default -> '/api' (works with Vercel rewrites to Render)
  */
-const getApiBase = () => {
+window.getApiBase = window.getApiBase || function() {
     if (window.APP_CONFIG && window.APP_CONFIG.BACKEND_URL && window.APP_CONFIG.BACKEND_URL.trim() !== '') {
         let base = window.APP_CONFIG.BACKEND_URL.trim().replace(/\/+$/, '');
         if (!base.endsWith('/api')) base += '/api';
@@ -39,9 +39,11 @@ const getApiBase = () => {
     return '/api';
 };
 
-const API_BASE = getApiBase();
+var getApiBase = window.getApiBase;
+window.API_BASE = window.API_BASE || window.getApiBase();
+var API_BASE = window.API_BASE;
 
-const Api = {
+var Api = window.Api || {
     /**
      * Get stored JWT token
      */
@@ -178,3 +180,102 @@ const Api = {
 };
 
 window.Api = Api;
+
+// Global Escape HTML Helper
+window.escapeHtml = window.escapeHtml || function(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+};
+
+// Verified, Accessible Destination Images Catalog
+window.DESTINATION_IMAGE_CATALOG = {
+    'ooty': 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800',
+    'manali': 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800',
+    'kerala': 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800',
+    'kerala backwaters': 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800',
+    'goa': 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800',
+    'paris': 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800',
+    'eiffel tower': 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800',
+    'taj mahal': 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800',
+    'agra': 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800',
+    'colosseum': 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800',
+    'statue of liberty': 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800',
+    'new york': 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800',
+    'machu picchu': 'https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=800',
+    'great wall of china': 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800',
+    'santorini': 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800',
+    'jaipur': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800',
+    'ladakh': 'https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=800',
+    'leh': 'https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=800',
+    'varanasi': 'https://images.unsplash.com/photo-1561359313-0639aad49ca6?w=800',
+    'shimla': 'https://images.unsplash.com/photo-1597074866923-dc0589150358?w=800',
+    'darjeeling': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800',
+    'munnar': 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=800',
+    'mysore': 'https://images.unsplash.com/photo-1590766940554-634a7ed41450?w=800',
+    'pondicherry': 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800',
+    'rishikesh': 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800',
+    'hampi': 'https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=800',
+    'coorg': 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=800',
+    'nainital': 'https://images.unsplash.com/photo-1597074866923-dc0589150358?w=800',
+    'udaipur': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800',
+    'alleppey': 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800',
+    'kodaikanal': 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800',
+    'jaisalmer': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800',
+    'gulmarg': 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800',
+    'srinagar': 'https://images.unsplash.com/photo-1597074866923-dc0589150358?w=800',
+    'amritsar': 'https://images.unsplash.com/photo-1589987607627-616cac5c2c5a?w=800',
+    'khajuraho': 'https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=800',
+    'shillong': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800',
+    'gangtok': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800',
+    'dubai': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800',
+    'london': 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800',
+    'bali': 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800',
+    'tokyo': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800',
+    'kyoto': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800',
+    'sydney': 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800',
+    'singapore': 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800',
+    'bangkok': 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=800'
+};
+
+window.getDestinationImage = function(destName) {
+    if (!destName || typeof destName !== 'string') return 'assets/dash.jpg';
+    const key = destName.toLowerCase().trim();
+    if (window.DESTINATION_IMAGE_CATALOG[key]) {
+        return window.DESTINATION_IMAGE_CATALOG[key];
+    }
+    for (const [k, url] of Object.entries(window.DESTINATION_IMAGE_CATALOG)) {
+        if (key.includes(k) || k.includes(key)) return url;
+    }
+    if (key.includes('beach') || key.includes('island') || key.includes('coast')) {
+        return 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800';
+    }
+    if (key.includes('snow') || key.includes('mountain') || key.includes('hill') || key.includes('peak')) {
+        return 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800';
+    }
+    if (key.includes('temple') || key.includes('heritage') || key.includes('palace') || key.includes('fort')) {
+        return 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800';
+    }
+    if (key.includes('lake') || key.includes('waterfall') || key.includes('backwater') || key.includes('river')) {
+        return 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800';
+    }
+    return 'assets/dash.jpg';
+};
+
+window.handleImageError = function(imgEl, destName) {
+    if (!imgEl) return;
+    const stage = parseInt(imgEl.dataset.fallbackStage || '0', 10);
+    if (stage >= 2) {
+        imgEl.onerror = null;
+        imgEl.src = 'assets/dash.jpg';
+        return;
+    }
+    if (stage === 1) {
+        imgEl.dataset.fallbackStage = '2';
+        imgEl.src = 'assets/dash.jpg';
+        return;
+    }
+    imgEl.dataset.fallbackStage = '1';
+    imgEl.src = window.getDestinationImage(destName);
+};

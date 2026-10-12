@@ -30,4 +30,6 @@ public class ItineraryGenerateRequest {
     private String currency; // "INR", "USD", "EUR"
 
     private List<String> interests; // "Sightseeing", "Adventure", "Food", "Nature", "Shopping", "Spiritual"
+ 
+    private String language; // e.g. "ta", "hi", "en", "fr", "es", "auto"
 }

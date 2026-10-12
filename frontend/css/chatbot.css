@@ -1233,3 +1233,28 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* AI Chat Destination Preview Card */
+.chat-dest-preview-card {
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-surface);
+    transition: var(--transition);
+}
+
+.chat-dest-preview-card:hover {
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow-md);
+}
+
+.chat-dest-preview-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+

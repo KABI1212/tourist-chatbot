@@ -1,8 +1,7 @@
 {
   "eiffel tower": {
     "images": [
-      "https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=800",
-      "https://images.unsplash.com/photo-1511739001486-6bfe10cec9e4?w=800",
+      "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800",
       "https://images.unsplash.com/photo-1549877452-9c387954fbc2?w=800"
     ],
     "lat": 48.8584,
@@ -12,8 +11,7 @@
   "taj mahal": {
     "images": [
       "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800",
-      "https://images.unsplash.com/photo-1599858769708-7c1ff5b6e47c?w=800",
-      "https://images.unsplash.com/photo-1567157577867-917a9d7d9468?w=800"
+      "https://images.unsplash.com/photo-1548013146-72479768bada?w=800"
     ],
     "lat": 27.1751,
     "lng": 78.0421,
@@ -21,9 +19,8 @@
   },
   "colosseum": {
     "images": [
-      "https://images.unsplash.com/photo-1562832135-14a35d25edef?w=800",
       "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800",
-      "https://images.unsplash.com/photo-1605100764556-1f1c0f3c0e0e?w=800"
+      "https://images.unsplash.com/photo-1515542622106-78bda8ba0e5b?w=800"
     ],
     "lat": 41.8902,
     "lng": 12.4922,
@@ -31,9 +28,8 @@
   },
   "statue of liberty": {
     "images": [
-      "https://images.unsplash.com/photo-1605130284535-b11db9d7c0a1?w=800",
-      "https://images.unsplash.com/photo-1565130838609-c3a86655db61?w=800",
-      "https://images.unsplash.com/photo-1590210697004-39f1ae1c6f19?w=800"
+      "https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800",
+      "https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=800"
     ],
     "lat": 40.6892,
     "lng": -74.0445,
@@ -42,18 +38,16 @@
   "machu picchu": {
     "images": [
       "https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=800",
-      "https://images.unsplash.com/photo-1526392060635-9d6019884377?w=800",
-      "https://images.unsplash.com/photo-1580619305218-8423a7ef79b4?w=800"
+      "https://images.unsplash.com/photo-1526392060635-9d6019884377?w=800"
     ],
     "lat": -13.1631,
-    "lng": -72.5450,
+    "lng": -72.545,
     "maps_link": "https://www.google.com/maps/search/?api=1&query=-13.1631,-72.5450"
   },
   "great wall of china": {
     "images": [
       "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800",
-      "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800",
-      "https://images.unsplash.com/photo-1599796915065-e860a5c97d33?w=800"
+      "https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=800"
     ],
     "lat": 40.4319,
     "lng": 116.5704,
@@ -61,9 +55,7 @@
   },
   "santorini": {
     "images": [
-      "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800",
-      "https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=800",
-      "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800"
+      "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800"
     ],
     "lat": 36.3932,
     "lng": 25.4615,
@@ -71,19 +63,16 @@
   },
   "goa": {
     "images": [
-      "https://images.unsplash.com/photo-1512343879784-a960bf40e7f0?w=800",
-      "https://images.unsplash.com/photo-1614082242765-7c98ca0f3df5?w=800",
-      "https://images.unsplash.com/photo-1582803859185-5848480cf5b5?w=800"
+      "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800",
+      "https://images.unsplash.com/photo-1587922546307-776227941871?w=800"
     ],
     "lat": 15.2993,
-    "lng": 74.1240,
+    "lng": 74.124,
     "maps_link": "https://www.google.com/maps/search/?api=1&query=15.2993,74.1240"
   },
   "kerala": {
     "images": [
-      "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=800",
-      "https://images.unsplash.com/photo-1602216054341-2d4b6b0c7b1e?w=800",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
+      "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800"
     ],
     "lat": 10.8505,
     "lng": 76.2711,
@@ -91,9 +80,8 @@
   },
   "manali": {
     "images": [
-      "https://images.unsplash.com/photo-1589632056659-9e5f62fb4b5f?w=800",
-      "https://images.unsplash.com/photo-1589798058781-d1f1937a59c1?w=800",
-      "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800"
+      "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800",
+      "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=800"
     ],
     "lat": 32.2396,
     "lng": 77.1887,
@@ -101,9 +89,8 @@
   },
   "jaipur": {
     "images": [
-      "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800",
       "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800",
-      "https://images.unsplash.com/photo-1586105251261-72a756497a11?w=800"
+      "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800"
     ],
     "lat": 26.9124,
     "lng": 75.7873,
@@ -111,9 +98,7 @@
   },
   "agra": {
     "images": [
-      "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800",
-      "https://images.unsplash.com/photo-1599858769708-7c1ff5b6e47c?w=800",
-      "https://images.unsplash.com/photo-1567157577867-917a9d7d9468?w=800"
+      "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800"
     ],
     "lat": 27.1767,
     "lng": 78.0081,
@@ -121,9 +106,7 @@
   },
   "ladakh": {
     "images": [
-      "https://images.unsplash.com/photo-1611768221161-906a7e687951?w=800",
-      "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800",
-      "https://images.unsplash.com/photo-1598890981544-23a665e5ee8f?w=800"
+      "https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=800"
     ],
     "lat": 34.1526,
     "lng": 77.5771,
@@ -131,9 +114,7 @@
   },
   "varanasi": {
     "images": [
-      "https://images.unsplash.com/photo-1561361058-c24cecae35ce?w=800",
-      "https://images.unsplash.com/photo-1566837945700-30057527ade0?w=800",
-      "https://images.unsplash.com/photo-1602216557920-4e4c1254568e?w=800"
+      "https://images.unsplash.com/photo-1561359313-0639aad49ca6?w=800"
     ],
     "lat": 25.3176,
     "lng": 82.9739,
@@ -141,9 +122,7 @@
   },
   "shimla": {
     "images": [
-      "https://images.unsplash.com/photo-1589802829985-817e28050049?w=800",
-      "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800",
-      "https://images.unsplash.com/photo-1593179357196-e89611e2e52b?w=800"
+      "https://images.unsplash.com/photo-1597074866923-dc0589150358?w=800"
     ],
     "lat": 31.1048,
     "lng": 77.1734,
@@ -151,19 +130,15 @@
   },
   "darjeeling": {
     "images": [
-      "https://images.unsplash.com/photo-1580629748743-a82687e0f43c?w=800",
-      "https://images.unsplash.com/photo-1596126265323-5c1c81f63a20?w=800",
-      "https://images.unsplash.com/photo-1564399591903-fd4cb1f7f588?w=800"
+      "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800"
     ],
-    "lat": 27.0410,
+    "lat": 27.041,
     "lng": 88.2663,
     "maps_link": "https://www.google.com/maps/search/?api=1&query=27.0410,88.2663"
   },
   "munnar": {
     "images": [
-      "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=800",
-      "https://images.unsplash.com/photo-1602216054341-2d4b6b0c7b1e?w=800",
-      "https://images.unsplash.com/photo-1589802829985-817e28050049?w=800"
+      "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=800"
     ],
     "lat": 10.0889,
     "lng": 77.0595,
@@ -171,9 +146,7 @@
   },
   "mysore": {
     "images": [
-      "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800",
-      "https://images.unsplash.com/photo-1586105251261-72a756497a11?w=800",
-      "https://images.unsplash.com/photo-1625218661325-807707f762dc?w=800"
+      "https://images.unsplash.com/photo-1590766940554-634a7ed41450?w=800"
     ],
     "lat": 12.2958,
     "lng": 76.6394,
@@ -181,9 +154,7 @@
   },
   "pondicherry": {
     "images": [
-      "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800",
-      "https://images.unsplash.com/photo-1586105251261-72a756497a11?w=800",
-      "https://images.unsplash.com/photo-1589802829985-817e28050049?w=800"
+      "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800"
     ],
     "lat": 11.9416,
     "lng": 79.8083,
@@ -191,9 +162,7 @@
   },
   "rishikesh": {
     "images": [
-      "https://images.unsplash.com/photo-1589802829985-817e28050049?w=800",
-      "https://images.unsplash.com/photo-1589622056659-9e5f62fb4b5f?w=800",
-      "https://images.unsplash.com/photo-1589798058781-d1f1937a59c1?w=800"
+      "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800"
     ],
     "lat": 30.0869,
     "lng": 78.2676,
@@ -201,29 +170,23 @@
   },
   "hampi": {
     "images": [
-      "https://images.unsplash.com/photo-1586105251261-72a756497a11?w=800",
-      "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800",
-      "https://images.unsplash.com/photo-1625218661325-807707f762dc?w=800"
+      "https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=800"
     ],
-    "lat": 15.3350,
+    "lat": 15.335,
     "lng": 76.4603,
     "maps_link": "https://www.google.com/maps/search/?api=1&query=15.3350,76.4603"
   },
   "ooty": {
     "images": [
-      "https://images.unsplash.com/photo-1589802829985-817e28050049?w=800",
-      "https://images.unsplash.com/photo-1596126265323-5c1c81f63a20?w=800",
-      "https://images.unsplash.com/photo-1580629748743-a82687e0f43c?w=800"
+      "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800"
     ],
     "lat": 11.4102,
-    "lng": 76.6950,
+    "lng": 76.695,
     "maps_link": "https://www.google.com/maps/search/?api=1&query=11.4102,76.6950"
   },
   "coorg": {
     "images": [
-      "https://images.unsplash.com/photo-1602216054341-2d4b6b0c7b1e?w=800",
-      "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=800",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
+      "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=800"
     ],
     "lat": 12.3375,
     "lng": 75.8068,
@@ -231,9 +194,7 @@
   },
   "nainital": {
     "images": [
-      "https://images.unsplash.com/photo-1593179357196-e89611e2e52b?w=800",
-      "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800",
-      "https://images.unsplash.com/photo-1589802829985-817e28050049?w=800"
+      "https://images.unsplash.com/photo-1597074866923-dc0589150358?w=800"
     ],
     "lat": 29.3919,
     "lng": 79.4542,
@@ -241,9 +202,7 @@
   },
   "udaipur": {
     "images": [
-      "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800",
-      "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800",
-      "https://images.unsplash.com/photo-1586105251261-72a756497a11?w=800"
+      "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800"
     ],
     "lat": 24.5854,
     "lng": 73.7125,
@@ -251,9 +210,7 @@
   },
   "leh": {
     "images": [
-      "https://images.unsplash.com/photo-1611768221161-906a7e687951?w=800",
-      "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800",
-      "https://images.unsplash.com/photo-1598890981544-23a665e5ee8f?w=800"
+      "https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=800"
     ],
     "lat": 34.1526,
     "lng": 77.5771,
@@ -261,9 +218,7 @@
   },
   "alleppey": {
     "images": [
-      "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=800",
-      "https://images.unsplash.com/photo-1602216054341-2d4b6b0c7b1e?w=800",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
+      "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800"
     ],
     "lat": 9.4981,
     "lng": 76.3388,
@@ -271,9 +226,7 @@
   },
   "kodaikanal": {
     "images": [
-      "https://images.unsplash.com/photo-1589802829985-817e28050049?w=800",
-      "https://images.unsplash.com/photo-1596126265323-5c1c81f63a20?w=800",
-      "https://images.unsplash.com/photo-1580629748743-a82687e0f43c?w=800"
+      "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800"
     ],
     "lat": 10.2381,
     "lng": 77.4892,
@@ -281,9 +234,7 @@
   },
   "jaisalmer": {
     "images": [
-      "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800",
-      "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800",
-      "https://images.unsplash.com/photo-1586105251261-72a756497a11?w=800"
+      "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800"
     ],
     "lat": 26.9157,
     "lng": 70.9083,
@@ -291,8 +242,6 @@
   },
   "gulmarg": {
     "images": [
-      "https://images.unsplash.com/photo-1593179357196-e89611e2e52b?w=800",
-      "https://images.unsplash.com/photo-1589802829985-817e28050049?w=800",
       "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800"
     ],
     "lat": 34.0484,
@@ -301,9 +250,7 @@
   },
   "srinagar": {
     "images": [
-      "https://images.unsplash.com/photo-1593179357196-e89611e2e52b?w=800",
-      "https://images.unsplash.com/photo-1589802829985-817e28050049?w=800",
-      "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800"
+      "https://images.unsplash.com/photo-1597074866923-dc0589150358?w=800"
     ],
     "lat": 34.0837,
     "lng": 74.7973,
@@ -311,19 +258,15 @@
   },
   "amritsar": {
     "images": [
-      "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=800",
-      "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800",
-      "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800"
+      "https://images.unsplash.com/photo-1589987607627-616cac5c2c5a?w=800"
     ],
-    "lat": 31.6340,
+    "lat": 31.634,
     "lng": 74.8723,
     "maps_link": "https://www.google.com/maps/search/?api=1&query=31.6340,74.8723"
   },
   "khajuraho": {
     "images": [
-      "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800",
-      "https://images.unsplash.com/photo-1586105251261-72a756497a11?w=800",
-      "https://images.unsplash.com/photo-1625218661325-807707f762dc?w=800"
+      "https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=800"
     ],
     "lat": 24.8318,
     "lng": 79.9199,
@@ -331,9 +274,7 @@
   },
   "shillong": {
     "images": [
-      "https://images.unsplash.com/photo-1589802829985-817e28050049?w=800",
-      "https://images.unsplash.com/photo-1593179357196-e89611e2e52b?w=800",
-      "https://images.unsplash.com/photo-1580629748743-a82687e0f43c?w=800"
+      "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800"
     ],
     "lat": 25.5788,
     "lng": 91.8933,
@@ -341,9 +282,7 @@
   },
   "gangtok": {
     "images": [
-      "https://images.unsplash.com/photo-1589802829985-817e28050049?w=800",
-      "https://images.unsplash.com/photo-1596126265323-5c1c81f63a20?w=800",
-      "https://images.unsplash.com/photo-1580629748743-a82687e0f43c?w=800"
+      "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800"
     ],
     "lat": 27.3389,
     "lng": 88.6065,
@@ -351,9 +290,7 @@
   },
   "dubai": {
     "images": [
-      "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800",
-      "https://images.unsplash.com/photo-1580674684081-7617fbf3d745?w=800",
-      "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=800"
+      "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800"
     ],
     "lat": 25.2048,
     "lng": 55.2708,
@@ -361,9 +298,7 @@
   },
   "paris": {
     "images": [
-      "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800",
-      "https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=800",
-      "https://images.unsplash.com/photo-1511739001486-6bfe10cec9e4?w=800"
+      "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800"
     ],
     "lat": 48.8566,
     "lng": 2.3522,
@@ -371,9 +306,7 @@
   },
   "london": {
     "images": [
-      "https://images.unsplash.com/photo-1505761671935-60b3a7427bad?w=800",
-      "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800",
-      "https://images.unsplash.com/photo-1509343256512-ed77b0f534d6?w=800"
+      "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800"
     ],
     "lat": 51.5074,
     "lng": -0.1278,
@@ -381,19 +314,15 @@
   },
   "bali": {
     "images": [
-      "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800",
-      "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=800",
-      "https://images.unsplash.com/photo-1539367628448-4bc5c9d171c8?w=800"
+      "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800"
     ],
     "lat": -8.3405,
-    "lng": 115.0920,
+    "lng": 115.092,
     "maps_link": "https://www.google.com/maps/search/?api=1&query=-8.3405,115.0920"
   },
   "tokyo": {
     "images": [
-      "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800",
-      "https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=800",
-      "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800"
+      "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800"
     ],
     "lat": 35.6762,
     "lng": 139.6503,
@@ -401,9 +330,7 @@
   },
   "sydney": {
     "images": [
-      "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800",
-      "https://images.unsplash.com/photo-1528072164453-f4e8ef0d475a?w=800",
-      "https://images.unsplash.com/photo-1523480717984-24cba35ae1ef?w=800"
+      "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800"
     ],
     "lat": -33.8688,
     "lng": 151.2093,
@@ -411,19 +338,15 @@
   },
   "new york": {
     "images": [
-      "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800",
-      "https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800",
-      "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800"
+      "https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800"
     ],
     "lat": 40.7128,
-    "lng": -74.0060,
+    "lng": -74.006,
     "maps_link": "https://www.google.com/maps/search/?api=1&query=40.7128,-74.0060"
   },
   "singapore": {
     "images": [
-      "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800",
-      "https://images.unsplash.com/photo-1534105615254-96a0e2a1f4f6?w=800",
-      "https://images.unsplash.com/photo-1537047902294-8e22623bf6a3?w=800"
+      "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800"
     ],
     "lat": 1.3521,
     "lng": 103.8198,
@@ -431,9 +354,7 @@
   },
   "bangkok": {
     "images": [
-      "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=800",
-      "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=800",
-      "https://images.unsplash.com/photo-1534008897995-27a23e859048?w=800"
+      "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=800"
     ],
     "lat": 13.7563,
     "lng": 100.5018,

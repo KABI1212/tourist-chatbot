@@ -3,7 +3,7 @@
    Modern, Ultra-Premium Travel-Tech Aesthetics
    ========================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&family=Noto+Sans+Malayalam:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&family=Noto+Sans+Bengali:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&display=swap');
 
 :root {
     /* Brand & Color Tokens — Luxury Travel Editorial (Dark Theme Default) */
@@ -40,7 +40,7 @@
     --border-focus: #C5A46D;
 
     /* Typography & Hierarchy */
-    --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Noto Sans Tamil', 'Noto Sans Devanagari', 'Noto Sans Arabic', 'Noto Sans Malayalam', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Bengali', 'Noto Sans Thai', 'Segoe UI', Roboto, sans-serif;
     --font-display: 'Cormorant Garamond', Georgia, serif;
     --radius-sm: 8px;
     --radius-md: 14px;
@@ -873,4 +873,394 @@ footer {
     body { background: #fff !important; color: #000 !important; }
     .navbar, .sidebar, footer, .btn-action, #toast-container { display: none !important; }
     .itinerary-output-box { border: none !important; box-shadow: none !important; color: #000 !important; }
+}
+
+/* ==========================================================
+   MULTILINGUAL & I18N SYSTEM STYLES
+   ========================================================== */
+.lang-selector-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.lang-selector-trigger:hover {
+    border-color: var(--primary-light);
+    background: rgba(37, 99, 235, 0.08);
+}
+
+.lang-selector-flag {
+    font-size: 16px;
+}
+
+/* Language Selection Modal */
+.lang-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    padding: 20px;
+}
+
+.lang-modal-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.lang-modal-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 680px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    transform: translateY(12px) scale(0.98);
+    transition: transform 0.25s ease;
+}
+
+.lang-modal-backdrop.open .lang-modal-card {
+    transform: translateY(0) scale(1);
+}
+
+.lang-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.lang-modal-title {
+    font-size: 20px;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.lang-modal-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+}
+
+.lang-modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.lang-modal-close:hover {
+    color: var(--text-main);
+    background: var(--bg-card);
+}
+
+.lang-search-wrap {
+    position: relative;
+    padding: 16px 24px 8px 24px;
+}
+
+.lang-search-icon {
+    position: absolute;
+    left: 38px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 14px;
+}
+
+.lang-search-input {
+    width: 100%;
+    padding: 11px 16px 11px 42px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-main);
+    font-size: 14px;
+    outline: none;
+    transition: var(--transition);
+}
+
+.lang-search-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.lang-tabs-bar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 24px 12px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.lang-tab-btn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.lang-tab-btn:hover {
+    color: var(--text-main);
+    border-color: var(--border-hover);
+}
+
+.lang-tab-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.lang-auto-card {
+    margin: 14px 24px 8px 24px;
+    padding: 14px 18px;
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.25);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.lang-auto-card:hover, .lang-auto-card.active {
+    background: rgba(37, 99, 235, 0.16);
+    border-color: var(--primary);
+}
+
+.lang-auto-icon {
+    font-size: 22px;
+}
+
+.lang-auto-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.lang-auto-info strong {
+    font-size: 14px;
+    color: var(--text-main);
+}
+
+.lang-auto-info span {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.lang-active-badge {
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--primary);
+    color: #fff;
+    padding: 3px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+}
+
+.lang-grid-container {
+    padding: 12px 24px 24px 24px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    flex: 1;
+}
+
+.lang-grid-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    text-align: left;
+    transition: var(--transition);
+    color: var(--text-main);
+}
+
+.lang-grid-item:hover {
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+    background: var(--bg-card-hover);
+}
+
+.lang-grid-item.active {
+    border-color: var(--primary);
+    background: rgba(37, 99, 235, 0.12);
+}
+
+.lang-grid-flag {
+    font-size: 20px;
+}
+
+.lang-grid-texts {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.lang-grid-native {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.lang-grid-name {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.lang-grid-check {
+    color: var(--primary-light);
+    font-size: 14px;
+}
+
+/* ==========================================================
+   VOICE MIC & TTS BUTTONS
+   ========================================================== */
+.chat-mic-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: var(--transition);
+    margin-bottom: 2px;
+}
+
+.chat-mic-btn:hover {
+    color: var(--primary-light);
+    border-color: var(--primary-light);
+    background: rgba(37, 99, 235, 0.08);
+}
+
+.chat-mic-btn.recording {
+    background: #ef4444 !important;
+    color: #fff !important;
+    border-color: #ef4444 !important;
+    animation: micPulse 1.2s infinite;
+}
+
+@keyframes micPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+    70% { transform: scale(1.08); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.tts-speak-btn.active {
+    color: var(--primary-light) !important;
+    background: rgba(37, 99, 235, 0.15) !important;
+    border-color: var(--primary-light) !important;
+}
+
+.voice-status-toast {
+    position: fixed;
+    bottom: 84px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 13.5px;
+    z-index: 9999;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+}
+
+.voice-status-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.voice-status-toast.warning {
+    border-color: #f59e0b;
+    color: #fbbf24;
+}
+
+/* ==========================================================
+   RTL LAYOUT SUPPORT (Arabic & Urdu)
+   ========================================================== */
+[dir="rtl"] {
+    text-align: right;
+}
+
+[dir="rtl"] .chat-input-row {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .msg-row.assistant {
+    flex-direction: row;
+}
+
+[dir="rtl"] .msg-row.user {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .lang-grid-item {
+    text-align: right;
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .lang-search-input {
+    padding: 11px 42px 11px 16px;
+}
+
+[dir="rtl"] .lang-search-icon {
+    left: auto;
+    right: 38px;
+}
+
+[dir="rtl"] .day-step-badge,
+[dir="rtl"] .budget-row {
+    flex-direction: row-reverse;
 }
