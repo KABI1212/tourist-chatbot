@@ -34,7 +34,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const initialPrompt = queryPrompt || pendingPrompt;
     if (initialPrompt) {
         if (pendingPrompt) localStorage.removeItem('pending_chat_prompt');
-        usePrompt(decodeURIComponent(initialPrompt));
+        let promptText = initialPrompt;
+        try {
+            promptText = decodeURIComponent(initialPrompt);
+        } catch (e) {
+            promptText = initialPrompt;
+        }
+        usePrompt(promptText);
         setTimeout(() => {
             handleChatSubmit(new Event('submit'));
         }, 350);

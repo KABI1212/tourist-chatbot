@@ -65,8 +65,9 @@
             <p>Your Personal Luxury Travel Planning &amp; Exploration Concierge</p>
 
             <!-- Search Bar inside Hero -->
-            <form class="hero-search-bar" id="heroSearchForm" onsubmit="handleHeroSearch(event)">
+            <form class="hero-search-bar" id="heroSearchForm" onsubmit="handleHeroSearch(event)" style="position:relative;">
                 <input type="text" class="hero-search-input" id="heroSearchInput" placeholder="Where do you want to explore? (e.g. Ooty, Manali, Paris)" data-i18n-placeholder="dest_search_placeholder" autocomplete="off" required>
+                <div id="heroAutocompleteDropdown" class="global-autocomplete-dropdown" style="display:none;"></div>
                 <button type="submit" class="hero-search-btn" id="heroSearchBtn" title="Search destination or plan trip">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -78,7 +79,7 @@
             <div class="quick-card" onclick="window.location.href='destinations.html'" id="cardFindDestinations">
                 <div class="quick-card-icon"><i class="fas fa-map-location-dot"></i></div>
                 <h4>Find Destinations</h4>
-                <span>Explore 44+ curated global &amp; Indian destinations</span>
+                <span>Explore worldwide destinations, attractions &amp; hidden gems</span>
             </div>
 
             <div class="quick-card" onclick="window.location.href='planner.html'" id="cardPlanItinerary">
@@ -333,7 +334,7 @@
                     <h4>3. Destination Discovery</h4>
                 </div>
                 <ul class="req-list">
-                    <li><i class="fas fa-check"></i> 44+ Verified Global &amp; Indian Places</li>
+                    <li><i class="fas fa-check"></i> Worldwide Discovery: Any City, Village, Temple or Attraction</li>
                     <li><i class="fas fa-check"></i> Climate, Best Time &amp; Ratings</li>
                     <li><i class="fas fa-check"></i> Curated Attractions &amp; Photography</li>
                     <li><i class="fas fa-check"></i> Coordinates &amp; Map Pins</li>
@@ -380,6 +381,15 @@
         let currentCalcTier = 'standard';
 
         document.addEventListener('DOMContentLoaded', async () => {
+            const heroInput = document.getElementById('heroSearchInput');
+            const heroDropdown = document.getElementById('heroAutocompleteDropdown');
+            if (heroInput && heroDropdown && typeof window.setupGlobalAutocomplete === 'function') {
+                window.setupGlobalAutocomplete(heroInput, heroDropdown, (item) => {
+                    const latParam = item.lat ? `&lat=${item.lat}&lon=${item.lon}` : '';
+                    window.location.href = `destinations.html?view=${encodeURIComponent(item.name)}${latParam}`;
+                });
+            }
+
             await loadPopularDestinations();
             recalculateBudget();
         });

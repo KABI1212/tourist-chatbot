@@ -188,6 +188,125 @@ var Api = window.Api || {
 
 window.Api = Api;
 
+// Global Worldwide Destination Autocomplete Controller
+window.setupGlobalAutocomplete = function(inputEl, dropdownEl, onSelect) {
+    if (!inputEl || !dropdownEl) return;
+    let debounceTimer = null;
+    let activeIndex = -1;
+    let currentItems = [];
+
+    const closeDropdown = () => {
+        dropdownEl.classList.remove('active');
+        dropdownEl.innerHTML = '';
+        activeIndex = -1;
+        currentItems = [];
+    };
+
+    const renderItems = (items) => {
+        currentItems = items || [];
+        activeIndex = -1;
+        if (!items || items.length === 0) {
+            dropdownEl.innerHTML = '<div class="autocomplete-empty"><i class="fas fa-location-crosshairs"></i> No matching destinations found. Press Enter to search globally.</div>';
+            dropdownEl.classList.add('active');
+            return;
+        }
+
+        dropdownEl.innerHTML = items.map((it, idx) => {
+            const cat = (it.category || '').toLowerCase();
+            const icon = cat.includes('beach') ? 'fa-umbrella-beach'
+                : cat.includes('mountain') ? 'fa-mountain'
+                : cat.includes('waterfall') ? 'fa-water'
+                : cat.includes('temple') ? 'fa-place-of-worship'
+                : cat.includes('nature') || cat.includes('wildlife') ? 'fa-tree'
+                : 'fa-location-dot';
+
+            const sub = it.state ? `${it.state}, ${it.country || ''}` : (it.country || 'Worldwide');
+            const catBadge = it.category ? `<span class="autocomplete-item-badge">${window.escapeHtml(it.category)}</span>` : '';
+
+            return `
+                <div class="autocomplete-item" data-index="${idx}">
+                    <div class="autocomplete-item-icon"><i class="fas ${icon}"></i></div>
+                    <div class="autocomplete-item-info">
+                        <div class="autocomplete-item-title">${window.escapeHtml(it.name)}</div>
+                        <div class="autocomplete-item-sub">${window.escapeHtml(sub)}</div>
+                    </div>
+                    ${catBadge}
+                </div>
+            `;
+        }).join('');
+
+        dropdownEl.querySelectorAll('.autocomplete-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const idx = parseInt(el.dataset.index, 10);
+                if (currentItems[idx]) {
+                    closeDropdown();
+                    if (typeof onSelect === 'function') onSelect(currentItems[idx]);
+                }
+            });
+        });
+
+        dropdownEl.classList.add('active');
+    };
+
+    inputEl.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const query = inputEl.value.trim();
+        if (query.length < 2) {
+            closeDropdown();
+            return;
+        }
+
+        dropdownEl.innerHTML = '<div class="autocomplete-loading"><i class="fas fa-spinner fa-spin"></i> Searching worldwide destinations…</div>';
+        dropdownEl.classList.add('active');
+
+        debounceTimer = setTimeout(async () => {
+            try {
+                const res = await window.Api.get(`/destinations/autocomplete?q=${encodeURIComponent(query)}&limit=8`);
+                const items = Array.isArray(res) ? res : (res.data || []);
+                renderItems(items);
+            } catch (e) {
+                console.warn('Autocomplete lookup error:', e);
+                closeDropdown();
+            }
+        }, 220);
+    });
+
+    inputEl.addEventListener('keydown', (e) => {
+        const itemEls = dropdownEl.querySelectorAll('.autocomplete-item');
+        if (!dropdownEl.classList.contains('active') || itemEls.length === 0) {
+            if (e.key === 'Enter') {
+                closeDropdown();
+            }
+            return;
+        }
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIndex = (activeIndex + 1) % itemEls.length;
+            itemEls.forEach((el, i) => el.classList.toggle('selected', i === activeIndex));
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIndex = (activeIndex - 1 + itemEls.length) % itemEls.length;
+            itemEls.forEach((el, i) => el.classList.toggle('selected', i === activeIndex));
+        } else if (e.key === 'Enter') {
+            if (activeIndex >= 0 && currentItems[activeIndex]) {
+                e.preventDefault();
+                const selected = currentItems[activeIndex];
+                closeDropdown();
+                if (typeof onSelect === 'function') onSelect(selected);
+            }
+        } else if (e.key === 'Escape') {
+            closeDropdown();
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!inputEl.contains(e.target) && !dropdownEl.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+};
+
 // Global Escape HTML Helper
 window.escapeHtml = window.escapeHtml || function(str) {
     if (!str) return '';

@@ -40,13 +40,16 @@
                 <span>TouristAI</span>
             </a>
 
-            <!-- Search inside header -->
-            <div
-                style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-full); padding:6px 16px; width:300px;">
-                <i class="fas fa-search" style="color:var(--text-dim); margin-right:8px; font-size:13px;"></i>
-                <input type="text" id="headerSearchInput" placeholder="Search destinations…"
-                    style="background:transparent; border:none; outline:none; color:var(--text-main); font-size:13px; width:100%;"
-                    oninput="filterDestinationsLive(this.value)">
+            <!-- Search inside header with Global Autocomplete -->
+            <div style="position:relative; width:320px;">
+                <div
+                    style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-full); padding:6px 16px; width:100%;">
+                    <i class="fas fa-search" style="color:var(--text-dim); margin-right:8px; font-size:13px;"></i>
+                    <input type="text" id="headerSearchInput" placeholder="Search any destination worldwide…"
+                        style="background:transparent; border:none; outline:none; color:var(--text-main); font-size:13px; width:100%;"
+                        autocomplete="off">
+                </div>
+                <div id="headerAutocompleteDropdown" class="global-autocomplete-dropdown"></div>
             </div>
 
             <div class="nav-links" id="navAuthLinks">
@@ -112,6 +115,8 @@
             <button class="dest-tab-btn" onclick="switchDestTab('tips')"><i class="fas fa-lightbulb"></i> Travel
                 Tips</button>
             <button class="dest-tab-btn" onclick="switchDestTab('photos')"><i class="fas fa-images"></i> Photos</button>
+            <button class="dest-tab-btn" onclick="switchDestTab('nearby')"><i class="fas fa-compass"></i> Nearby
+                Places</button>
         </div>
     </div>
 
@@ -132,7 +137,10 @@
                 </span>
             </div>
 
-            <div style="display:flex; gap:12px;">
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <button class="btn btn-outline btn-sm" onclick="askAiAboutCurrentDest()" id="btnAskAiAboutPlace">
+                    <i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> Ask AI About Place
+                </button>
                 <button class="btn btn-outline btn-sm" onclick="toggleFavorite()" id="favoriteBtn">
                     <i class="far fa-heart"></i> Save to Favorites
                 </button>
@@ -301,13 +309,28 @@
             <div class="attractions-grid" id="photosGrid"></div>
         </div>
 
+        <!-- TAB: NEARBY PLACES DISCOVERY -->
+        <div id="tabContentNearby" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <div>
+                    <h3
+                        style="font-family:var(--font-display); font-size:24px; font-weight:700; color:var(--text-main);">
+                        Dynamic Nearby Places &amp; Attractions
+                    </h3>
+                    <p style="color:var(--text-muted); font-size:13.5px;">
+                        Authentic landmarks, waterfalls, viewpoints, and cultural spots discovered near this destination
+                    </p>
+                </div>
+            </div>
+            <div class="attractions-grid" id="nearbyPlacesGrid"></div>
+        </div>
+
         <!-- ALL DESTINATIONS DIRECTORY & EXPLORER (Requirement 5) -->
         <div style="margin-top:80px; padding-top:40px; border-top:1px solid var(--border);">
             <div class="section-header-row">
                 <div class="section-title-wrap">
-                    <h2>Explore All Curated Destinations</h2>
-                    <p>Discover 44+ verified travel escapes with climate details, interactive maps, and smart trip
-                        planning</p>
+                    <h2>Explore Global Destinations</h2>
+                    <p>Discover worldwide destinations, attractions, and hidden gems with live climate details, interactive maps, and smart trip planning</p>
                 </div>
             </div>
 
@@ -320,9 +343,10 @@
                         <i class="fas fa-search"
                             style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--text-dim); font-size:14px;"></i>
                         <input type="text" id="dirSearchInput"
-                            placeholder="Search by name, city, state, country or keyword (e.g. Ooty, Beach, Fort, Snow)…"
+                            placeholder="Search any place worldwide (e.g. Valparai, Tokyo, Kodaikanal, Paris)…"
                             style="width:100%; padding:12px 16px 12px 42px; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); font-size:14px; outline:none;"
-                            oninput="handleDiscoveryFilter()">
+                            autocomplete="off">
+                        <div id="dirAutocompleteDropdown" class="global-autocomplete-dropdown"></div>
                     </div>
                     <!-- Budget Tier Filter -->
                     <select id="dirBudgetFilter" class="form-select"
@@ -453,6 +477,34 @@
             const urlParams = new URLSearchParams(window.location.search);
             const viewTarget = urlParams.get('view') || urlParams.get('search');
 
+            // 1. Initialize Global Autocomplete for Navbar Search
+            const headerSearch = document.getElementById('headerSearchInput');
+            const headerDropdown = document.getElementById('headerAutocompleteDropdown');
+            if (headerSearch && headerDropdown && typeof window.setupGlobalAutocomplete === 'function') {
+                window.setupGlobalAutocomplete(headerSearch, headerDropdown, (item) => {
+                    fetchAndDisplayDestination(item.name, item.latitude, item.longitude);
+                });
+                headerSearch.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && headerSearch.value.trim()) {
+                        fetchAndDisplayDestination(headerSearch.value.trim());
+                    }
+                });
+            }
+
+            // 2. Initialize Global Autocomplete for Directory Filter Search
+            const dirSearch = document.getElementById('dirSearchInput');
+            const dirDropdown = document.getElementById('dirAutocompleteDropdown');
+            if (dirSearch && dirDropdown && typeof window.setupGlobalAutocomplete === 'function') {
+                window.setupGlobalAutocomplete(dirSearch, dirDropdown, (item) => {
+                    fetchAndDisplayDestination(item.name, item.latitude, item.longitude);
+                });
+                dirSearch.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && dirSearch.value.trim()) {
+                        fetchAndDisplayDestination(dirSearch.value.trim());
+                    }
+                });
+            }
+
             await fetchAllDestinations();
 
             if (viewTarget) {
@@ -460,7 +512,7 @@
                 if (found) {
                     displayFeaturedDestination(found);
                 } else {
-                    displayFeaturedDestination(defaultDestData);
+                    fetchAndDisplayDestination(viewTarget);
                 }
             } else {
                 displayFeaturedDestination(defaultDestData);
@@ -470,6 +522,37 @@
                 if (leafletMap) leafletMap.invalidateSize();
             });
         });
+
+        async function fetchAndDisplayDestination(nameOrId, lat, lon) {
+            if (!nameOrId) return;
+            const titleEl = document.getElementById('destTitle');
+            const prevTitle = titleEl ? titleEl.textContent : '';
+            if (titleEl) titleEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Discovering ${escapeHtml(nameOrId)}…`;
+
+            try {
+                let url = `/destinations/details?name=${encodeURIComponent(nameOrId)}`;
+                if (lat && lon) url += `&lat=${lat}&lon=${lon}`;
+                const res = await Api.get(url);
+                const dest = res.data || res;
+                if (dest && dest.name) {
+                    displayFeaturedDestination(dest);
+                    const newUrl = new URL(window.location);
+                    newUrl.searchParams.set('view', dest.name);
+                    window.history.pushState({}, '', newUrl);
+                    return;
+                }
+            } catch (e) {
+                console.warn('Could not load global destination details:', e);
+                if (titleEl) titleEl.textContent = prevTitle || nameOrId;
+                alert(`Could not load details for "${nameOrId}". Please try again.`);
+            }
+        }
+
+        function askAiAboutCurrentDest() {
+            if (!currentDest || !currentDest.name) return;
+            const prompt = `Tell me everything about visiting ${currentDest.name}, including top attractions, best time to visit, and local transit.`;
+            window.location.href = `chatbot.html?prompt=${encodeURIComponent(prompt)}`;
+        }
 
         function escapeHtml(str) {
             if (!str) return '';
@@ -533,21 +616,20 @@
             currentDest = dest;
             document.getElementById('destTitle').textContent = dest.name;
             document.getElementById('destSubtitle').textContent = dest.famousFor || dest.name;
-            document.getElementById('destLocation').innerHTML = `<i class="fas fa-location-dot" style="color:var(--accent-gold);"></i> ${dest.country || 'India'}`;
-            document.getElementById('destWeatherTemp').innerHTML = `<i class="fas fa-cloud-sun" style="color:var(--accent-gold); font-size:24px;"></i> ${dest.weather ? dest.weather.split(' ')[0] : '18°C'}`;
-            document.getElementById('destWeatherDesc').textContent = dest.weather ? dest.weather.substring(dest.weather.indexOf(' ') + 1) : 'Mostly Cloudy';
+            document.getElementById('destLocation').innerHTML = `<i class="fas fa-location-dot" style="color:var(--accent-gold);"></i> ${dest.country || 'Worldwide'}`;
+            document.getElementById('destWeatherTemp').innerHTML = `<i class="fas fa-cloud-sun" style="color:var(--accent-gold); font-size:24px;"></i> ${dest.weather ? dest.weather.split(' ')[0] : '22°C'}`;
+            document.getElementById('destWeatherDesc').textContent = dest.weather ? dest.weather.substring(dest.weather.indexOf(' ') + 1) : 'Pleasant';
             document.getElementById('destBestTime').textContent = dest.bestTime || 'Oct - Jun';
             document.getElementById('destDescriptionText').textContent = dest.description || dest.famousFor || '';
-            document.getElementById('destRatingPill').innerHTML = `<i class="fas fa-star"></i> ${dest.rating || '4.8'} (${dest.reviewCount || '2.5K'} reviews)`;
-            document.getElementById('destIdealDays').innerHTML = `<i class="fas fa-clock"></i> ${dest.idealDuration || '3 - 4 Days'}`;
+            document.getElementById('destRatingPill').innerHTML = `<i class="fas fa-star"></i> ${dest.rating || '4.7'} (${dest.reviewCount || '2K'} reviews)`;
+            document.getElementById('destIdealDays').innerHTML = `<i class="fas fa-clock"></i> ${dest.idealDuration || '2 - 4 Days'}`;
 
-            if (dest.images && dest.images.length > 0) {
-                document.getElementById('destHeroBanner').style.backgroundImage = `url('${dest.images[0]}')`;
-            }
+            const bannerImg = (dest.images && dest.images[0]) || (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(dest.name) : 'assets/dash.jpg');
+            document.getElementById('destHeroBanner').style.backgroundImage = `url('${bannerImg}')`;
 
             // External Links
             const queryName = encodeURIComponent(dest.name);
-            document.getElementById('googleMapsExternalLink').href = `https://www.google.com/maps/search/?api=1&query=${queryName}`;
+            document.getElementById('googleMapsExternalLink').href = dest.mapsLink || `https://www.google.com/maps/search/?api=1&query=${queryName}`;
             document.getElementById('btnBookingDirect').href = `https://www.booking.com/searchresults.html?ss=${queryName}`;
             document.getElementById('btnMmtDirect').href = `https://www.makemytrip.com/hotels/hotel-listing/?city=${queryName}`;
 
@@ -555,7 +637,10 @@
             renderHotels(dest.hotels || defaultDestData.hotels);
             renderFoods(dest.localFoods || defaultDestData.localFoods);
             renderTips(dest.travelTipsList || defaultDestData.travelTipsList);
-            renderPhotos(dest.images || defaultDestData.images);
+            renderPhotos(dest.images || [bannerImg]);
+
+            // Dynamically discover nearby attractions
+            loadDynamicNearbyPlaces(dest);
 
             // Re-center map if active
             if (leafletMap) {
@@ -563,6 +648,51 @@
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function loadDynamicNearbyPlaces(dest) {
+            const nearbyGrid = document.getElementById('nearbyPlacesGrid');
+            if (!nearbyGrid) return;
+            if (!dest.latitude || !dest.longitude) {
+                nearbyGrid.innerHTML = '<p style="color:var(--text-muted); padding:20px;">Nearby places coordinates unavailable.</p>';
+                return;
+            }
+            nearbyGrid.innerHTML = '<div style="padding:20px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Discovering authentic landmarks & spots nearby…</div>';
+            try {
+                const res = await Api.get(`/destinations/nearby?lat=${dest.latitude}&lon=${dest.longitude}&radius=10000&limit=8`);
+                const items = Array.isArray(res) ? res : (res.data || []);
+                if (items && items.length > 0) {
+                    nearbyGrid.innerHTML = items.map(p => `
+                        <div class="attraction-card">
+                            <div class="attraction-body" style="padding:22px;">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                                    <span class="badge-tag" style="background:rgba(56,189,248,0.15); color:var(--accent-cyan); font-size:12px;">
+                                        <i class="fas fa-location-arrow"></i> ${p.distanceKm || '1.5'} km away
+                                    </span>
+                                    <span class="badge-tag" style="background:rgba(197,164,109,0.15); color:var(--accent-gold); font-size:12px;">
+                                        ${escapeHtml(p.category || 'Attraction')}
+                                    </span>
+                                </div>
+                                <h4 style="margin-bottom:8px;">${escapeHtml(p.name)}</h4>
+                                <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px; line-height:1.5;">${escapeHtml(p.description || 'Prominent regional sight.')}</p>
+                                <div style="display:flex; gap:10px;">
+                                    <a href="${p.mapsLink || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}`}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="flex:1; justify-content:center;">
+                                        <i class="fas fa-diamond-turn-right"></i> Directions
+                                    </a>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="fetchAndDisplayDestination('${escapeHtml(p.name)}', ${p.latitude}, ${p.longitude})" style="flex:1; justify-content:center;">
+                                        <i class="fas fa-eye"></i> Explore Place
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    nearbyGrid.innerHTML = '<p style="color:var(--text-muted); padding:20px;">No additional nearby places discovered in this radius.</p>';
+                }
+            } catch (e) {
+                console.warn('Nearby places load error:', e);
+                nearbyGrid.innerHTML = '<p style="color:var(--text-muted); padding:20px;">Nearby places discovery currently unavailable.</p>';
+            }
         }
 
         function renderAttractions(list) {
@@ -753,8 +883,39 @@
                 return true;
             });
 
+            if (filteredDestinations.length === 0 && query.length >= 2) {
+                searchGlobalDestinations(query);
+                return;
+            }
+
             displayedCount = 9;
             renderDirectory();
+        }
+
+        async function searchGlobalDestinations(query) {
+            const grid = document.getElementById('destDirectoryGrid');
+            const emptyEl = document.getElementById('dirEmptyState');
+            const loadMoreWrap = document.getElementById('loadMoreWrap');
+            if (grid) grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:36px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin fa-2x" style="color:var(--accent-gold); margin-bottom:12px; display:block;"></i> Searching worldwide destination catalog for "' + escapeHtml(query) + '"…</div>';
+            if (emptyEl) emptyEl.style.display = 'none';
+            if (loadMoreWrap) loadMoreWrap.style.display = 'none';
+
+            try {
+                const res = await Api.get(`/destinations/search?query=${encodeURIComponent(query)}`);
+                const items = Array.isArray(res) ? res : (res.data || []);
+                if (items && items.length > 0) {
+                    filteredDestinations = items;
+                    displayedCount = items.length;
+                    renderDirectory();
+                    return;
+                }
+            } catch (e) {
+                console.warn('Global directory search error:', e);
+            }
+
+            if (emptyEl) emptyEl.style.display = 'block';
+            if (grid) grid.innerHTML = '';
+            renderRecommendedFallback();
         }
 
         function resetDiscoveryFilters() {
@@ -803,7 +964,7 @@
         }
 
         function switchDestTab(tabName) {
-            const tabIds = ['overview', 'places', 'map', 'transit', 'hotels', 'food', 'tips', 'photos'];
+            const tabIds = ['overview', 'places', 'map', 'transit', 'hotels', 'food', 'tips', 'photos', 'nearby'];
             tabIds.forEach(t => {
                 const content = document.getElementById('tabContent' + t.charAt(0).toUpperCase() + t.slice(1));
                 if (content) content.style.display = (t === tabName) ? 'block' : 'none';

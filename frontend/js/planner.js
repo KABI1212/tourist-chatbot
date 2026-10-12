@@ -32,6 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dest) {
         document.getElementById('tripDestination').value = dest;
     }
+
+    // Global Autocomplete for Destination
+    const destInput = document.getElementById('tripDestination');
+    const plannerDropdown = document.getElementById('plannerAutocompleteDropdown');
+    if (destInput && plannerDropdown && typeof window.setupGlobalAutocomplete === 'function') {
+        window.setupGlobalAutocomplete(destInput, plannerDropdown, (item) => {
+            destInput.value = item.name + (item.country ? `, ${item.country}` : '');
+        });
+    }
     if (travelers) {
         document.getElementById('tripTravelers').value = travelers;
     }

@@ -8,6 +8,7 @@ import com.tourist.chatbot.repository.ChatRepository;
 import com.tourist.chatbot.service.ChatService;
 import com.tourist.chatbot.service.DestinationMatcher;
 import com.tourist.chatbot.service.GeminiService;
+import com.tourist.chatbot.service.PlacesProviderService;
 import com.tourist.chatbot.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,13 +16,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +41,9 @@ public class ChatServiceTest {
     @Mock
     private DestinationMatcher destinationMatcher;
 
+    @Mock
+    private PlacesProviderService placesProviderService;
+
     @InjectMocks
     private ChatService chatService;
 
@@ -51,9 +53,8 @@ public class ChatServiceTest {
 
         Destination ooty = Destination.builder().name("Ooty").description("Queen of Hill stations").build();
 
-        // DestinationMatcher.find(userMessage) → ooty; second call not needed
         when(destinationMatcher.find("Tell me about visiting Ooty")).thenReturn(Optional.of(ooty));
-        when(geminiService.generateResponse(any(), eq("Tell me about visiting Ooty")))
+        when(geminiService.generateResponse(any(), anyString()))
                 .thenReturn("Ooty is a gorgeous hill station with tea gardens and lakes.");
 
         // Guest user passes null username
