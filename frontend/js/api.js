@@ -36,6 +36,13 @@ window.getApiBase = window.getApiBase || function() {
         return 'http://localhost:8080/api';
     }
 
+    // When running locally on a separate dev server port (e.g. localhost:3000 or 5000 via `serve` / `live-server`),
+    // automatically direct API calls to the local Spring Boot backend on port 8080.
+    if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
+        window.location.port !== '8080') {
+        return 'http://localhost:8080/api';
+    }
+
     return '/api';
 };
 
