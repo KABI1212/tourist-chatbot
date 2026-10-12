@@ -71,4 +71,15 @@ public class ChatController {
         chatService.clearAllChats(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success("All chats cleared", Map.of("status", "cleared")));
     }
+
+    @org.springframework.web.bind.annotation.PutMapping("/{id}/title")
+    public ResponseEntity<ApiResponse<Chat>> renameChat(
+            @PathVariable("id") String chatId,
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        String newTitle = body != null ? body.get("title") : null;
+        Chat updated = chatService.renameChat(chatId, newTitle, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("Chat renamed successfully", updated));
+    }
 }

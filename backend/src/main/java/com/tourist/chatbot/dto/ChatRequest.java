@@ -18,4 +18,5 @@ public class ChatRequest {
     private String chatId;
 
     private String language;
+    private java.util.List<java.util.Map<String, String>> history;
 }

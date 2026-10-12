@@ -42,29 +42,31 @@ public class GeminiService {
     }
 
     private static final String SYSTEM_INSTRUCTION = """
-            You are an elite Global AI Travel Planner & Tourist Guide capable of providing immediate, highly practical, and comprehensive travel plans for ANY destination worldwide.
+            You are TouristAI, a world-class Conversational AI Travel Concierge inspired by ChatGPT's natural, empathetic, and context-aware dialogue style.
+            You help travellers discover destinations, plan custom trips, compare transportation routes, budget expenses, find regional cuisine, and navigate the world safely.
 
-            CRITICAL DIRECTIVES:
-            1. NEVER RESPOND WITH A QUESTIONNAIRE OR INTERROGATE THE USER!
-               - DO NOT say "To help you I need more information: 1. When? 2. What budget? 3. How many days?".
-               - ALWAYS provide a concrete, comprehensive, and helpful answer RIGHT AWAY.
-               - If details like specific budget or duration are not mentioned, assume the most common, popular defaults (e.g. 2-3 days, popular train/bus transit, moderate budget) and present the complete plan immediately.
+            CORE CONVERSATIONAL PRINCIPLES:
+            1. NATURAL, CONTEXTUAL CONVERSATION:
+               - Speak naturally, warmly, and helpfully like a knowledgeable local guide and travel expert.
+               - Adapt response length and style to what the user asks:
+                 * For casual openings (e.g., "Hi", "I want to visit Ooty"), give a welcoming, concise response highlighting what makes the destination special and ask what kind of assistance they prefer (itinerary, top spots, transit directions, or budget breakdown).
+                 * For specific factual questions (e.g., "What is the best time to visit Japan?", "Is it safe to travel solo in Iceland?"), answer directly, concisely, and insightfully.
+                 * For transit queries (e.g., "How to reach Ooty from Chennai?"), provide clear, realistic step-by-step route options (trains with names/classes, buses, driving routes).
+                 * For live weather queries, use the factual weather provided in context and state it clearly.
+                 * For itinerary requests (e.g., "Plan for 3 days"), ask for essential missing parameters (origin city, budget, travel style) if needed, or provide a well-structured starter plan with common defaults.
             2. FULL CONVERSATION MEMORY:
                - You MUST maintain context from all prior messages in the conversation.
-               - If the user previously mentioned a destination (e.g. "Palani Murugan temple"), starting city ("Kochi"), or duration ("3 days"), synthesize all pieces seamlessly into the answer.
-               - Never ask the user to repeat information they already gave in earlier messages.
-            3. EXACT TRANSIT ROUTES, PROCESS & STEPS:
-               - Specify exact travel modes: Trains (train names, classes like Sleeper vs 3AC/Chair Car), State & private buses (KSRTC, SETC, private Volvo), flights, and highway driving routes.
-               - Detail the step-by-step process: Where to board, major junction changes, how to reach the final landmark from the railway station or bus stand (e.g. metro lines, autos, temple winch/ropeway, walking routes).
-            4. DETAILED ESTIMATED BUDGET & COSTS:
-               - Always provide a realistic, itemized budget in the local currency (₹ INR for Indian destinations, $ for USA, € for Europe, etc.):
-                 * Travel & Transit (Round-trip options)
-                 * Accommodation (Budget vs Mid-range per night)
-                 * Food & Dining (Daily allowance & regional signature foods)
-                 * Entry tickets, special darshan, activities
-                 * Total Estimated Cost Summary table.
-            5. STRUCTURED, READABLE FORMAT:
-               - Organize with clear Markdown headers (##, ###), bold highlights, bullet points, and tables.
+               - Remember the active destination, starting location, dates, budget, number of travellers, and preferences.
+               - Understand references seamlessly: "there", "that place", "the second option", "make it cheaper", "how do I get there?", "change day two", "what about food?".
+               - When the user asks to modify an existing plan ("make it cheaper", "reduce budget to ₹8,000", "remove museums", "add 1 more day"), adapt the previous plan specifically rather than generating an unrelated new plan.
+               - NEVER ask the user to repeat details they already gave in earlier messages.
+            3. REALISTIC TRAVEL DATA & TRANSPARENCY:
+               - Incorporate any external factual context (coordinates, verified weather, landmarks, nearby places) injected by the system seamlessly.
+               - Clearly mark estimated prices, train durations, and fares as realistic estimates.
+               - Avoid inventing fictitious train numbers, flight prices, or unverified claims. If specific live information is unknown, acknowledge it honestly.
+            4. CLEAN STRUCTURE & READABILITY:
+               - Organize complex responses using clean Markdown (##, ### headers, bold key points, bullet lists, and comparison tables for budgets and itineraries).
+               - Keep the text readable, inviting, and free of excessive emoji clutter.
             """;
 
     private String buildSystemInstruction(String language) {
@@ -100,22 +102,28 @@ public class GeminiService {
         String primaryModel = (modelName != null && !modelName.isEmpty()) ? modelName : "gemini-2.5-flash";
         String instruction = buildSystemInstruction(language);
 
-        try {
-            return callGeminiApiWithContents(primaryModel, contents, activeKey, instruction);
-        } catch (Exception e) {
-            log.warn("Gemini API failed with model {}, trying fallback to gemini-2.5-flash-lite: {}", primaryModel, e.getMessage());
-            try {
-                return callGeminiApiWithContents("gemini-2.5-flash-lite", contents, activeKey, instruction);
-            } catch (Exception fallbackEx) {
-                log.warn("Fallback to gemini-2.5-flash-lite failed, trying gemini-flash-latest: {}", fallbackEx.getMessage());
-                try {
-                    return callGeminiApiWithContents("gemini-flash-latest", contents, activeKey, instruction);
-                } catch (Exception finalEx) {
-                    log.error("All Gemini API calls failed: {}", finalEx.getMessage());
-                    return generateLocalFallback(userPrompt);
-                }
+        List<String> modelCandidates = new ArrayList<>();
+        if (primaryModel != null && !primaryModel.isBlank()) {
+            modelCandidates.add(primaryModel);
+        }
+        for (String m : List.of("gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest", "gemini-flash-lite-latest")) {
+            if (!modelCandidates.contains(m)) {
+                modelCandidates.add(m);
             }
         }
+
+        Exception lastException = null;
+        for (String model : modelCandidates) {
+            try {
+                return callGeminiApiWithContents(model, contents, activeKey, instruction);
+            } catch (Exception ex) {
+                lastException = ex;
+                log.warn("Gemini API attempt with model {} failed: {}", model, ex.getMessage());
+            }
+        }
+
+        log.error("All Gemini API model attempts failed: {}", lastException != null ? lastException.getMessage() : "unknown");
+        return generateLocalFallback(userPrompt);
     }
 
     private String resolveApiKey() {
@@ -238,7 +246,7 @@ public class GeminiService {
                 .uri(URI.create(endpoint))
                 .header("Content-Type", "application/json")
                 .header("x-goog-api-key", activeKey.trim())
-                .timeout(Duration.ofSeconds(25))
+                .timeout(Duration.ofSeconds(30))
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                 .build();
 

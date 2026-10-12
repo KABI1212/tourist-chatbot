@@ -19,6 +19,7 @@ public class TouristChatbotApplication {
     private static final Logger log = LoggerFactory.getLogger(TouristChatbotApplication.class);
 
     public static void main(String[] args) {
+        System.setProperty("java.net.preferIPv4Stack", "true");
         loadDotEnv();
         SpringApplication.run(TouristChatbotApplication.class, args);
     }

@@ -53,38 +53,35 @@
         </div>
     </nav>
 
-    <!-- CHAT LAYOUT (Screen 2) -->
+    <!-- CHAT LAYOUT -->
     <div class="chat-layout">
+
+        <!-- MOBILE SIDEBAR BACKDROP -->
+        <div class="chat-sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
 
         <!-- LEFT SIDEBAR -->
         <aside class="chat-sidebar" id="chatSidebar">
             <div class="sidebar-top">
                 <button class="new-chat-btn" id="newChatBtn" onclick="startNewChat()">
-                    <i class="fas fa-plus"></i> New Chat
+                    <i class="fas fa-plus"></i> <span data-i18n="chat_new_journey">New Journey</span>
                 </button>
             </div>
 
             <div class="sidebar-scroll-area">
-                <div class="sidebar-group-title">Recent Chats</div>
-                <div id="recentChatsList">
-                    <div class="recent-chat-item active" onclick="loadSampleChat('ooty_budget')">
-                        <i class="fas fa-message"></i> Chennai to Ooty under ₹8K
-                    </div>
-                    <div class="recent-chat-item" onclick="loadSampleChat('kerala')">
-                        <i class="fas fa-message"></i> 5 Days Kerala Backwaters
-                    </div>
-                    <div class="recent-chat-item" onclick="loadSampleChat('manali')">
-                        <i class="fas fa-message"></i> Manali Adventure Budget
-                    </div>
-                    <div class="recent-chat-item" onclick="loadSampleChat('goa')">
-                        <i class="fas fa-message"></i> Goa Heritage &amp; Beaches
-                    </div>
+                <div class="sidebar-group-title">
+                    <span data-i18n="chat_recent_conversations">Recent Conversations</span>
+                    <button type="button" class="sidebar-icon-btn" onclick="startNewChat()" title="Start New Conversation">
+                        <i class="fas fa-pen-to-square"></i>
+                    </button>
+                </div>
+                <div id="recentChatsList" class="recent-chats-list">
+                    <!-- Populated dynamically via JS -->
                 </div>
             </div>
 
             <div class="sidebar-bottom">
-                <button class="clear-history-btn" onclick="clearChatHistory()" title="Clear current conversation history">
-                    <i class="fas fa-trash-can"></i> Clear History
+                <button type="button" class="clear-history-btn" onclick="confirmClearHistory()" title="Clear all conversation history">
+                    <i class="fas fa-trash-can"></i> <span data-i18n="chat_clear_history">Clear History</span>
                 </button>
             </div>
         </aside>
@@ -93,112 +90,150 @@
         <main class="chat-main-stage">
             <!-- Header -->
             <div class="chat-stage-header">
-                <div class="assistant-headline">
-                    <h2>Your AI Travel Concierge</h2>
-                    <p>Natural-language planning, transit routes, budget calculations, and regional guides</p>
+                <div class="header-left-group">
+                    <button type="button" class="mobile-sidebar-toggle" id="sidebarToggleBtn" onclick="toggleSidebar(true)" title="Toggle Conversations Menu" aria-label="Toggle Conversations">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="assistant-headline">
+                        <h2>Your AI Travel Concierge</h2>
+                        <p>Intelligent destination discovery, custom itineraries, transit directions &amp; live weather</p>
+                    </div>
                 </div>
 
-                <div style="display:flex; gap:10px;">
-                    <button class="btn btn-outline btn-sm" onclick="exportChat()" title="Export current chat">
-                        <i class="fas fa-download"></i> Export
+                <div class="header-right-group">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="startNewChat()" title="New Chat">
+                        <i class="fas fa-plus"></i> <span class="hide-mobile">New Chat</span>
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="exportChat()" title="Export current chat as text">
+                        <i class="fas fa-download"></i> <span class="hide-mobile">Export</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Messages List -->
-            <div class="messages-scroll-box" id="messagesBox">
-                <!-- User Prompt Bubble -->
-                <div class="msg-row user">
-                    <div class="msg-bubble">
-                        Plan a 3-day trip from Chennai to Ooty for two people under ₹8,000, including transportation, hotels, food, sightseeing, and a complete itinerary.
+            <!-- Messages Viewport & Scroll Container -->
+            <div class="messages-viewport" id="messagesViewport">
+
+                <!-- WELCOME SCREEN (Shown when conversation is fresh) -->
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-badge">
+                        <div class="welcome-icon-glow">
+                            <i class="fas fa-compass"></i>
+                        </div>
+                        <span class="welcome-tag">TouristAI Concierge</span>
                     </div>
-                    <div class="msg-avatar usr"><i class="fas fa-user"></i></div>
-                </div>
 
-                <!-- AI Response Bubble -->
-                <div class="msg-row assistant">
-                    <div class="msg-avatar bot"><i class="fas fa-compass"></i></div>
-                    <div class="msg-bubble ai-bubble">
-                        <p>Here is your comprehensive <strong>3-Day Ooty Budget Itinerary</strong> tailored for <strong>2 travelers</strong> under <strong>₹8,000 total (₹4,000/person)</strong>, covering round-trip train transit from Chennai, verified heritage stays, local food, and sights:</p>
+                    <h1 class="welcome-title">Where would you like to explore?</h1>
+                    <p class="welcome-subtitle">
+                        Ask about any destination worldwide, request tailor-made itineraries, transit routes, budget estimates, or local weather in English, Tamil, or Tanglish.
+                    </p>
 
-                        <!-- Trip Preview Card -->
-                        <div class="chat-trip-card">
-                            <h4>3-Day Chennai to Ooty Budget Trip</h4>
-                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Total Budget: ₹7,650 for 2 • Mode: Nilgiri Express + Toy Train</p>
-
-                            <div class="day-preview-item">
-                                <strong>Day 1 • Boarding &amp; Arrival</strong>
-                                <span>Board Overnight Nilgiri Express (Chennai Central &rarr; Mettupalayam Sleeper ~₹380/seat). Transfer via UNESCO Toy Train to Ooty. Check into Zostel / budget homestay (~₹1,400/night). Evening at Ooty Lake &amp; Botanical Garden.</span>
+                    <!-- Starter Prompt Cards Grid -->
+                    <div class="welcome-prompts-grid">
+                        <div class="welcome-card" onclick="useSuggestedChip('Plan a 3-day trip from Chennai to Ooty for 2 people under ₹8,000')">
+                            <div class="card-icon"><i class="fas fa-mountain"></i></div>
+                            <div class="card-content">
+                                <h4>3-Day Ooty Budget Trip</h4>
+                                <p>From Chennai under ₹8,000 for 2 with trains, tea gardens &amp; stays</p>
                             </div>
-
-                            <div class="day-preview-item">
-                                <strong>Day 2 • Peaks &amp; Tea Gardens</strong>
-                                <span>Shared cab / bus to Doddabetta Peak (₹10 entry). Visit Tea Factory &amp; Museum. Walk through Rose Garden. Sample Ooty Varkey and homemade chocolates at Commercial Road.</span>
-                            </div>
-
-                            <div class="day-preview-item">
-                                <strong>Day 3 • Waterfalls &amp; Return</strong>
-                                <span>Morning visit to Pykara Lake &amp; Waterfalls. Return to Mettupalayam by state bus (₹60/person) and board return train back to Chennai.</span>
-                            </div>
-
-                            <div class="budget-est-row">
-                                <span class="budget-lbl">Estimated Total for 2</span>
-                                <span class="budget-val">₹7,650 (Under ₹8,000 limit)</span>
-                            </div>
-
-                            <button class="btn btn-primary btn-sm" style="margin-top:14px; width:100%; justify-content:center;" onclick="window.location.href='destinations.html?view=Ooty'">
-                                View Full Ooty Guide &amp; Maps &rarr;
-                            </button>
                         </div>
 
-                        <!-- Action bar -->
-                        <div class="msg-actions-row">
-                            <button class="msg-action-btn" onclick="copyAiResponse(this)"><i class="fas fa-copy"></i> Copy</button>
-                            <button class="msg-action-btn" onclick="retryAiResponse()"><i class="fas fa-rotate-right"></i> Retry</button>
-                            <button class="msg-action-btn" onclick="shareAiResponse()"><i class="fas fa-share-nodes"></i> Share</button>
+                        <div class="welcome-card" onclick="useSuggestedChip('5 days Kerala backwaters itinerary with houseboat and budget breakdown')">
+                            <div class="card-icon"><i class="fas fa-water"></i></div>
+                            <div class="card-content">
+                                <h4>5 Days Kerala Backwaters</h4>
+                                <p>Munnar tea hills, Alleppey houseboat, and local spice plantations</p>
+                            </div>
+                        </div>
+
+                        <div class="welcome-card" onclick="useSuggestedChip('What is the live weather and best time to visit Manali?')">
+                            <div class="card-icon"><i class="fas fa-cloud-sun"></i></div>
+                            <div class="card-content">
+                                <h4>Manali Weather &amp; Season</h4>
+                                <p>Current weather, snowfall season, and ideal adventure months</p>
+                            </div>
+                        </div>
+
+                        <div class="welcome-card" onclick="useSuggestedChip('How can I reach Kodaikanal from Madurai by bus or taxi?')">
+                            <div class="card-icon"><i class="fas fa-route"></i></div>
+                            <div class="card-content">
+                                <h4>Transit &amp; Directions</h4>
+                                <p>Step-by-step route options, travel durations, and transit advice</p>
+                            </div>
+                        </div>
+
+                        <div class="welcome-card" onclick="useSuggestedChip('Suggest top romantic places in Paris on a modest budget')">
+                            <div class="card-icon"><i class="fas fa-landmark"></i></div>
+                            <div class="card-content">
+                                <h4>Paris on a Budget</h4>
+                                <p>Walkable neighborhoods, viewpoints, cozy cafes, and metro tips</p>
+                            </div>
+                        </div>
+
+                        <div class="welcome-card" onclick="useSuggestedChip('Chennai la irundhu 3 days trip plan pannu under 10k budget')">
+                            <div class="card-icon"><i class="fas fa-language"></i></div>
+                            <div class="card-content">
+                                <h4>Tamil &amp; Tanglish Planning</h4>
+                                <p>Ask naturally in Tamil or Tanglish: "Budget konjam kammi pannu"</p>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Messages Container -->
+                <div class="messages-scroll-box" id="messagesBox">
+                    <!-- Dynamic chat messages inserted here -->
+                </div>
+
+                <!-- Floating Scroll to Bottom Button -->
+                <button type="button" class="scroll-to-bottom-btn" id="scrollToBottomBtn" onclick="scrollToBottomSmooth()" title="Jump to recent messages">
+                    <i class="fas fa-arrow-down"></i>
+                </button>
             </div>
 
-            <!-- Bottom Floating Prompt Chips -->
+            <!-- Bottom Floating Prompt Chips & Input Dock -->
             <div class="chat-footer-dock">
+                <!-- Suggested Chips Tray -->
                 <div class="prompt-chips-tray" id="chipsTray">
-                    <button class="prompt-chip" onclick="useSuggestedChip('Plan a 3-day trip from Chennai to Ooty for 2 people under ₹8,000')">
-                        🏔️ Chennai &rarr; Ooty under ₹8K
-                    </button>
-                    <button class="prompt-chip" onclick="useSuggestedChip('What are the best places to visit in Kerala?')">
-                        🌴 Best Places in Kerala
-                    </button>
-                    <button class="prompt-chip" onclick="useSuggestedChip('3-Day Manali itinerary for adventure lovers with estimated budget')">
-                        ⛷️ 3-Day Manali Itinerary
-                    </button>
-                    <button class="prompt-chip" onclick="useSuggestedChip('Best budget beach stay options in Goa for couples')">
-                        🏖️ Goa Couple Budget Stays
-                    </button>
-                    <button class="prompt-chip" onclick="useSuggestedChip('How to reach Ooty by train from Chennai or Bangalore?')">
-                        🚂 Trains to Ooty (IRCTC)
-                    </button>
+                    <!-- Populated dynamically via JS -->
                 </div>
 
-                <!-- Input Field -->
+                <!-- Input Form -->
                 <form class="chat-input-row" id="chatForm" onsubmit="handleChatSubmit(event)">
                     <textarea 
                         id="chatMessageInput" 
                         rows="1" 
-                        placeholder="Ask anything about travel, budgets, transit routes or itineraries…" 
+                        placeholder="Ask anything about travel, budgets, transit routes, or itineraries…" 
                         data-i18n-placeholder="chat_input_placeholder"
                         onkeydown="handleInputKeydown(event)"
                         required></textarea>
+
                     <button type="button" class="chat-mic-btn" id="voiceMicBtn" title="Speak your question" onclick="Voice.toggleRecognition()">
                         <i class="fas fa-microphone"></i>
                     </button>
+
                     <button type="submit" class="chat-send-btn" id="sendBtn" title="Send Message" data-i18n-title="chat_send">
-                        <i class="fas fa-paper-plane"></i>
+                        <i class="fas fa-paper-plane" id="sendBtnIcon"></i>
                     </button>
                 </form>
+
+                <div class="chat-input-disclaimer">
+                    <i class="fas fa-sparkles"></i> <span>Powered by Google Gemini &amp; Live Places Data. Verify real-time transit and booking details before travel.</span>
+                </div>
             </div>
         </main>
+    </div>
+
+    <!-- CONFIRMATION MODAL -->
+    <div class="chat-modal-overlay" id="confirmModal">
+        <div class="chat-modal-box">
+            <div class="chat-modal-icon"><i class="fas fa-triangle-exclamation"></i></div>
+            <h3 id="modalTitle">Clear Conversation History</h3>
+            <p id="modalMessage">Are you sure you want to clear your conversation history? This cannot be undone.</p>
+            <div class="chat-modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeConfirmModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" id="modalConfirmBtn" onclick="executeModalAction()">Clear</button>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
