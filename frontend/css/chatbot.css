@@ -1993,4 +1993,206 @@
     border: 1px solid var(--border);
 }
 
+/* ==========================================================================
+   CHAT RESPONSE LANGUAGE SELECTOR
+   ========================================================================== */
+.chat-lang-selector-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+.chat-lang-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: var(--radius-full, 999px);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+}
+
+.chat-lang-btn:hover {
+    border-color: var(--accent-gold);
+    background: rgba(197, 164, 109, 0.1);
+    transform: translateY(-1px);
+}
+
+.chat-lang-flag {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.chat-lang-chevron {
+    font-size: 10px;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+}
+
+.chat-lang-btn[aria-expanded="true"] .chat-lang-chevron {
+    transform: rotate(180deg);
+}
+
+.chat-lang-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 240px;
+    max-height: 340px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+    z-index: 1050;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fadeInDown 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chat-lang-dropdown.show {
+    display: flex;
+}
+
+.chat-lang-dropdown-header {
+    padding: 10px 14px;
+    background: rgba(197, 164, 109, 0.08);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent-gold);
+}
+
+.chat-lang-options-list {
+    overflow-y: auto;
+    max-height: 290px;
+    padding: 4px;
+}
+
+.chat-lang-opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-main);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.chat-lang-opt:hover {
+    background: rgba(197, 164, 109, 0.12);
+    color: var(--accent-gold);
+}
+
+.chat-lang-opt.active {
+    background: rgba(197, 164, 109, 0.18);
+    color: var(--accent-gold);
+    font-weight: 700;
+}
+
+.chat-lang-opt .opt-flag {
+    font-size: 14px;
+    width: 20px;
+    text-align: center;
+}
+
+.chat-lang-opt .opt-name {
+    flex: 1;
+}
+
+.chat-lang-opt .opt-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.chat-lang-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 6px;
+}
+
+.chat-lang-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 10px;
+    margin-top: 2px;
+    background: rgba(197, 164, 109, 0.08);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--accent-gold);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.chat-lang-more:hover {
+    background: rgba(197, 164, 109, 0.16);
+    border-color: var(--accent-gold);
+}
+
+/* RTL Language Handling */
+[dir="rtl"] .chat-main-stage,
+.rtl-text {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+/* Voice Notification Toast */
+.voice-status-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(30px);
+    background: var(--bg-surface);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    padding: 10px 18px;
+    border-radius: var(--radius-full, 999px);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.voice-status-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+.voice-status-toast.warning {
+    border-color: #EAB308;
+    color: #FACC15;
+}
+
+.voice-status-toast.info {
+    border-color: var(--accent-gold);
+    color: var(--text-main);
+}
+
+
 

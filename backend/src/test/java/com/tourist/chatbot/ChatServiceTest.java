@@ -53,8 +53,10 @@ public class ChatServiceTest {
 
         Destination ooty = Destination.builder().name("Ooty").description("Queen of Hill stations").build();
 
-        when(destinationMatcher.find("Tell me about visiting Ooty")).thenReturn(Optional.of(ooty));
-        when(geminiService.generateResponse(any(), anyString()))
+        when(destinationMatcher.find(anyString())).thenReturn(Optional.of(ooty));
+        lenient().when(geminiService.generateResponse(any(), anyString()))
+                .thenReturn("Ooty is a gorgeous hill station with tea gardens and lakes.");
+        lenient().when(geminiService.generateResponse(any(), anyString(), anyString()))
                 .thenReturn("Ooty is a gorgeous hill station with tea gardens and lakes.");
 
         // Guest user passes null username
@@ -66,5 +68,29 @@ public class ChatServiceTest {
         assertNotNull(resp.getDestination());
         assertEquals("Ooty", resp.getDestination().getName());
         verifyNoInteractions(userService);
+    }
+
+    @Test
+    void testMultilingualLanguageDetection() {
+        // Tamil Script
+        assertEquals("ta", chatService.determineEffectiveLanguage("ஊட்டியைப் பற்றி சொல்லு", null, null));
+
+        // Tanglish
+        assertEquals("ta", chatService.determineEffectiveLanguage("Ooty pathi sollunga bro", null, null));
+        assertEquals("ta", chatService.determineEffectiveLanguage("Chennai la irundhu Ooty ku 3 days trip plan pannu", null, null));
+
+        // Hindi Script
+        assertEquals("hi", chatService.determineEffectiveLanguage("मुझे ऊटी के बारे में बताओ", null, null));
+
+        // Hinglish
+        assertEquals("hi", chatService.determineEffectiveLanguage("Ooty kaise jaa sakte hain?", null, null));
+
+        // Explicit command
+        assertEquals("fr", chatService.determineEffectiveLanguage("Reply in French", null, null));
+        assertEquals("de", chatService.determineEffectiveLanguage("Speak in German", null, null));
+        assertEquals("ta", chatService.determineEffectiveLanguage("தமிழில் பதில் சொல்லு", null, null));
+
+        // English default
+        assertEquals("en", chatService.determineEffectiveLanguage("Tell me about Ooty", null, null));
     }
 }

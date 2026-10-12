@@ -64,6 +64,7 @@ function initChatInterface() {
         form.addEventListener('submit', handleChatSubmit);
     }
 
+    initChatLanguageSelector();
     updatePromptChips();
 }
 
@@ -170,7 +171,11 @@ async function handleChatSubmit(e) {
     activeAbortController = new AbortController();
 
     try {
-        let sendLang = (typeof I18n !== 'undefined') ? I18n.getCurrentLanguage() : 'auto';
+        let preferredLang = (typeof I18n !== 'undefined' && typeof I18n.getChatLanguage === 'function')
+            ? I18n.getChatLanguage()
+            : 'auto';
+
+        let sendLang = preferredLang;
         if (sendLang === 'auto' && typeof I18n !== 'undefined') {
             sendLang = I18n.detectLanguage(text);
         }
@@ -200,12 +205,14 @@ async function handleChatSubmit(e) {
 
         const replyText = res.response || res.message || "I couldn't process that query. Please try another place.";
         const destination = res.destination || null;
+        const resLanguage = (res.metadata && res.metadata.language) || sendLang;
 
-        // Add assistant response to conversation history
+        // Add assistant response to conversation history with language metadata
         currentConversationHistory.push({
             role: 'assistant',
             content: replyText,
-            destination: destination
+            destination: destination,
+            language: resLanguage
         });
 
         renderConversation();
@@ -280,7 +287,7 @@ function renderConversation() {
             const userRow = createUserMessageElement(msg.content, index);
             box.appendChild(userRow);
         } else {
-            const aiRow = createAssistantMessageElement(msg.content, msg.destination, index);
+            const aiRow = createAssistantMessageElement(msg.content, msg.destination, index, msg.language);
             box.appendChild(aiRow);
         }
     });
@@ -319,7 +326,7 @@ function createUserMessageElement(text, index) {
     return row;
 }
 
-function createAssistantMessageElement(markdownText, destination, index) {
+function createAssistantMessageElement(markdownText, destination, index, language) {
     const row = document.createElement('div');
     row.className = 'msg-row assistant';
 
@@ -333,7 +340,20 @@ function createAssistantMessageElement(markdownText, destination, index) {
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble';
 
-    let contentHtml = formatMarkdown(markdownText);
+    // Store language code on bubble for voice engine
+    if (language) {
+        bubble.dataset.lang = language;
+    }
+
+    // Right-to-Left script support (Arabic, Urdu)
+    const isRtl = language === 'ar' || language === 'ur' || /[\u0600-\u06FF]/.test(markdownText);
+    if (isRtl) {
+        bubble.setAttribute('dir', 'rtl');
+        bubble.classList.add('rtl-text');
+    }
+
+    // Wrap markdown text inside dedicated .msg-text-content container
+    let contentHtml = `<div class="msg-text-content">${formatMarkdown(markdownText)}</div>`;
 
     // If a destination was detected or returned, add interactive destination card
     if (destination && destination.name) {
@@ -367,10 +387,11 @@ function createAssistantMessageElement(markdownText, destination, index) {
     const actionsRow = document.createElement('div');
     actionsRow.className = 'msg-actions-row';
 
+    const langName = language ? language.toUpperCase() : 'AUTO';
     actionsRow.innerHTML = `
         <button type="button" class="msg-action-btn" onclick="copyAiResponse(this)"><i class="fas fa-copy"></i> Copy</button>
         <button type="button" class="msg-action-btn" onclick="regenerateResponse(${index})"><i class="fas fa-rotate-right"></i> Regenerate</button>
-        <button type="button" class="msg-action-btn tts-speak-btn" onclick="Voice.toggleSpeech(this)" title="Read Aloud"><i class="fas fa-volume-up"></i> Listen</button>
+        <button type="button" class="msg-action-btn tts-speak-btn" onclick="Voice.toggleSpeech(this)" title="Read Aloud in ${langName}"><i class="fas fa-volume-up"></i> Listen</button>
         <button type="button" class="msg-action-btn" onclick="shareAiResponse()"><i class="fas fa-share-nodes"></i> Share</button>
     `;
 
@@ -888,8 +909,9 @@ function updatePromptChips() {
         '🌴 5 Days Kerala Backwaters',
         '☀️ Manali Weather & Season',
         '🚂 Transit from Madurai to Kodaikanal',
-        '🗼 Paris on a Modest Budget',
-        '🍛 Chennai la irundhu 3 days trip'
+        '🍛 Chennai la irundhu Ooty ku 3 days trip',
+        '✨ ஊட்டியைப் பற்றி சொல்லு',
+        '✨ मुझे ऊटी के बारे में बताओ'
     ];
 
     tray.innerHTML = '';
@@ -905,6 +927,91 @@ function updatePromptChips() {
         });
         tray.appendChild(btn);
     });
+}
+
+// Chat Language Selector Helpers
+function initChatLanguageSelector() {
+    updateChatLangUI();
+
+    // Listen for language change events from i18n modal
+    window.addEventListener('chatLanguageChanged', (e) => {
+        updateChatLangUI(e.detail && e.detail.language);
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+        const wrap = document.getElementById('chatLangSelectorWrap');
+        const dropdown = document.getElementById('chatLangDropdown');
+        if (wrap && dropdown && !wrap.contains(e.target)) {
+            dropdown.classList.remove('show');
+            const btn = document.getElementById('chatLangBtn');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+    });
+}
+
+function toggleChatLangDropdown(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    const dropdown = document.getElementById('chatLangDropdown');
+    const btn = document.getElementById('chatLangBtn');
+    if (!dropdown || !btn) return;
+
+    const isOpen = dropdown.classList.toggle('show');
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function selectChatLanguage(code) {
+    if (typeof I18n !== 'undefined' && typeof I18n.setChatLanguage === 'function') {
+        I18n.setChatLanguage(code);
+    } else {
+        localStorage.setItem('tourist_chat_language', code);
+    }
+    updateChatLangUI(code);
+    const dropdown = document.getElementById('chatLangDropdown');
+    const btn = document.getElementById('chatLangBtn');
+    if (dropdown) dropdown.classList.remove('show');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+function updateChatLangUI(langCode) {
+    const code = langCode || (typeof I18n !== 'undefined' && typeof I18n.getChatLanguage === 'function' ? I18n.getChatLanguage() : 'auto');
+    const flagEl = document.getElementById('chatLangCurrentFlag');
+    const labelEl = document.getElementById('chatLangCurrentLabel');
+
+    if (code === 'auto') {
+        if (flagEl) flagEl.textContent = '⚡';
+        if (labelEl) labelEl.textContent = 'Auto-detect';
+    } else if (typeof I18n !== 'undefined') {
+        const meta = I18n.getLanguageMeta(code);
+        if (meta) {
+            if (flagEl) flagEl.textContent = meta.flag || '🌐';
+            if (labelEl) labelEl.textContent = meta.nativeName || meta.name;
+        }
+    }
+
+    // Update active highlight in dropdown
+    document.querySelectorAll('.chat-lang-opt').forEach(opt => {
+        const optLang = opt.getAttribute('data-lang');
+        if (optLang === code) {
+            opt.classList.add('active');
+        } else {
+            opt.classList.remove('active');
+        }
+    });
+}
+
+function openFullLangModal() {
+    const dropdown = document.getElementById('chatLangDropdown');
+    const btn = document.getElementById('chatLangBtn');
+    if (dropdown) dropdown.classList.remove('show');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+
+    if (typeof I18n !== 'undefined' && typeof I18n.openModal === 'function') {
+        I18n.openModal();
+    }
 }
 
 // Global window mappings
@@ -923,3 +1030,8 @@ window.toggleSidebar = toggleSidebar;
 window.exportChat = exportChat;
 window.scrollToBottomSmooth = scrollToBottomSmooth;
 window.openPlannerFor = openPlannerFor;
+window.toggleChatLangDropdown = toggleChatLangDropdown;
+window.selectChatLanguage = selectChatLanguage;
+window.openFullLangModal = openFullLangModal;
+window.updateChatLangUI = updateChatLangUI;
+

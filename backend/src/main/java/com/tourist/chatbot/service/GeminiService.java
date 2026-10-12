@@ -67,21 +67,111 @@ public class GeminiService {
             4. CLEAN STRUCTURE & READABILITY:
                - Organize complex responses using clean Markdown (##, ### headers, bold key points, bullet lists, and comparison tables for budgets and itineraries).
                - Keep the text readable, inviting, and free of excessive emoji clutter.
-            """;
-
-    private String buildSystemInstruction(String language) {
+            """;    private String buildSystemInstruction(String language) {
         StringBuilder sb = new StringBuilder(SYSTEM_INSTRUCTION);
         sb.append("\n6. MULTILINGUAL & SCRIPT DIRECTIVES:\n");
-        sb.append("   - You are a native-fluent multilingual communicator supporting Indian languages (Tamil தமிழ், Hindi हिन्दी, Malayalam മലയാളം, Telugu తెలుగు, Kannada ಕನ್ನಡ, Bengali বাংলা, Marathi मराठी, Gujarati ગુજરાતી, Punjabi ਪੰਜਾਬੀ, Urdu اردو, Odia ଓଡ଼ିଆ, Assamese অসমীয়া, English) and International languages (French Français, Spanish Español, German Deutsch, Italian Italiano, Portuguese Português, Arabic العربية, Chinese 简体中文, Japanese 日本語, Korean 한국어, Russian Русский, Indonesian Bahasa Indonesia, Thai ไทย, Vietnamese Tiếng Việt).\n");
+        sb.append("   - You are a native-fluent multilingual travel guide supporting Indian languages (Tamil தமிழ், Hindi हिन्दी, Malayalam മലയാളം, Telugu తెలుగు, Kannada ಕನ್ನಡ, Bengali বাংলা, Marathi मराठी, Gujarati ગુજરાતી, Punjabi ਪੰਜਾਬੀ, Urdu اردو, Odia ଓଡ଼ିଆ, Assamese অসমীয়া, English) and International languages (French Français, Spanish Español, German Deutsch, Italian Italiano, Portuguese Português, Arabic العربية, Chinese 简体中文, Japanese 日本語, Korean 한국어, Russian Русский, Indonesian Bahasa Indonesia, Thai ไทย, Vietnamese Tiếng Việt).\n");
 
-        if (language != null && !language.isBlank() && !"auto".equalsIgnoreCase(language)) {
-            sb.append(String.format("   - ACTIVE LANGUAGE OVERRIDE: The user has selected '%s'. You MUST respond directly and fluently in this language.\n", language));
+        String languageLabel = resolveLanguageLabel(language);
+        if (languageLabel != null) {
+            sb.append(String.format("   - ACTIVE LANGUAGE DIRECTIVE: The user's preferred response language is %s. You MUST write your complete answer in this language unless the user asks for a different language.\n", languageLabel));
             sb.append("   - If the user writes in code-switched dialect (e.g. Tamil-English / Tanglish or Hindi-English / Hinglish), reply in natural, friendly conversational style matching their preference.\n");
         } else {
-            sb.append("   - INTELLIGENT LANGUAGE DETECTION: Automatically detect the language or script of the user's latest query. If the user writes in Tamil (e.g. 'ஊட்டிக்கு 3 நாள் trip plan பண்ணு' or Tanglish 'Ooty-ku 3 days trip plan pannu'), respond warmly in Tamil/Tanglish. If in Hindi, respond in Hindi. If in Telugu, Malayalam, Spanish, French, etc., respond in that exact language.\n");
+            sb.append("   - INTELLIGENT AUTOMATIC LANGUAGE DETECTION: You must automatically detect the user's language, script, or dialect (e.g. Tamil script தமிழ், Tanglish, Hindi script हिन्दी, Hinglish, Telugu తెలుగు, Malayalam മലയാളം, Kannada ಕನ್ನಡ, Bengali বাংলা, French, Spanish, German, Arabic, Chinese, Japanese, etc.) and respond DIRECTLY in that exact language and native script.\n");
+            sb.append("   - If the user writes in Tanglish (e.g. 'Ooty pathi sollunga bro', 'Chennai la irundhu Ooty ku 3 days trip plan pannu', 'Budget konjam kammi pannu'), understand their intent fully and reply in warm, natural conversational Tamil or Tanglish.\n");
+            sb.append("   - If the user writes in Hinglish (e.g. 'Ooty kaise jaa sakte hain?', 'Manali ghumne ka plan batao'), reply in natural Hindi.\n");
+            sb.append("   - If the user requests an explicit language change like 'Reply in Tamil', 'Answer in Hindi', 'Speak in French', 'Switch to Spanish', IMMEDIATELY switch to that requested language for this and all follow-up turns.\n");
+            sb.append("   - Maintain the active language throughout the conversation until the user changes it or speaks in another language.\n");
+            sb.append("   - NEVER default to English when the user communicates in another language.\n");
         }
         sb.append("   - CRITICAL TRAVEL ACCURACY: NEVER mistranslate proper names of places, temples, monuments, bus terminals, railway stations, flight codes, hotels, distances, and prices. Preserve proper place names accurately (with English phonetic transliteration in brackets where helpful for navigation).\n");
         return sb.toString();
+    }
+
+    private String resolveLanguageLabel(String code) {
+        if (code == null || code.isBlank() || "auto".equalsIgnoreCase(code)) return null;
+        switch (code.toLowerCase().trim()) {
+            case "ta":
+            case "tamil":
+                return "Tamil (தமிழ்) - Write your complete response fluently in native Tamil script (தமிழ் எழுத்துக்கள்). For Tanglish queries, you may use conversational Tamil with English landmark names in brackets where helpful for navigation.";
+            case "hi":
+            case "hindi":
+                return "Hindi (हिन्दी) - Write your complete response fluently in Hindi using Devanagari script (देवनागरी लिपि).";
+            case "te":
+            case "telugu":
+                return "Telugu (తెలుగు) - Write your complete response fluently in Telugu script (తెలుగు లిపి).";
+            case "ml":
+            case "malayalam":
+                return "Malayalam (മലയാളം) - Write your complete response fluently in Malayalam script (മലയാള ലിപി).";
+            case "kn":
+            case "kannada":
+                return "Kannada (ಕನ್ನಡ) - Write your complete response fluently in Kannada script (ಕನ್ನಡ ಲಿపి).";
+            case "bn":
+            case "bengali":
+                return "Bengali (বাংলা) - Write your complete response fluently in Bengali script (বাংলা লিপি).";
+            case "mr":
+            case "marathi":
+                return "Marathi (मराठी) - Write your complete response fluently in Marathi using Devanagari script.";
+            case "gu":
+            case "gujarati":
+                return "Gujarati (ગુજરાતી) - Write your complete response fluently in Gujarati script (ગુજરાતી લિપિ).";
+            case "pa":
+            case "punjabi":
+                return "Punjabi (ਪੰਜਾਬੀ) - Write your complete response fluently in Gurmukhi script (ਗੁਰਮੁਖੀ).";
+            case "ur":
+            case "urdu":
+                return "Urdu (اردو) - Write your complete response fluently in Urdu (اردو رسم الخط).";
+            case "or":
+            case "odia":
+                return "Odia (ଓଡ଼ିଆ) - Write your complete response fluently in Odia script.";
+            case "as":
+            case "assamese":
+                return "Assamese (অসমীয়া) - Write your complete response fluently in Assamese script.";
+            case "fr":
+            case "french":
+                return "French (Français) - Write your complete response fluently in French.";
+            case "es":
+            case "spanish":
+                return "Spanish (Español) - Write your complete response fluently in Spanish.";
+            case "de":
+            case "german":
+                return "German (Deutsch) - Write your complete response fluently in German.";
+            case "it":
+            case "italian":
+                return "Italian (Italiano) - Write your complete response fluently in Italian.";
+            case "pt":
+            case "portuguese":
+                return "Portuguese (Português) - Write your complete response fluently in Portuguese.";
+            case "ar":
+            case "arabic":
+                return "Arabic (العربية) - Write your complete response fluently in Arabic script.";
+            case "zh":
+            case "chinese":
+                return "Chinese (Simplified 简体中文) - Write your complete response fluently in Simplified Chinese.";
+            case "ja":
+            case "japanese":
+                return "Japanese (日本語) - Write your complete response fluently in Japanese.";
+            case "ko":
+            case "korean":
+                return "Korean (한국어) - Write your complete response fluently in Korean Hangul.";
+            case "ru":
+            case "russian":
+                return "Russian (Русский) - Write your complete response fluently in Russian Cyrillic.";
+            case "id":
+            case "indonesian":
+                return "Indonesian (Bahasa Indonesia) - Write your complete response fluently in Indonesian.";
+            case "th":
+            case "thai":
+                return "Thai (ไทย) - Write your complete response fluently in Thai script.";
+            case "vi":
+            case "vietnamese":
+                return "Vietnamese (Tiếng Việt) - Write your complete response fluently in Vietnamese.";
+            case "en":
+            case "english":
+                return "English - Write your complete response in clear, inviting English.";
+            default:
+                return code + " - Write your complete response fluently in this language.";
+        }
     }
 
     /**
@@ -95,7 +185,7 @@ public class GeminiService {
         String activeKey = resolveApiKey();
         if (activeKey == null || activeKey.trim().isEmpty()) {
             log.warn("Gemini API key is not configured.");
-            return generateLocalFallback(userPrompt);
+            return generateLocalFallback(userPrompt, language);
         }
 
         List<Map<String, Object>> contents = buildContentsList(history, userPrompt);
@@ -123,7 +213,7 @@ public class GeminiService {
         }
 
         log.error("All Gemini API model attempts failed: {}", lastException != null ? lastException.getMessage() : "unknown");
-        return generateLocalFallback(userPrompt);
+        return generateLocalFallback(userPrompt, language);
     }
 
     private String resolveApiKey() {
@@ -514,11 +604,66 @@ public class GeminiService {
         return sb.toString().trim();
     }
 
-    /**
-     * Fallback travel guide when AI service is unavailable or rate-limited
-     */
     private String generateLocalFallback(String query) {
-        // Do NOT interpolate the raw query into HTML/Markdown — use a safe, generic message.
+        return generateLocalFallback(query, null);
+    }
+
+    private String generateLocalFallback(String query, String language) {
+        if ("ta".equalsIgnoreCase(language)) {
+            return """
+                    ### 🌍 சுற்றுலா வழிகாட்டி
+
+                    தற்போது AI வழிகாட்டி பிஸியாக உள்ளது. சில முக்கிய பயணக் குறிப்புகள்:
+
+                    * **பயணத்திற்கு சிறந்த நேரம்:** பருவமழை மற்றும் உள்ளூர் நிகழ்வுகளை சரிபார்த்து திட்டமிடுங்கள்.
+                    * **போக்குவரத்து:** விரைவு ரயில்கள் அல்லது பேருந்துகள் பட்ஜெட்டுக்கு மிகவும் ஏற்றவை.
+                    * **தங்குமிடம்:** சுற்றுலா இடங்கள் மற்றும் பேருந்து நிலையங்களுக்கு அருகில் முன்பதிவு செய்யுங்கள்.
+                    * **பட்ஜெட் திட்டம்:** 35% தங்குமிடம், 25% போக்குவரத்து, 25% உணவு மற்றும் 15% இதர செலவுகளுக்கு ஒதுக்குங்கள்.
+
+                    *(AI சேவை விரைவில் செயல்படும். சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.)*
+                    """;
+        }
+        if ("hi".equalsIgnoreCase(language)) {
+            return """
+                    ### 🌍 यात्रा सहायक
+
+                    इस समय AI गाइड व्यस्त है। कुछ आवश्यक यात्रा सुझाव:
+
+                    * **सर्वोत्तम समय:** मौसम और स्थानीय त्योहारों की जांच करके ही टिकट बुक करें।
+                    * **परिवहन:** बजट यात्रा के लिए नियमित एक्सप्रेस ट्रेनें या सरकारी बसें सर्वोत्तम हैं।
+                    * **आवास:** प्रमुख दर्शनीय स्थलों या रेलवे स्टेशन के पास रुकें।
+                    * **बजट योजना:** 35% आवास, 25% परिवहन, 25% भोजन व दर्शनीय स्थल और 15% अन्य खर्चों के लिए रखें।
+
+                    *(AI सेवा शीघ्र उपलब्ध होगी। कृपया कुछ क्षणों बाद पुनः प्रयास करें।)*
+                    """;
+        }
+        if ("fr".equalsIgnoreCase(language)) {
+            return """
+                    ### 🌍 Assistant de Voyage
+
+                    Notre guide IA est temporairement indisponible. Conseils essentiels de voyage :
+
+                    * **Meilleure période :** Vérifiez la météo et les événements locaux avant de réserver.
+                    * **Transport :** Privilégiez les trains express et les transports régionaux pour économiser.
+                    * **Hébergement :** Choisissez des hôtels proches des gares ou du centre historique.
+
+                    *(Veuillez réessayer dans un instant.)*
+                    """;
+        }
+        if ("es".equalsIgnoreCase(language)) {
+            return """
+                    ### 🌍 Asistente de Viajes
+
+                    Nuestro guía de IA está temporalmente ocupado. Consejos clave de viaje:
+
+                    * **Mejor época:** Consulta el clima local y festividades antes de viajar.
+                    * **Transporte:** Compara trenes y autobuses interurbanos para ahorrar presupuesto.
+                    * **Alojamiento:** Elige ubicaciones céntricas cerca del transporte público.
+
+                    *(Por favor intenta de nuevo en unos momentos.)*
+                    """;
+        }
+
         return """
                 ### 🌍 Travel Assistant Offline
 

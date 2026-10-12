@@ -1162,6 +1162,29 @@ const I18n = {
     detectLanguage(text) {
         if (!text || typeof text !== 'string') return 'en';
         const str = text.trim();
+        const lower = str.toLowerCase();
+
+        // 0. Explicit language switch commands in user prompt
+        const cmdMatch = lower.match(/\b(?:reply|answer|speak|respond|talk|write|translate|switch)\s+(?:in|into|to)\s+([a-zA-Z]+)\b/i);
+        if (cmdMatch) {
+            const map = {
+                tamil: 'ta', hindi: 'hi', telugu: 'te', malayalam: 'ml', kannada: 'kn', bengali: 'bn',
+                marathi: 'mr', gujarati: 'gu', punjabi: 'pa', urdu: 'ur', french: 'fr', spanish: 'es',
+                german: 'de', italian: 'it', portuguese: 'pt', arabic: 'ar', chinese: 'zh', japanese: 'ja',
+                korean: 'ko', russian: 'ru', english: 'en'
+            };
+            const target = cmdMatch[1].toLowerCase();
+            if (map[target]) return map[target];
+        }
+        if (lower.includes('தமிழில்') || lower.includes('தமிள்') || lower.includes('tamil la') || lower.includes('tanglish')) return 'ta';
+        if (lower.includes('हिंदी में') || lower.includes('हिन्दी में') || lower.includes('hindi me') || lower.includes('hinglish')) return 'hi';
+        if (lower.includes('తెలుగులో')) return 'te';
+        if (lower.includes('മലയാളത്തിൽ')) return 'ml';
+        if (lower.includes('ಕನ್ನಡದಲ್ಲಿ')) return 'kn';
+        if (lower.includes('বাংলায়')) return 'bn';
+        if (lower.includes('en français') || lower.includes('en francais')) return 'fr';
+        if (lower.includes('en español') || lower.includes('en espanol')) return 'es';
+        if (lower.includes('auf deutsch')) return 'de';
 
         // 1. Unicode Script Range Detection
         if (/[\u0B80-\u0BFF]/.test(str)) return 'ta'; // Tamil
@@ -1185,34 +1208,53 @@ const I18n = {
         if (/[\u0E00-\u0E7F]/.test(str)) return 'th'; // Thai
 
         // 2. Code-switching / Latin heuristics (Tanglish, Hinglish, Spanish, French, etc.)
-        const lower = str.toLowerCase();
-        
         // Tanglish heuristics (Tamil-English mixed)
-        const tanglishKeywords = ['pannu', 'polam', 'vanakkam', 'epdi', 'irukku', 'enna', 'ponga', 'nanba', 'romba', 'oru', 'naal', 'ootyku', 'trip-la', 'budget-la', 'sollu', 'paakanum'];
+        const tanglishKeywords = [
+            'pathi', 'sollunga', 'sollu', 'irundhu', 'lerundhu', 'lendhu', 'lirundhu', 'pannu', 'pannunga', 
+            'theriyuma', 'vanakkam', 'konjam', 'kammi', 'kamti', 'nalla', 'polaam', 'polam', 'enna', 
+            'eppadi', 'epdi', 'inga', 'enga', 'romba', 'machan', 'bro', 'thambi', 'kooda', 'paakalaam', 
+            'iruku', 'irukku', 'edhuvum', 'venum', 'poga', 'neram', 'kudunga', 'thanga', 'vaanga', 
+            'ooru', 'nanba', 'ponga', 'oru', 'naal', 'ootyku', 'paakanum', 'selavu'
+        ];
         if (tanglishKeywords.some(w => new RegExp('\\b' + w + '\\b', 'i').test(lower))) {
             return 'ta';
         }
 
         // Hinglish heuristics (Hindi-English mixed)
-        const hinglishKeywords = ['karo', 'karna', 'batao', 'chalo', 'ghumne', 'kaise', 'jaayein', 'kripya', 'shukriya', 'bhai', 'mujhe'];
+        const hinglishKeywords = [
+            'kaise', 'batao', 'bataiye', 'jaa', 'sakte', 'kya', 'hai', 'hain', 'karo', 'karna', 
+            'kahan', 'kitna', 'kitne', 'chahiye', 'chalna', 'jaana', 'bhi', 'aur', 'accha', 'achha', 
+            'ghumne', 'jagah', 'raasta', 'paas', 'dikhaye', 'chalo', 'bhai', 'mujhe', 'humko', 
+            'kripya', 'shukriya'
+        ];
         if (hinglishKeywords.some(w => new RegExp('\\b' + w + '\\b', 'i').test(lower))) {
             return 'hi';
         }
 
         // French
-        if (/\b(bonjour|merci|voyage|visiter|combien|ou aller)\b/i.test(lower)) return 'fr';
+        if (/\b(bonjour|merci|comment aller|voyage|visiter|je veux|quel est|s'il vous plaît|pourquoi)\b/i.test(lower)) return 'fr';
         // Spanish
-        if (/\b(hola|gracias|viaje|donde|itinerario|playa|cuanto)\b/i.test(lower)) return 'es';
+        if (/\b(hola|gracias|cómo llegar|como llegar|viaje|visitar|quiero|cuál es|por favor|dónde está)\b/i.test(lower)) return 'es';
         // German
-        if (/\b(hallo|danke|reise|wohin|wie viel|urlaub)\b/i.test(lower)) return 'de';
+        if (/\b(hallo|danke|wie komme|reise|besuchen|ich möchte|wo ist|bitte)\b/i.test(lower)) return 'de';
         // Italian
-        if (/\b(ciao|grazie|viaggio|dove|quanto costa)\b/i.test(lower)) return 'it';
+        if (/\b(ciao|grazie|viaggio|dove|quanto costa|come arrivare)\b/i.test(lower)) return 'it';
         // Portuguese
-        if (/\b(ola|obrigado|viagem|onde|quanto custa)\b/i.test(lower)) return 'pt';
+        if (/\b(ola|obrigado|viagem|onde|quanto custa|como chegar)\b/i.test(lower)) return 'pt';
         // Indonesian
-        if (/\b(halo|terima kasih|perjalanan|bagaimana|berapa)\b/i.test(lower)) return 'id';
+        if (/\b(halo|terima kasih|perjalanan|bagaimana|berapa|ke mana)\b/i.test(lower)) return 'id';
 
         return 'en';
+    },
+
+    getChatLanguage() {
+        return localStorage.getItem('tourist_chat_language') || 'auto';
+    },
+
+    setChatLanguage(code) {
+        if (!code) code = 'auto';
+        localStorage.setItem('tourist_chat_language', code);
+        window.dispatchEvent(new CustomEvent('chatLanguageChanged', { detail: { language: code } }));
     },
 
     updateNavButton() {

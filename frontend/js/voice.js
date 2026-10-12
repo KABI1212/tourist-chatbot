@@ -2,7 +2,8 @@
 /**
  * TouristAI — Voice Engine (Speech-to-Text & Text-to-Speech)
  * Supports all 26 languages via Web Speech API with native speechCode mappings,
- * mic recording animations, permission handling, markdown cleaning, and audio controls.
+ * compatible voice detection, missing voice fallback explanation, mic animations,
+ * and sentence speech keep-alive for Chromium.
  */
 
 const Voice = {
@@ -10,6 +11,7 @@ const Voice = {
     isRecording: false,
     currentUtterance: null,
     activePlayButton: null,
+    speechHeartbeat: null,
 
     initSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -81,7 +83,7 @@ const Voice = {
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            this.showVoiceToast('Speech recognition is not supported in this browser. Try Chrome or Edge.', 'warning');
+            this.showVoiceToast('Speech recognition is not supported in this browser. Please try Chrome or Edge.', 'warning');
             return;
         }
 
@@ -91,23 +93,32 @@ const Voice = {
 
         if (!this.recognition) return;
 
-        // Resolve active language speech code
-        let speechCode = 'en-US';
+        // Resolve active language speech code (checking chat preference first)
+        let langCode = 'en';
         if (typeof I18n !== 'undefined') {
-            const currentLang = I18n.getCurrentLanguage();
-            if (currentLang !== 'auto') {
-                const meta = I18n.getLanguageMeta(currentLang);
-                if (meta && meta.speechCode) speechCode = meta.speechCode;
+            const chatLang = typeof I18n.getChatLanguage === 'function' ? I18n.getChatLanguage() : I18n.getCurrentLanguage();
+            if (chatLang && chatLang !== 'auto') {
+                langCode = chatLang;
             } else {
-                // If auto, try default browser language or en-US/ta-IN
-                speechCode = navigator.language || 'en-US';
+                langCode = 'auto';
             }
+        }
+
+        let speechCode = 'en-US';
+        let langMeta = null;
+        if (langCode !== 'auto' && typeof I18n !== 'undefined') {
+            langMeta = I18n.getLanguageMeta(langCode);
+            if (langMeta && langMeta.speechCode) speechCode = langMeta.speechCode;
+        } else {
+            speechCode = navigator.language || 'en-US';
         }
 
         this.recognition.lang = speechCode;
 
         try {
             this.recognition.start();
+            const langLabel = langMeta ? (langMeta.nativeName || langMeta.name) : speechCode;
+            this.updateMicUI(true, `Listening in ${langLabel}… speak now`);
         } catch (err) {
             console.warn('Failed to start speech recognition:', err);
             this.stopRecognition();
@@ -165,7 +176,7 @@ const Voice = {
             return;
         }
 
-        // If currently playing on this button, stop or pause
+        // If currently playing on this button, stop
         if (window.speechSynthesis.speaking && this.activePlayButton === btn) {
             this.stopSpeech();
             return;
@@ -177,49 +188,80 @@ const Voice = {
         const bubble = btn.closest('.msg-bubble');
         if (!bubble) return;
 
-        // Extract raw assistant text
-        const clone = bubble.cloneNode(true);
-        // Remove action buttons from clone
-        const actions = clone.querySelector('.msg-actions-row');
-        if (actions) actions.remove();
+        // Extract raw assistant text ONLY from .msg-text-content (excluding cards, actions, etc.)
+        const textContainer = bubble.querySelector('.msg-text-content') || bubble;
+        const clone = textContainer.cloneNode(true);
+        // Ensure destination cards and action buttons are removed from clone
+        clone.querySelectorAll('.chat-dest-preview-card, .msg-actions-row, button').forEach(el => el.remove());
         const fullText = this.cleanMarkdownForSpeech(clone.innerText);
 
         if (!fullText) return;
 
-        // Truncate to first 500 characters or 3 sentences for comfortable listening
-        const spokenSnippet = fullText.length > 600 ? fullText.substring(0, 600) + '...' : fullText;
+        // Resolve language code from bubble attribute, chat setting, or content detection
+        let targetLang = bubble.dataset.lang;
+        if (!targetLang || targetLang === 'auto') {
+            if (typeof I18n !== 'undefined' && typeof I18n.getChatLanguage === 'function') {
+                const pref = I18n.getChatLanguage();
+                if (pref && pref !== 'auto') targetLang = pref;
+            }
+        }
+        if (!targetLang || targetLang === 'auto') {
+            targetLang = (typeof I18n !== 'undefined') ? I18n.detectLanguage(fullText) : 'en';
+        }
 
-        const utterance = new SpeechSynthesisUtterance(spokenSnippet);
+        const meta = (typeof I18n !== 'undefined') ? I18n.getLanguageMeta(targetLang) : null;
+        const speechCode = (meta && meta.speechCode) ? meta.speechCode : 'en-US';
 
-        // Detect language or use active language
-        let langCode = 'en-US';
-        if (typeof I18n !== 'undefined') {
-            const currentLang = I18n.getCurrentLanguage();
-            if (currentLang !== 'auto') {
-                const meta = I18n.getLanguageMeta(currentLang);
-                if (meta && meta.speechCode) langCode = meta.speechCode;
-            } else {
-                const detected = I18n.detectLanguage(fullText);
-                const meta = I18n.getLanguageMeta(detected);
-                if (meta && meta.speechCode) langCode = meta.speechCode;
+        // Check available SpeechSynthesis voices for compatibility
+        const voices = window.speechSynthesis.getVoices();
+        let matchedVoice = null;
+
+        if (voices && voices.length > 0) {
+            // 1. Exact match (e.g. ta-IN, hi-IN, fr-FR)
+            matchedVoice = voices.find(v => v.lang.toLowerCase() === speechCode.toLowerCase());
+            // 2. Language prefix match (e.g. ta, hi, fr)
+            if (!matchedVoice) {
+                const prefix = speechCode.split('-')[0].toLowerCase();
+                matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith(prefix));
+            }
+            // 3. Fallback matching for regional language names
+            if (!matchedVoice && meta && meta.name) {
+                const n = meta.name.toLowerCase();
+                matchedVoice = voices.find(v => v.name.toLowerCase().includes(n));
             }
         }
 
-        utterance.lang = langCode;
+        // Requirement 4: Handle missing voices gracefully without mispronouncing native scripts in English
+        if (targetLang !== 'en' && !matchedVoice) {
+            const langName = meta ? (meta.nativeName || meta.name) : targetLang.toUpperCase();
+            this.showVoiceToast(`Voice for ${langName} is not installed in your browser. Text response is available.`, 'warning');
+            return;
+        }
 
-        // Voice picking
-        const voices = window.speechSynthesis.getVoices();
-        if (voices && voices.length > 0) {
-            const matchedVoice = voices.find(v => v.lang.toLowerCase() === langCode.toLowerCase() || v.lang.startsWith(langCode.split('-')[0]));
-            if (matchedVoice) {
-                utterance.voice = matchedVoice;
-            }
+        // Prepare speech utterance
+        const spokenSnippet = fullText.length > 600 ? fullText.substring(0, 600) + '...' : fullText;
+        const utterance = new SpeechSynthesisUtterance(spokenSnippet);
+
+        utterance.lang = speechCode;
+        if (matchedVoice) {
+            utterance.voice = matchedVoice;
         }
 
         utterance.onstart = () => {
             this.activePlayButton = btn;
             btn.classList.add('active');
             btn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+
+            // Chromium keep-alive heartbeat to prevent 15-second cutoff
+            if (this.speechHeartbeat) clearInterval(this.speechHeartbeat);
+            this.speechHeartbeat = setInterval(() => {
+                if (window.speechSynthesis && window.speechSynthesis.speaking) {
+                    window.speechSynthesis.pause();
+                    window.speechSynthesis.resume();
+                } else {
+                    clearInterval(this.speechHeartbeat);
+                }
+            }, 10000);
         };
 
         utterance.onend = () => {
@@ -236,6 +278,10 @@ const Voice = {
     },
 
     stopSpeech() {
+        if (this.speechHeartbeat) {
+            clearInterval(this.speechHeartbeat);
+            this.speechHeartbeat = null;
+        }
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
@@ -259,14 +305,13 @@ const Voice = {
         toast.className = `voice-status-toast show ${type}`;
         setTimeout(() => {
             toast.className = 'voice-status-toast';
-        }, 3200);
+        }, 3600);
     }
 };
 
 // Initialize voice voices list
 if ('speechSynthesis' in window) {
     window.speechSynthesis.onvoiceschanged = () => {
-        // Pre-warm voices
         window.speechSynthesis.getVoices();
     };
 }
