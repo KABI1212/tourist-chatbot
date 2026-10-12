@@ -102,8 +102,9 @@
         right: 0;
         padding: 24px 20px;
         gap: 16px;
-        background: #120e0b;
+        background: var(--bg-surface);
         border-bottom: 1px solid var(--border);
+        box-shadow: var(--shadow-lg);
         z-index: 1001;
     }
 

@@ -11,19 +11,23 @@
     --primary-hover: #D8BC88;
     --primary-light: #DFC89B;
     --primary-glow: rgba(197, 164, 109, 0.35);
+    --primary-foreground: #11110F;
 
     --bg-dark: #11110F; /* Charcoal Black */
     --bg-surface: #191916; /* Dark Surface */
     --bg-card: #1F1F1B;
     --bg-card-hover: #272722;
     --bg-sidebar: #141412;
+    --bg-elevated: #282823;
+    --bg-overlay: rgba(0, 0, 0, 0.75);
     --bg-input: rgba(247, 244, 237, 0.05);
     --bg-input-focus: rgba(247, 244, 237, 0.09);
 
     --text-main: #F7F4ED; /* Warm Ivory */
     --text-muted: #B8B2A6; /* Muted Beige */
-    --text-dim: #7C7870;
+    --text-dim: #8E8A80;
     --text-light: #F7F4ED;
+    --text-inverse: #11110F;
 
     --accent-emerald: #10B981;
     --accent-emerald-glow: rgba(16, 185, 129, 0.25);
@@ -33,11 +37,29 @@
     --accent-gold-glow: rgba(197, 164, 109, 0.28);
     --accent-rose: #F43F5E;
     --accent-purple: #8B5CF6;
+    --accent-amber: #F59E0B;
 
     --border: rgba(197, 164, 109, 0.2); /* Soft borders with subtle gold accents */
     --border-light: rgba(197, 164, 109, 0.32);
     --border-gold: #C5A46D;
     --border-focus: #C5A46D;
+    --border-hover: rgba(197, 164, 109, 0.5);
+
+    /* Button specific semantic tokens */
+    --btn-primary-bg: linear-gradient(135deg, #C5A46D 0%, #A8864C 100%);
+    --btn-primary-text: #11110F;
+    --btn-primary-hover-bg: linear-gradient(135deg, #D8BC88 0%, #B89758 100%);
+
+    --btn-outline-text: #F7F4ED;
+    --btn-outline-bg: rgba(247, 244, 237, 0.05);
+    --btn-outline-border: rgba(197, 164, 109, 0.32);
+    --btn-outline-hover-text: #F7F4ED;
+    --btn-outline-hover-bg: rgba(197, 164, 109, 0.12);
+    --btn-outline-hover-border: #C5A46D;
+
+    /* Code and Markdown tokens */
+    --code-bg: rgba(247, 244, 237, 0.08);
+    --table-header-bg: rgba(247, 244, 237, 0.05);
 
     /* Typography & Hierarchy */
     --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Noto Sans Tamil', 'Noto Sans Devanagari', 'Noto Sans Arabic', 'Noto Sans Malayalam', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Bengali', 'Noto Sans Thai', 'Segoe UI', Roboto, sans-serif;
@@ -59,36 +81,62 @@
 
 /* Luxury Travel Editorial — Light Theme Support */
 [data-theme="light"] {
+    --primary: #9E7D47; /* Rich Champagne Gold for contrast on light background */
+    --primary-hover: #866838;
+    --primary-light: #B49258;
+    --primary-glow: rgba(158, 125, 71, 0.25);
+    --primary-foreground: #FFFFFF;
+
     --bg-dark: #F7F4ED; /* Warm Ivory */
     --bg-surface: #FFFFFF;
     --bg-card: #FFFFFF;
     --bg-card-hover: #F2EFE8;
-    --bg-sidebar: #ECE8DF;
+    --bg-sidebar: #EDE8DC;
+    --bg-elevated: #FFFFFF;
+    --bg-overlay: rgba(17, 17, 15, 0.55);
     --bg-input: rgba(17, 17, 15, 0.05);
-    --bg-input-focus: rgba(17, 17, 15, 0.09);
+    --bg-input-focus: rgba(17, 17, 15, 0.08);
 
     --text-main: #11110F; /* Charcoal Black */
-    --text-muted: #57544E;
-    --text-dim: #7C7870;
+    --text-muted: #4A4740;
+    --text-dim: #6E6A62;
     --text-light: #11110F;
+    --text-inverse: #FFFFFF;
 
-    --primary: #9E7D47; /* Rich Champagne Gold for contrast on light background */
-    --primary-hover: #866838;
-    --primary-light: #B49258;
-    --primary-glow: rgba(158, 125, 71, 0.3);
-
+    --accent-emerald: #059669;
+    --accent-cyan: #0284C7;
     --accent-gold: #9E7D47;
     --accent-gold-hover: #866838;
-    --accent-gold-glow: rgba(158, 125, 71, 0.25);
+    --accent-gold-glow: rgba(158, 125, 71, 0.22);
+    --accent-rose: #E11D48;
+    --accent-purple: #7C3AED;
+    --accent-amber: #D97706;
 
     --border: rgba(158, 125, 71, 0.22);
     --border-light: rgba(158, 125, 71, 0.38);
     --border-gold: #9E7D47;
     --border-focus: #9E7D47;
+    --border-hover: rgba(158, 125, 71, 0.55);
 
-    --shadow-sm: 0 2px 8px rgba(17, 17, 15, 0.06);
-    --shadow-md: 0 8px 24px rgba(17, 17, 15, 0.1);
-    --shadow-lg: 0 16px 40px rgba(17, 17, 15, 0.14);
+    /* Button specific semantic tokens for light theme */
+    --btn-primary-bg: linear-gradient(135deg, #9E7D47 0%, #866838 100%);
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover-bg: linear-gradient(135deg, #866838 0%, #6E5327 100%);
+
+    --btn-outline-text: #11110F;
+    --btn-outline-bg: rgba(17, 17, 15, 0.04);
+    --btn-outline-border: rgba(158, 125, 71, 0.35);
+    --btn-outline-hover-text: #11110F;
+    --btn-outline-hover-bg: rgba(158, 125, 71, 0.12);
+    --btn-outline-hover-border: #9E7D47;
+
+    /* Code and Markdown tokens for light theme */
+    --code-bg: rgba(17, 17, 15, 0.06);
+    --table-header-bg: rgba(158, 125, 71, 0.08);
+
+    --shadow-sm: 0 2px 8px rgba(17, 17, 15, 0.05);
+    --shadow-md: 0 8px 24px rgba(17, 17, 15, 0.08);
+    --shadow-lg: 0 16px 40px rgba(17, 17, 15, 0.12);
     --shadow-glow: 0 0 30px rgba(158, 125, 71, 0.15);
 }
 
@@ -281,8 +329,8 @@ button, input, select, textarea {
 }
 
 .nav-btn-login {
-    background: var(--primary);
-    color: #fff !important;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text) !important;
     padding: 9px 22px;
     border-radius: var(--radius-full);
     font-weight: 600;
@@ -294,7 +342,7 @@ button, input, select, textarea {
 }
 
 .nav-btn-login:hover {
-    background: var(--primary-hover);
+    background: var(--btn-primary-hover-bg);
     transform: translateY(-1px);
 }
 
@@ -302,7 +350,7 @@ button, input, select, textarea {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--bg-input);
     border: 1px solid var(--border);
     padding: 4px 14px 4px 6px;
     border-radius: var(--radius-full);
@@ -311,7 +359,7 @@ button, input, select, textarea {
 }
 
 .user-profile-menu:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-input-focus);
     border-color: var(--primary-light);
 }
 
@@ -347,25 +395,27 @@ button, input, select, textarea {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, #1D4ED8 100%);
-    color: #fff;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
     box-shadow: 0 6px 20px var(--primary-glow);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.45);
+    background: var(--btn-primary-hover-bg);
+    box-shadow: 0 8px 25px var(--primary-glow);
 }
 
 .btn-outline {
-    background: rgba(255, 255, 255, 0.05);
-    color: #fff;
-    border: 1px solid var(--border-light);
+    background: var(--btn-outline-bg);
+    color: var(--btn-outline-text);
+    border: 1px solid var(--btn-outline-border);
 }
 
 .btn-outline:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: #fff;
+    background: var(--btn-outline-hover-bg);
+    color: var(--btn-outline-hover-text);
+    border-color: var(--btn-outline-hover-border);
 }
 
 .btn-emerald {
@@ -533,7 +583,7 @@ button, input, select, textarea {
 }
 
 .quick-card {
-    background: rgba(19, 28, 56, 0.85);
+    background: var(--bg-card);
     backdrop-filter: blur(12px);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
@@ -549,7 +599,7 @@ button, input, select, textarea {
 
 .quick-card:hover {
     transform: translateY(-6px);
-    background: rgba(27, 38, 79, 0.95);
+    background: var(--bg-card-hover);
     border-color: var(--primary-light);
     box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
@@ -745,7 +795,7 @@ button, input, select, textarea {
    REQUIREMENTS / FEATURE SUITE BAR (Screen Bottom)
    ========================================================== */
 .requirements-strip {
-    background: #060A17;
+    background: var(--bg-surface);
     border-top: 1px solid var(--border);
     padding: 60px 32px;
 }
@@ -759,7 +809,7 @@ button, input, select, textarea {
 }
 
 .req-card {
-    background: rgba(19, 28, 56, 0.4);
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 22px 20px;
@@ -812,7 +862,7 @@ button, input, select, textarea {
    FOOTER
    ========================================================== */
 footer {
-    background: #040711;
+    background: var(--bg-surface);
     border-top: 1px solid var(--border);
     padding: 50px 32px 30px;
 }
@@ -846,7 +896,7 @@ footer {
 }
 
 .toast {
-    background: var(--bg-card);
+    background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 14px 20px;
@@ -855,7 +905,7 @@ footer {
     gap: 12px;
     box-shadow: var(--shadow-lg);
     font-size: 14px;
-    color: #fff;
+    color: var(--text-main);
     animation: toastSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1357,4 +1407,62 @@ footer {
     font-size: 13px;
     color: var(--text-muted);
 }
+
+/* ==========================================================
+   THEME ADAPTED LEAFLET MAP CONTROLS & POPUPS
+   ========================================================== */
+.leaflet-container {
+    font-family: var(--font-sans) !important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+    background: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+}
+
+.leaflet-popup-content {
+    color: var(--text-main) !important;
+    margin: 12px 14px !important;
+    line-height: 1.5;
+}
+
+.leaflet-popup-content strong {
+    color: var(--text-main) !important;
+    font-size: 14px;
+}
+
+.leaflet-popup-content p {
+    color: var(--text-muted) !important;
+    font-size: 12.5px;
+    margin: 4px 0 0 0;
+}
+
+.leaflet-control-zoom a,
+.leaflet-control-layers {
+    background: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background: var(--bg-card-hover) !important;
+    color: var(--accent-gold) !important;
+}
+
+.leaflet-control-layers-expanded {
+    background: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+    padding: 8px 12px !important;
+}
+
+.leaflet-control-layers label {
+    color: var(--text-main) !important;
+    font-size: 12.5px;
+}
+
 

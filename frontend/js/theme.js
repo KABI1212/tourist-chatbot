@@ -4,8 +4,17 @@
  * Integrates dynamic brand logo and favicon variants per active theme
  */
 (function() {
-    const savedTheme = localStorage.getItem('touristai_theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    function getInitialTheme() {
+        const saved = localStorage.getItem('touristai_theme');
+        if (saved === 'light' || saved === 'dark') return saved;
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            return 'light';
+        }
+        return 'dark';
+    }
+
+    const currentTheme = getInitialTheme();
+    document.documentElement.setAttribute('data-theme', currentTheme);
 
     function updateFavicon(theme) {
         let favLink = document.querySelector("link[rel='icon']");
@@ -58,13 +67,27 @@
     };
 
     // Initialize early for favicon
-    updateFavicon(savedTheme);
+    updateFavicon(currentTheme);
+
+    // Listen to system theme preference changes if user hasn't explicitly set one
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
+            if (!localStorage.getItem('touristai_theme')) {
+                const next = e.matches ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                updateIcons(next);
+                window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: next } }));
+            }
+        });
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
-        updateIcons(savedTheme);
+        const activeTheme = document.documentElement.getAttribute('data-theme') || currentTheme;
+        updateIcons(activeTheme);
         const buttons = document.querySelectorAll('.theme-toggle-btn');
         buttons.forEach(btn => {
             btn.addEventListener('click', window.toggleTheme);
         });
     });
 })();
+
