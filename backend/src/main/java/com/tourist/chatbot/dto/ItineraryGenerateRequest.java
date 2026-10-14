@@ -25,11 +25,21 @@ public class ItineraryGenerateRequest {
 
     private int travelers;
 
-    private String budgetTier; // "Budget", "Moderate", "Luxury"
+    private String budgetTier; // "Budget", "Moderate", "Premium", "Luxury"
 
-    private String currency; // "INR", "USD", "EUR"
+    private Double customBudget;
 
-    private List<String> interests; // "Sightseeing", "Adventure", "Food", "Nature", "Shopping", "Spiritual"
- 
+    private String budgetType; // "per_person", "total"
+
+    private String currency; // "INR", "USD", "EUR", "GBP"
+
+    private String originCity;
+
+    private String transitMode;
+
+    private List<String> interests; // "Sightseeing", "Adventure", "Food and dining", etc.
+
+    private String additionalPreferences;
+
     private String language; // e.g. "ta", "hi", "en", "fr", "es", "auto"
 }
