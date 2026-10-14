@@ -621,7 +621,7 @@ async function generateItinerary(e) {
 
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Synthesizing Itinerary with Gemini…';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Synthesizing Itinerary…';
     }
     if (regenBtn) {
         regenBtn.disabled = true;
