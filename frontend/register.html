@@ -31,7 +31,7 @@
                 <img src="assets/brand/logo-light.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-light">
                 <span>TouristAI</span>
             </a>
-            <div class="nav-links">
+            <div class="nav-links" id="navAuthLinks">
                 <a href="index.html" class="nav-link" data-i18n="nav_home">Home</a>
                 <a href="destinations.html" class="nav-link" data-i18n="nav_destinations">Destinations</a>
                 <a href="planner.html" class="nav-link" data-i18n="nav_planner">Plan Trip</a>
@@ -117,6 +117,12 @@
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (Auth.isAuthenticated()) {
+                window.location.replace('index.html');
+            }
+        });
+
         async function handleRegisterSubmit(e) {
             e.preventDefault();
             const alertBox = document.getElementById('authAlert');
@@ -153,11 +159,11 @@
                 alertBox.style.display = 'block';
                 alertBox.style.background = 'rgba(16,185,129,0.15)';
                 alertBox.style.color = '#34D399';
-                alertBox.textContent = 'Registration successful! Taking you to login…';
+                alertBox.innerHTML = '<i class="fas fa-check-circle"></i> Registration successful! Taking you to login…';
 
                 setTimeout(() => {
-                    window.location.href = 'login.html?registered=true';
-                }, 800);
+                    window.location.replace('login.html?registered=true');
+                }, 600);
             } catch (err) {
                 alertBox.style.display = 'block';
                 alertBox.style.background = 'rgba(244,63,94,0.15)';
