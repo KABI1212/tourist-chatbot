@@ -387,7 +387,12 @@ public class GeminiService {
         int travelers = request.getTravelers() > 0 ? request.getTravelers() : 2;
         String budgetTier = (request.getBudgetTier() != null && !request.getBudgetTier().isBlank()) ? request.getBudgetTier() : "Moderate";
         String currency = (request.getCurrency() != null && !request.getCurrency().isBlank()) ? request.getCurrency() : "INR";
-        List<String> interests = (request.getInterests() != null && !request.getInterests().isEmpty()) ? request.getInterests() : List.of("Sightseeing", "Nature", "Food");
+        List<String> interests = (request.getInterests() != null && !request.getInterests().isEmpty()) ? request.getInterests() : List.of("Sightseeing", "Nature and lakes", "Food and dining");
+        String originCity = (request.getOriginCity() != null) ? request.getOriginCity().trim() : "";
+        String transitMode = (request.getTransitMode() != null && !request.getTransitMode().isBlank()) ? request.getTransitMode().trim() : "Mixed";
+        Double customBudget = request.getCustomBudget();
+        String budgetType = (request.getBudgetType() != null && !request.getBudgetType().isBlank()) ? request.getBudgetType().trim() : "per_person";
+        String additionalPrefs = (request.getAdditionalPreferences() != null) ? request.getAdditionalPreferences().trim() : "";
 
         String langDirective = (request.getLanguage() != null && !request.getLanguage().isBlank() && !"en".equalsIgnoreCase(request.getLanguage()) && !"auto".equalsIgnoreCase(request.getLanguage()))
                 ? "- Language: Write all summaries, titles, descriptions, activities, and tips fluently in " + request.getLanguage() + " while retaining proper landmark names.\n"
@@ -395,14 +400,28 @@ public class GeminiService {
 
         String activeKey = resolveApiKey();
         if (activeKey != null && !activeKey.trim().isEmpty()) {
+            StringBuilder extraDetails = new StringBuilder();
+            if (!originCity.isEmpty()) {
+                extraDetails.append("- Starting / Origin City: ").append(originCity).append("\n");
+            }
+            if (!transitMode.isEmpty() && !"No preference".equalsIgnoreCase(transitMode)) {
+                extraDetails.append("- Preferred Transit Mode: ").append(transitMode).append("\n");
+            }
+            if (customBudget != null && customBudget > 0) {
+                extraDetails.append(String.format("- Specific Budget Constraint: %s %,.0f (%s)\n", currency, customBudget, "total".equalsIgnoreCase(budgetType) ? "total for whole trip" : "per person"));
+            }
+            if (!additionalPrefs.isEmpty()) {
+                extraDetails.append("- Additional Preferences / Constraints: ").append(additionalPrefs).append("\n");
+            }
+
             String prompt = String.format("""
                     Generate a detailed, realistic travel itinerary for %s for %d days.
                     Details:
                     - Travelers: %d
                     - Budget Tier: %s (Currency: %s)
-                    - Interests: %s
+                    - Selected Interests: %s
                     - Start Date: %s
-                    %s
+                    %s%s
                     Respond with ONLY a valid raw JSON object (no markdown code blocks, no ```json, just raw JSON) matching this structure:
                     {
                       "title": "Your %d Days %s Itinerary",
@@ -441,7 +460,7 @@ public class GeminiService {
                     }
                     """,
                     dest, days, travelers, budgetTier, currency, String.join(", ", interests),
-                    request.getStartDate() != null ? request.getStartDate() : "Upcoming", langDirective,
+                    request.getStartDate() != null ? request.getStartDate() : "Upcoming", extraDetails.toString(), langDirective,
                     days, dest, dest, days, travelers, budgetTier, currency
             );
 
@@ -463,6 +482,10 @@ public class GeminiService {
                     com.tourist.chatbot.dto.ItineraryResponse response = objectMapper.treeToValue(root, com.tourist.chatbot.dto.ItineraryResponse.class);
                     response.setSuccess(true);
                     response.setImageUrl(getDestinationImage(dest));
+                    response.setOriginCity(originCity);
+                    response.setTransitMode(transitMode);
+                    response.setCustomBudget(customBudget);
+                    response.setBudgetType(budgetType);
                     return response;
                 }
             } catch (Exception e) {
@@ -470,19 +493,45 @@ public class GeminiService {
             }
         }
 
-        return generateFallbackItinerary(dest, days, travelers, budgetTier, currency, interests, request.getStartDate());
+        return generateFallbackItinerary(dest, days, travelers, budgetTier, currency, interests, request.getStartDate(), originCity, transitMode, customBudget, budgetType, additionalPrefs);
     }
 
     private com.tourist.chatbot.dto.ItineraryResponse generateFallbackItinerary(
-            String destination, int days, int travelers, String budgetTier, String currency, List<String> interests, String startDate
+            String destination, int days, int travelers, String budgetTier, String currency, List<String> interests,
+            String startDate, String originCity, String transitMode, Double customBudget, String budgetType, String additionalPrefs
     ) {
         String cleanDest = capitalize(destination);
-        int baseCostPerPersonPerDay = budgetTier.equalsIgnoreCase("Luxury") ? 6000 : (budgetTier.equalsIgnoreCase("Budget") ? 1800 : 3500);
-        int totalEstimate = baseCostPerPersonPerDay * travelers * days;
-        String currencySymbol = currency.equalsIgnoreCase("USD") ? "$" : (currency.equalsIgnoreCase("EUR") ? "€" : "₹");
-        String estimatedBudgetStr = String.format("%s%,d - %s%,d for %d %s",
-                currencySymbol, (int)(totalEstimate * 0.9), currencySymbol, (int)(totalEstimate * 1.15),
-                travelers, travelers == 1 ? "traveler" : "travelers");
+        String currencySymbol = currency.equalsIgnoreCase("USD") ? "$" : (currency.equalsIgnoreCase("EUR") ? "€" : (currency.equalsIgnoreCase("GBP") ? "£" : "₹"));
+
+        int totalEstimate;
+        if (customBudget != null && customBudget > 0) {
+            if ("total".equalsIgnoreCase(budgetType)) {
+                totalEstimate = customBudget.intValue();
+            } else {
+                totalEstimate = (int) (customBudget * travelers);
+            }
+        } else {
+            int baseCostPerPersonPerDay = 3500;
+            if (budgetTier.equalsIgnoreCase("Luxury")) {
+                baseCostPerPersonPerDay = 8500;
+            } else if (budgetTier.equalsIgnoreCase("Premium")) {
+                baseCostPerPersonPerDay = 5500;
+            } else if (budgetTier.equalsIgnoreCase("Budget")) {
+                baseCostPerPersonPerDay = 1800;
+            }
+            totalEstimate = baseCostPerPersonPerDay * travelers * days;
+        }
+
+        String estimatedBudgetStr;
+        if (customBudget != null && customBudget > 0) {
+            estimatedBudgetStr = String.format("%s%,d (%s Budget for %d %s)",
+                    currencySymbol, totalEstimate, "total".equalsIgnoreCase(budgetType) ? "Total Trip" : "Per Person",
+                    travelers, travelers == 1 ? "traveler" : "travelers");
+        } else {
+            estimatedBudgetStr = String.format("%s%,d - %s%,d for %d %s",
+                    currencySymbol, (int)(totalEstimate * 0.9), currencySymbol, (int)(totalEstimate * 1.15),
+                    travelers, travelers == 1 ? "traveler" : "travelers");
+        }
 
         List<Map<String, Object>> daysPlan = new ArrayList<>();
         java.time.LocalDate baseDate = null;
@@ -490,7 +539,10 @@ public class GeminiService {
             try { baseDate = java.time.LocalDate.parse(startDate); } catch (Exception ignored) {}
         }
 
-        // Generate day-by-day plan tailored to destination & interests
+        String transitSnippet = (!transitMode.isBlank() && !"No preference".equalsIgnoreCase(transitMode)) ? " via " + transitMode : "";
+        String originSnippet = (!originCity.isBlank()) ? " from " + originCity : "";
+
+        // Generate day-by-day plan tailored to destination, transit & interests
         for (int i = 1; i <= days; i++) {
             String dateLabel = (baseDate != null)
                     ? baseDate.plusDays(i - 1).format(java.time.format.DateTimeFormatter.ofPattern("d MMM"))
@@ -503,35 +555,96 @@ public class GeminiService {
 
             if (i == 1) {
                 dayTitle = "Arrival & Settling in " + cleanDest;
-                location = cleanDest + " Town Center";
-                activities.add("Check-in to accommodation and refresh");
-                activities.add("Stroll around the central promenade & local markets");
+                location = cleanDest + " Central Promenade";
+                if (!originCity.isEmpty() || !transitMode.isEmpty()) {
+                    activities.add("Depart" + originSnippet + transitSnippet + " and check in to accommodation");
+                } else {
+                    activities.add("Check-in to accommodation and refresh");
+                }
+                activities.add("Stroll around the central promenade, historic lanes & local markets");
                 activities.add("Enjoy an authentic welcome dinner featuring regional cuisine");
             } else if (i == days) {
-                dayTitle = "Souvenir Shopping & Departure";
+                dayTitle = "Souvenir Shopping & Farewell Departure";
                 location = cleanDest + " Transit Hub";
-                activities.add("Morning stroll and photography of scenic viewpoints");
-                activities.add("Pick up local handicrafts, spices, and specialty souvenirs");
-                activities.add("Check out and departure back home");
-            } else {
-                if (interests.contains("Adventure")) {
-                    dayTitle = "Outdoor Adventures & Scenic Escapes";
-                    location = cleanDest + " Valley & Trails";
-                    activities.add("Morning nature hike or adventure activities (trekking/zipline/sports)");
-                    activities.add("Scenic picnic lunch overlooking panoramic viewpoints");
-                    activities.add("Evening relaxation and campfire or cafe hopping");
-                } else if (interests.contains("Spiritual") || interests.contains("Culture")) {
-                    dayTitle = "Heritage, Temples & Cultural Treasures";
-                    location = cleanDest + " Historic Quarter";
-                    activities.add("Visit iconic ancient temples and historic architectural landmarks");
-                    activities.add("Guided cultural tour and traditional crafts exhibition");
-                    activities.add("Sunset evening prayer ceremony or cultural performance");
+                activities.add("Morning stroll and golden-hour photography of scenic viewpoints");
+                activities.add("Pick up local handicrafts, artisan specialties, and souvenirs");
+                if (!originCity.isEmpty()) {
+                    activities.add("Check out and departure back to " + originCity + transitSnippet);
                 } else {
-                    dayTitle = "Signature Highlights & Natural Wonders";
-                    location = cleanDest + " Top Attractions";
-                    activities.add("Explore premier botanical parks, serene lakes, or viewpoints");
-                    activities.add("Taste famous regional lunch specialties at recommended diners");
-                    activities.add("Sunset viewpoints and leisure evening walks");
+                    activities.add("Check out and departure journey back home" + transitSnippet);
+                }
+            } else {
+                // Determine theme based on cyclic selection of user's interests
+                String primaryInterest = (!interests.isEmpty()) ? interests.get((i - 2) % interests.size()) : "Sightseeing";
+                String interestLower = primaryInterest.toLowerCase();
+
+                if (interestLower.contains("beach")) {
+                    dayTitle = "Coastal Beaches & Golden Sands in " + cleanDest;
+                    location = cleanDest + " Coastline & Shores";
+                    activities.add("Morning seaside walk and coastal panoramas");
+                    activities.add("Beachside relaxation, watersports or catamaran cruise");
+                    activities.add("Sunset seafood dinner by the ocean promenade");
+                } else if (interestLower.contains("wildlife")) {
+                    dayTitle = "Wildlife Safari & Nature Reserves in " + cleanDest;
+                    location = cleanDest + " Sanctuary & National Park";
+                    activities.add("Early morning wildlife sanctuary safari & birdwatching trail");
+                    activities.add("Guided naturalist walk through pristine forest habitats");
+                    activities.add("Evening visit to wildlife interpretation center");
+                } else if (interestLower.contains("photography")) {
+                    dayTitle = "Scenic Panoramas & Photography Trail in " + cleanDest;
+                    location = cleanDest + " Signature Viewpoints";
+                    activities.add("Sunrise photo expedition at iconic vantage points");
+                    activities.add("Architectural photography in historic quarters & botanical parks");
+                    activities.add("Golden-hour landscape photography and twilight stroll");
+                } else if (interestLower.contains("food") || interestLower.contains("dining")) {
+                    dayTitle = "Gastronomic Heritage & Culinary Delights in " + cleanDest;
+                    location = cleanDest + " Culinary District";
+                    activities.add("Morning artisanal breakfast and local spice/produce market tour");
+                    activities.add("Interactive traditional cooking demo or heritage tasting session");
+                    activities.add("Curated dinner at a premier farm-to-table regional restaurant");
+                } else if (interestLower.contains("adventure")) {
+                    dayTitle = "Outdoor Adventures & Valley Trails in " + cleanDest;
+                    location = cleanDest + " Valley & Adventure Outpost";
+                    activities.add("Morning nature hike, trekking trail or zipline adventure");
+                    activities.add("Picnic lunch overlooking panoramic gorges and valleys");
+                    activities.add("Evening campfire storytelling or local café hopping");
+                } else if (interestLower.contains("historical") || interestLower.contains("history")) {
+                    dayTitle = "Historic Forts, Palaces & Heritage in " + cleanDest;
+                    location = cleanDest + " Historic Quarter";
+                    activities.add("Tour majestic heritage palaces, ancient fortresses & museums");
+                    activities.add("Guided architectural walk through timeless monuments");
+                    activities.add("Evening cultural sound-and-light show or heritage recital");
+                } else if (interestLower.contains("spiritual") || interestLower.contains("culture")) {
+                    dayTitle = "Sacred Sanctuaries & Cultural Traditions in " + cleanDest;
+                    location = cleanDest + " Sacred Quarter";
+                    activities.add("Morning visit to iconic ancient shrines and spiritual sanctuaries");
+                    activities.add("Meditation session and traditional cultural artisan workshop");
+                    activities.add("Sunset evening aarti/ceremony and reflective courtyard walk");
+                } else if (interestLower.contains("relaxation") || interestLower.contains("spa")) {
+                    dayTitle = "Tranquil Wellness & Leisure in " + cleanDest;
+                    location = cleanDest + " Lakeside Retreat";
+                    activities.add("Rejuvenating morning spa treatment or yoga session");
+                    activities.add("Gentle boat ride across serene waters and botanical gardens");
+                    activities.add("Relaxed twilight tea lounge overlooking peaceful nature");
+                } else if (interestLower.contains("family")) {
+                    dayTitle = "Family-Friendly Wonders & Fun in " + cleanDest;
+                    location = cleanDest + " Recreational Park";
+                    activities.add("Family visit to botanical gardens, zoo or interactive science park");
+                    activities.add("Picnic lunch and leisurely recreational boat ride");
+                    activities.add("Evening stroll with sweet treats, handicrafts and toy shops");
+                } else if (interestLower.contains("shopping")) {
+                    dayTitle = "Artisan Bazaars & Boutiques in " + cleanDest;
+                    location = cleanDest + " Heritage Markets";
+                    activities.add("Morning stroll through traditional artisan craft bazaars");
+                    activities.add("Sample street delicacies while browsing local silks and spices");
+                    activities.add("Evening boutique shopping and rooftop dinner");
+                } else {
+                    // Nature & lakes or Sightseeing default
+                    dayTitle = "Natural Wonders & Signature Landmarks in " + cleanDest;
+                    location = cleanDest + " Top Landmarks";
+                    activities.add("Explore premier botanical gardens, tranquil lakes or waterfalls");
+                    activities.add("Taste famous regional specialties at recommended diners");
+                    activities.add("Sunset viewpoints and relaxing twilight promenade");
                 }
             }
 
@@ -542,7 +655,7 @@ public class GeminiService {
                     "location", location,
                     "imageUrl", dayImg,
                     "activities", activities,
-                    "description", "Curated full-day experience covering signature landmarks and relaxing transit."
+                    "description", "Curated full-day experience covering signature landmarks, authentic experiences, and relaxing transit."
             ));
         }
 
@@ -553,12 +666,17 @@ public class GeminiService {
                 "activities", String.format("%s%,d", currencySymbol, (int)(totalEstimate * 0.15))
         );
 
-        List<String> travelTips = List.of(
-                "Book popular attractions and transit passes in advance during peak season.",
-                "Pack weather-appropriate clothing: comfortable walking shoes and light jackets for evenings.",
-                "Keep cash handy for local street markets and auto-rickshaws / taxis.",
-                "Respect local customs and check photography permissions at sacred sites."
-        );
+        List<String> travelTips = new ArrayList<>();
+        if (!transitMode.isEmpty() && !"No preference".equalsIgnoreCase(transitMode)) {
+            travelTips.add("Pre-book your " + transitMode + " transit tickets early to secure the best fares and timings.");
+        }
+        if (customBudget != null && customBudget > 0) {
+            travelTips.add(String.format("Estimated total expenditure is calibrated to your custom %s budget constraint (%s%,d).",
+                    "total".equalsIgnoreCase(budgetType) ? "total" : "per-person", currencySymbol, totalEstimate));
+        }
+        travelTips.add("Pack weather-appropriate attire: comfortable walking shoes and light layers for changing temperatures.");
+        travelTips.add("Keep digital copies of IDs and some local currency handy for remote attractions and local bazaars.");
+        travelTips.add("Respect sacred monument dress codes and photography rules.");
 
         return com.tourist.chatbot.dto.ItineraryResponse.builder()
                 .success(true)
@@ -567,14 +685,21 @@ public class GeminiService {
                 .days(days)
                 .travelers(travelers)
                 .budgetTier(budgetTier)
+                .customBudget(customBudget)
+                .budgetType(budgetType)
                 .estimatedBudget(estimatedBudgetStr)
                 .currency(currency)
+                .originCity(originCity)
+                .transitMode(transitMode)
                 .imageUrl(getDestinationImage(cleanDest))
                 .daysPlan(daysPlan)
                 .budgetBreakdown(budgetBreakdown)
                 .travelTips(travelTips)
-                .summary(String.format("Handcrafted %d-day getaway in %s tailored for %d %s with a %s budget and focus on %s.",
-                        days, cleanDest, travelers, travelers == 1 ? "traveler" : "travelers", budgetTier, String.join(", ", interests)))
+                .summary(String.format("Handcrafted %d-day getaway in %s tailored for %d %s with a %s budget%s and focus on %s.",
+                        days, cleanDest, travelers, travelers == 1 ? "traveler" : "travelers",
+                        customBudget != null ? "custom " + currencySymbol + totalEstimate : budgetTier,
+                        !originCity.isEmpty() ? " traveling from " + originCity : "",
+                        String.join(", ", interests)))
                 .build();
     }
 
