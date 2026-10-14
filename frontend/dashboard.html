@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Trips &amp; Dashboard — TouristAI</title>
+    <title>Traveler Workspace &amp; Dashboard — TouristAI</title>
+    <meta name="description" content="Manage your saved travel itineraries, explore wishlisted destinations, customize travel preferences, and plan custom journeys.">
     <!-- Google Fonts: Cormorant Garamond & DM Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,8 +21,18 @@
     <meta name="theme-color" content="#11110F">
     <!-- Theme Switcher -->
     <script src="js/theme.js"></script>
+    <!-- Immediate Authentication Guard to prevent any flashing of protected content -->
+    <script>
+        (function() {
+            var token = localStorage.getItem('tourist_jwt_token');
+            if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+                var current = window.location.pathname.split('/').pop() || 'dashboard.html';
+                window.location.replace('login.html?redirect=' + encodeURIComponent(current + window.location.search));
+            }
+        })();
+    </script>
 </head>
-<body style="background:var(--bg-dark);">
+<body style="background:var(--bg-dark);" data-requires-auth="true">
 
     <!-- NAVBAR -->
     <nav class="navbar" id="dashNavbar">
@@ -33,104 +44,392 @@
             </a>
 
             <div class="nav-links" id="navAuthLinks">
+                <!-- Dynamically populated by Auth.updateNavbar() -->
                 <a href="index.html" class="nav-link" data-i18n="nav_home">Home</a>
                 <a href="destinations.html" class="nav-link" data-i18n="nav_destinations">Destinations</a>
                 <a href="planner.html" class="nav-link" data-i18n="nav_planner">Plan Trip</a>
                 <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Chat</span></a>
-
-                <!-- Language Selector -->
-                <button type="button" class="lang-selector-trigger" id="langSelectorBtn" title="Change Language">
-                    <span class="lang-selector-flag" id="currentLangFlag">🌐</span>
-                    <span id="currentLangLabel">Language</span>
-                    <i class="fas fa-chevron-down" style="font-size:10px; opacity:0.7;"></i>
-                </button>
-                
-                <!-- Theme Toggle Button -->
-                <button type="button" class="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
-                    <i class="fas fa-sun"></i>
-                </button>
+                <a href="dashboard.html" class="nav-link active"><i class="fas fa-compass" style="color:var(--accent-gold);"></i> <span>Dashboard</span></a>
             </div>
         </div>
     </nav>
 
-    <!-- DASHBOARD LAYOUT (Screen 6 Mockup) -->
-    <div class="dashboard-layout">
+    <!-- MAIN DASHBOARD APPLICATION CONTAINER -->
+    <div class="dashboard-layout" id="dashboardLayoutApp" style="display:none;">
         
-        <!-- Sidebar Menu (Screen 6 Mockup) -->
+        <!-- SIDEBAR NAVIGATION -->
         <aside class="dashboard-sidebar">
             <ul class="dash-menu-list">
-                <li class="dash-menu-item" onclick="switchDashboardView('overview')">
-                    <i class="fas fa-chart-pie"></i> Dashboard
+                <li class="dash-menu-item active" id="tabNavOverview" onclick="switchDashboardView('overview')">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Overview</span>
                 </li>
-                <li class="dash-menu-item active" id="menuMyTrips" onclick="switchDashboardView('trips')">
-                    <i class="fas fa-suitcase-rolling"></i> My Trips
+                <li class="dash-menu-item" id="tabNavTrips" onclick="switchDashboardView('trips')">
+                    <i class="fas fa-suitcase-rolling"></i>
+                    <span>My Trips</span>
+                    <span class="badge-count" id="badgeTripsCount">0</span>
                 </li>
-                <li class="dash-menu-item" id="menuSavedPlaces" onclick="switchDashboardView('places')">
-                    <i class="fas fa-heart"></i> Saved Places
+                <li class="dash-menu-item" id="tabNavPlaces" onclick="switchDashboardView('places')">
+                    <i class="fas fa-heart"></i>
+                    <span>Saved Places</span>
+                    <span class="badge-count" id="badgePlacesCount">0</span>
                 </li>
-                <li class="dash-menu-item" id="menuProfileSettings" onclick="switchDashboardView('profile')">
-                    <i class="fas fa-user-gear"></i> Profile Settings
+                <li class="dash-menu-item" id="tabNavProfile" onclick="switchDashboardView('profile')">
+                    <i class="fas fa-user-gear"></i>
+                    <span>Profile &amp; Settings</span>
                 </li>
             </ul>
 
+            <!-- Sidebar User Card Widget -->
             <div class="dash-user-profile-widget">
                 <div class="dash-user-avatar" id="dashUserAvatar"><i class="fas fa-user"></i></div>
-                <div style="flex:1; overflow:hidden;">
-                    <h5 class="dash-user-name" id="dashUserName">Traveler</h5>
+                <div style="flex:1; min-width:0;">
+                    <div class="dash-user-name" id="dashUserName">Traveler</div>
                     <span class="dash-user-email" id="dashUserEmail">user@example.com</span>
                 </div>
-                <button class="btn btn-outline btn-sm" onclick="Auth.logout()" title="Logout" style="padding:6px 10px; border-color:var(--border);">
+                <button type="button" class="btn btn-outline btn-sm" onclick="Auth.logout()" title="Sign Out" style="padding:6px 10px; border-color:var(--border);">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
             </div>
         </aside>
 
-        <!-- Main Dashboard Content -->
-        <main class="dashboard-content-area">
+        <!-- MAIN DASHBOARD CONTENT AREA -->
+        <main class="dashboard-main">
             
-            <!-- Trips Header & Filter Tabs (Screen 6 Mockup) -->
-            <div class="dash-page-header">
-                <div>
-                    <h2>My Saved Itineraries</h2>
-                    <p>Manage, review, and export your AI-crafted journeys</p>
+            <!-- Mobile Responsive Tab Bar (Visible on mobile/tablet screens <= 768px) -->
+            <div class="dash-mobile-tabs" id="dashMobileTabs">
+                <button type="button" class="dash-mobile-tab-btn active" id="mobTabOverview" onclick="switchDashboardView('overview')">
+                    <i class="fas fa-chart-pie"></i> Overview
+                </button>
+                <button type="button" class="dash-mobile-tab-btn" id="mobTabTrips" onclick="switchDashboardView('trips')">
+                    <i class="fas fa-suitcase-rolling"></i> Trips (<span id="mobBadgeTrips">0</span>)
+                </button>
+                <button type="button" class="dash-mobile-tab-btn" id="mobTabPlaces" onclick="switchDashboardView('places')">
+                    <i class="fas fa-heart"></i> Places (<span id="mobBadgePlaces">0</span>)
+                </button>
+                <button type="button" class="dash-mobile-tab-btn" id="mobTabProfile" onclick="switchDashboardView('profile')">
+                    <i class="fas fa-user-gear"></i> Settings
+                </button>
+            </div>
+
+            <!-- ========================================================
+                 VIEW 1: OVERVIEW DASHBOARD
+                 ======================================================== -->
+            <section id="viewOverview" class="dash-tab-section active">
+                
+                <!-- Welcome Banner Card -->
+                <div class="dash-welcome-card">
+                    <div class="dash-welcome-texts">
+                        <h2>Welcome back, <span id="dashGreetingName">Traveler</span>!</h2>
+                        <p>Your personalized AI travel hub. Plan new journeys, manage saved day-by-day itineraries, track your dream destinations, and consult your Google Gemini AI travel concierge.</p>
+                    </div>
+                    <div class="dash-welcome-actions">
+                        <a href="planner.html" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> Plan New Trip
+                        </a>
+                        <a href="chatbot.html" class="btn btn-outline btn-sm" style="color:var(--accent-gold); border-color:var(--accent-gold);">
+                            <i class="fas fa-sparkles"></i> AI Assistant
+                        </a>
+                    </div>
                 </div>
-                <a href="planner.html" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus"></i> Plan New Trip
-                </a>
-            </div>
 
-            <!-- Tab Pills (Screen 6 Mockup) -->
-            <div class="trip-filter-tabs">
-                <button class="trip-tab-pill active" onclick="filterTripsByStatus('all', this)">All Trips</button>
-                <button class="trip-tab-pill" onclick="filterTripsByStatus('upcoming', this)">Upcoming</button>
-                <button class="trip-tab-pill" onclick="filterTripsByStatus('past', this)">Past</button>
-            </div>
+                <!-- Live Metrics Overview (Real Data Only, No Fabrication) -->
+                <div class="dash-stats-grid">
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon"><i class="fas fa-suitcase-rolling"></i></div>
+                        <div>
+                            <div class="dash-stat-value" id="statTotalTrips">0</div>
+                            <div class="dash-stat-label">Total Saved Trips</div>
+                        </div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon"><i class="fas fa-plane-departure"></i></div>
+                        <div>
+                            <div class="dash-stat-value" id="statUpcomingTrips">0</div>
+                            <div class="dash-stat-label">Upcoming Journeys</div>
+                        </div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon"><i class="fas fa-heart"></i></div>
+                        <div>
+                            <div class="dash-stat-value" id="statSavedPlaces">0</div>
+                            <div class="dash-stat-label">Saved Wishlist Places</div>
+                        </div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon"><i class="fas fa-calendar-days"></i></div>
+                        <div>
+                            <div class="dash-stat-value" id="statTotalDays">0</div>
+                            <div class="dash-stat-label">Planned Travel Days</div>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- Trips Grid (Screen 6 Mockup) -->
-            <div class="trips-cards-grid" id="tripsCardsGrid">
-                <!-- Dynamically populated -->
-            </div>
+                <!-- Quick Actions Grid -->
+                <div style="margin-bottom:18px;">
+                    <h3 style="font-size:19px; font-weight:700; color:var(--text-main); margin-bottom:4px;">Quick Actions</h3>
+                    <p style="font-size:13.5px; color:var(--text-muted); margin-bottom:16px;">Jump straight into planning, AI consultations, or destination discovery.</p>
+                </div>
+                
+                <div class="dash-quick-grid">
+                    <div class="dash-quick-card" onclick="window.location.href='planner.html'">
+                        <div>
+                            <div class="dash-quick-card-icon"><i class="fas fa-calendar-check"></i></div>
+                            <h4>Plan a New Trip</h4>
+                            <p>Generate bespoke day-wise itineraries with budgets, transportation, and daily activities.</p>
+                        </div>
+                        <div class="dash-quick-card-action">Launch Planner <i class="fas fa-arrow-right"></i></div>
+                    </div>
 
-            <!-- Empty State -->
-            <div id="noTripsState" style="display:none; text-align:center; padding:60px 20px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); margin-top:20px;">
-                <div class="logo-badge" style="margin:0 auto 16px; width:52px; height:52px; font-size:24px;"><i class="fas fa-suitcase-rolling"></i></div>
-                <h3 style="font-family:var(--font-display); font-size:22px; color:var(--text-main); margin-bottom:8px;">No Saved Trips Yet</h3>
-                <p style="color:var(--text-muted); font-size:14px; max-width:420px; margin:0 auto 20px;">
-                    Generate custom day-wise itineraries in our AI Trip Planner and save them directly to your personal portfolio.
-                </p>
-                <a href="planner.html" class="btn btn-primary btn-sm"><i class="fas fa-sparkles"></i> Plan Your First Trip</a>
-            </div>
+                    <div class="dash-quick-card" onclick="window.location.href='chatbot.html'">
+                        <div>
+                            <div class="dash-quick-card-icon"><i class="fas fa-sparkles"></i></div>
+                            <h4>AI Travel Concierge</h4>
+                            <p>Chat with Google Gemini AI for instant local tips, routes, food recommendations, and packing lists.</p>
+                        </div>
+                        <div class="dash-quick-card-action">Open AI Chat <i class="fas fa-arrow-right"></i></div>
+                    </div>
+
+                    <div class="dash-quick-card" onclick="window.location.href='destinations.html'">
+                        <div>
+                            <div class="dash-quick-card-icon"><i class="fas fa-compass"></i></div>
+                            <h4>Explore Destinations</h4>
+                            <p>Browse worldwide attractions, interactive maps, weather guides, and seasonal highlights.</p>
+                        </div>
+                        <div class="dash-quick-card-action">Discover Places <i class="fas fa-arrow-right"></i></div>
+                    </div>
+
+                    <div class="dash-quick-card" onclick="switchDashboardView('places')">
+                        <div>
+                            <div class="dash-quick-card-icon"><i class="fas fa-bookmark"></i></div>
+                            <h4>View Saved Places</h4>
+                            <p>Access your curated list of bookmarked destinations and travel bucket list.</p>
+                        </div>
+                        <div class="dash-quick-card-action">View Wishlist <i class="fas fa-arrow-right"></i></div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Section -->
+                <div style="margin-top:40px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                        <div>
+                            <h3 style="font-size:19px; font-weight:700; color:var(--text-main);">Recent Travel Itineraries</h3>
+                            <p style="font-size:13.5px; color:var(--text-muted);">Your most recently planned or updated travel journeys.</p>
+                        </div>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="switchDashboardView('trips')">
+                            View All Trips <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <div id="overviewRecentTripsContainer" class="saved-trips-list">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <!-- Overview Empty State if 0 trips -->
+                    <div id="overviewNoTripsState" class="dash-empty-state" style="display:none;">
+                        <div class="dash-empty-icon"><i class="fas fa-suitcase-rolling"></i></div>
+                        <h3>No Saved Trips Yet</h3>
+                        <p>You haven't generated or saved any trip itineraries yet. Create your first custom journey with our AI Trip Planner in seconds!</p>
+                        <a href="planner.html" class="btn btn-primary btn-sm"><i class="fas fa-sparkles"></i> Plan Your First Trip</a>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 VIEW 2: MY TRIPS (SAVED ITINERARIES)
+                 ======================================================== -->
+            <section id="viewMyTrips" class="dash-tab-section">
+                
+                <div class="dash-page-header">
+                    <div>
+                        <h2>My Saved Itineraries</h2>
+                        <p>Manage, review, export, and explore all your custom AI-crafted travel plans.</p>
+                    </div>
+                    <a href="planner.html" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Plan New Trip
+                    </a>
+                </div>
+
+                <!-- Trip Filter Tabs -->
+                <div class="trip-filter-tabs">
+                    <button type="button" class="trip-tab-pill active" id="filterBtnAll" onclick="filterTripsByStatus('all', this)">
+                        All Trips (<span id="countFilterAll">0</span>)
+                    </button>
+                    <button type="button" class="trip-tab-pill" id="filterBtnUpcoming" onclick="filterTripsByStatus('upcoming', this)">
+                        Upcoming (<span id="countFilterUpcoming">0</span>)
+                    </button>
+                    <button type="button" class="trip-tab-pill" id="filterBtnPast" onclick="filterTripsByStatus('past', this)">
+                        Past / Completed (<span id="countFilterPast">0</span>)
+                    </button>
+                </div>
+
+                <!-- Trip Cards List Container -->
+                <div class="saved-trips-list" id="tripsCardsList">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Empty State for My Trips -->
+                <div id="tripsEmptyState" class="dash-empty-state" style="display:none;">
+                    <div class="dash-empty-icon"><i class="fas fa-map-location-dot"></i></div>
+                    <h3 id="tripsEmptyTitle">No Trips Found</h3>
+                    <p id="tripsEmptyText">Ready to create an unforgettable travel experience? Generate a customized day-by-day plan with transport, stays, and activities.</p>
+                    <a href="planner.html" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Plan Your First Trip</a>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 VIEW 3: SAVED PLACES (FAVORITES / WISHLIST)
+                 ======================================================== -->
+            <section id="viewSavedPlaces" class="dash-tab-section">
+                
+                <div class="dash-page-header">
+                    <div>
+                        <h2>Saved Places &amp; Wishlist</h2>
+                        <p>Worldwide destinations, cultural landmarks, and hidden gems bookmarked for your future travels.</p>
+                    </div>
+                    <a href="destinations.html" class="btn btn-outline btn-sm">
+                        <i class="fas fa-compass"></i> Explore More Destinations
+                    </a>
+                </div>
+
+                <!-- Favorites Grid Container -->
+                <div class="favorites-grid" id="favoritesCardsGrid">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Empty State for Saved Places -->
+                <div id="favoritesEmptyState" class="dash-empty-state" style="display:none;">
+                    <div class="dash-empty-icon"><i class="fas fa-heart"></i></div>
+                    <h3>No Saved Places Yet</h3>
+                    <p>Browse our worldwide destination guides and click the heart icon on any landmark to bookmark it here for easy reference.</p>
+                    <a href="destinations.html" class="btn btn-primary btn-sm"><i class="fas fa-compass"></i> Browse Destinations</a>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 VIEW 4: PROFILE & ACCOUNT SETTINGS
+                 ======================================================== -->
+            <section id="viewProfile" class="dash-tab-section">
+                
+                <div class="dash-page-header">
+                    <div>
+                        <h2>Profile &amp; Account Settings</h2>
+                        <p>Update your personal details, travel preferences, and password security.</p>
+                    </div>
+                </div>
+
+                <div class="dash-profile-grid">
+                    
+                    <!-- Edit Profile Card -->
+                    <div class="dash-form-card">
+                        <h3><i class="fas fa-user-circle" style="color:var(--accent-gold);"></i> Personal Information</h3>
+                        <p>Update your display name, contact information, and travel style bio.</p>
+
+                        <div id="profileAlert" style="display:none; padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:18px;"></div>
+
+                        <form id="profileForm" onsubmit="saveUserProfile(event)">
+                            <div class="form-field">
+                                <label for="profUsername"><i class="fas fa-at"></i> Username (Permanent)</label>
+                                <input type="text" id="profUsername" class="form-input" readonly>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="profFullName"><i class="fas fa-user"></i> Full Name</label>
+                                <input type="text" id="profFullName" class="form-input" placeholder="e.g. Alexandra Smith" required>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="profEmail"><i class="fas fa-envelope"></i> Email Address</label>
+                                <input type="email" id="profEmail" class="form-input" placeholder="user@example.com" readonly>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="profPhone"><i class="fas fa-phone"></i> Contact Phone</label>
+                                <input type="tel" id="profPhone" class="form-input" placeholder="+1 (555) 000-0000">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="profAddress"><i class="fas fa-location-dot"></i> City / Country</label>
+                                <input type="text" id="profAddress" class="form-input" placeholder="e.g. Chennai, India">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="profBio"><i class="fas fa-pen"></i> Bio &amp; Travel Preferences</label>
+                                <textarea id="profBio" class="form-input" rows="3" placeholder="Passionate explorer who loves mountain hikes, heritage architecture, and authentic local street food…"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-sm" id="btnSaveProfile">
+                                <i class="fas fa-check"></i> Save Profile Changes
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Security & Password Change Card -->
+                    <div>
+                        <div class="dash-form-card" style="margin-bottom:24px;">
+                            <h3><i class="fas fa-lock" style="color:var(--accent-gold);"></i> Password &amp; Security</h3>
+                            <p>Update your password to keep your travel account secure.</p>
+
+                            <div id="passwordAlert" style="display:none; padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:18px;"></div>
+
+                            <form id="passwordForm" onsubmit="changeUserPassword(event)">
+                                <div class="form-field">
+                                    <label for="currPassword">Current Password</label>
+                                    <input type="password" id="currPassword" class="form-input" placeholder="••••••••" required>
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="newPassword">New Password (min. 6 characters)</label>
+                                    <input type="password" id="newPassword" class="form-input" placeholder="••••••••" required minlength="6">
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="confirmNewPassword">Confirm New Password</label>
+                                    <input type="password" id="confirmNewPassword" class="form-input" placeholder="••••••••" required minlength="6">
+                                </div>
+
+                                <button type="submit" class="btn btn-outline btn-sm" id="btnChangePassword" style="border-color:var(--accent-gold); color:var(--accent-gold);">
+                                    <i class="fas fa-key"></i> Update Password
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Account Summary Card -->
+                        <div class="dash-form-card">
+                            <h3><i class="fas fa-shield-halved" style="color:var(--accent-emerald);"></i> Account Status</h3>
+                            <div style="font-size:13.5px; color:var(--text-muted); line-height:1.8; margin-top:10px;">
+                                <div><strong style="color:var(--text-main);">Role:</strong> <span class="badge-tag badge-upcoming" style="margin-left:6px;" id="accountRoleBadge">Verified Traveler</span></div>
+                                <div style="margin-top:6px;"><strong style="color:var(--text-main);">Authentication:</strong> Stateless Spring Security JWT</div>
+                                <div style="margin-top:6px;"><strong style="color:var(--text-main);">Account Created:</strong> <span id="accountCreatedDate">Active Account</span></div>
+                            </div>
+                            <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:13px; color:var(--text-dim);">Finished your session?</span>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="Auth.logout()" style="color:var(--accent-rose); border-color:rgba(244,63,94,0.3);">
+                                    <i class="fas fa-sign-out-alt"></i> Sign Out
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
 
         </main>
     </div>
 
     <!-- TRIP DETAIL MODAL -->
-    <div id="tripDetailModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:2000; align-items:center; justify-content:center; padding:20px;">
-        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); max-width:720px; width:100%; max-height:85vh; overflow-y:auto; padding:32px; position:relative; box-shadow:var(--shadow-lg);">
-            <button onclick="closeTripModal()" style="position:absolute; top:20px; right:20px; background:transparent; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">
+    <div id="tripDetailModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:2000; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); max-width:760px; width:100%; max-height:88vh; overflow-y:auto; padding:32px 36px; position:relative; box-shadow:var(--shadow-lg);">
+            <button type="button" onclick="closeTripModal()" title="Close details" style="position:absolute; top:20px; right:20px; background:transparent; border:none; color:var(--text-muted); font-size:22px; cursor:pointer; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:var(--transition);">
                 <i class="fas fa-times"></i>
             </button>
-            <div id="modalTripContent"></div>
+            <div id="modalTripContent">
+                <!-- Dynamically filled by openTripModal(id) -->
+            </div>
         </div>
     </div>
 
