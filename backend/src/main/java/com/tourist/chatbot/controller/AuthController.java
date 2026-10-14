@@ -5,7 +5,11 @@ import com.tourist.chatbot.dto.AuthRequest;
 import com.tourist.chatbot.dto.AuthResponse;
 import com.tourist.chatbot.dto.RegisterRequest;
 import com.tourist.chatbot.dto.UserProfileResponse;
+import com.tourist.chatbot.dto.ResetAuthResponse;
+import com.tourist.chatbot.dto.ResetPasswordRequest;
+import com.tourist.chatbot.dto.VerifyResetEmailRequest;
 import com.tourist.chatbot.service.AuthService;
+import com.tourist.chatbot.service.PasswordResetService;
 import com.tourist.chatbot.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +31,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
@@ -52,5 +57,17 @@ public class AuthController {
         }
         UserProfileResponse profile = userService.getProfile(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(profile));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<ResetAuthResponse>> forgotPassword(@Valid @RequestBody VerifyResetEmailRequest request) {
+        ResetAuthResponse response = passwordResetService.verifyAccountAndCreateResetAuth(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success("Account verified. You may now securely set a new password.", response));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Map<String, String>>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully. Please sign in with your new password.", Map.of("status", "success")));
     }
 }
