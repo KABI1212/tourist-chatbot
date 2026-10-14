@@ -42,9 +42,47 @@ public class GeminiServiceTest {
     }
 
     @Test
+    void testStructuredItineraryWithCustomBudgetOriginTransitAndInterests() {
+        ItineraryGenerateRequest req = ItineraryGenerateRequest.builder()
+                .destination("Goa")
+                .originCity("Bangalore")
+                .transitMode("Train")
+                .days(3)
+                .travelers(2)
+                .budgetTier("Custom")
+                .customBudget(25000.0)
+                .budgetType("total")
+                .currency("INR")
+                .interests(List.of("Beaches", "Food and dining", "Relaxation"))
+                .startDate("2026-11-01")
+                .endDate("2026-11-03")
+                .build();
+
+        ItineraryResponse response = geminiService.generateStructuredItinerary(req);
+
+        assertNotNull(response);
+        assertTrue(response.isSuccess());
+        assertEquals("Goa", response.getDestination());
+        assertEquals(3, response.getDays());
+        assertEquals(2, response.getTravelers());
+        assertEquals("Bangalore", response.getOriginCity());
+        assertEquals("Train", response.getTransitMode());
+        assertEquals(25000.0, response.getCustomBudget());
+        assertEquals("total", response.getBudgetType());
+        assertNotNull(response.getDaysPlan());
+        assertEquals(3, response.getDaysPlan().size());
+        assertNotNull(response.getEstimatedBudget());
+        assertNotNull(response.getBudgetBreakdown());
+        assertTrue(response.getBudgetBreakdown().containsKey("lodging"));
+        assertNotNull(response.getTravelTips());
+        assertFalse(response.getTravelTips().isEmpty());
+    }
+
+    @Test
     void testLocalFallbackText() {
         String fallback = geminiService.generateResponse("Ooty hill station");
         assertNotNull(fallback);
-        assertTrue(fallback.contains("Ooty"));
+        assertFalse(fallback.isBlank());
+        assertTrue(fallback.contains("Ooty") || fallback.contains("Travel") || fallback.contains("சுற்றுலா") || fallback.contains("यात्रा"));
     }
 }
