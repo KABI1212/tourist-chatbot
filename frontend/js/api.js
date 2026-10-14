@@ -97,15 +97,18 @@ var Api = window.Api || {
             const response = await fetch(url, config);
 
             // Handle token expiration for protected endpoints only
-            const protectedEndpoints = ['/trips', '/favorites', '/users', '/chat/history', '/chat/clear'];
+            const protectedEndpoints = ['/trips', '/favorites', '/users', '/chat/history', '/chat/clear', '/auth/me'];
             const isProtected = protectedEndpoints.some(p => endpoint.includes(p));
 
             if ((response.status === 401 || response.status === 403) && isProtected && this.getToken()) {
                 console.warn(`Session expired or unauthorized on protected endpoint: ${endpoint}`);
                 this.setToken(null);
                 localStorage.removeItem('tourist_user');
+                if (typeof window.Auth !== 'undefined' && window.Auth.updateNavbar) {
+                    window.Auth.updateNavbar();
+                }
                 if (window.location.pathname.includes('dashboard.html')) {
-                    window.location.href = `login.html?expired=true&redirect=dashboard.html`;
+                    window.location.replace('login.html?expired=true&redirect=dashboard.html');
                 }
             }
 
