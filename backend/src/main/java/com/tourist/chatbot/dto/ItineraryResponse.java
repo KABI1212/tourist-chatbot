@@ -26,9 +26,17 @@ public class ItineraryResponse {
 
     private String budgetTier;
 
+    private Double customBudget;
+
+    private String budgetType;
+
     private String estimatedBudget;
 
     private String currency;
+
+    private String originCity;
+
+    private String transitMode;
 
     private String imageUrl;
 
