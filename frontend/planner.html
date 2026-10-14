@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +8,14 @@
     <!-- Google Fonts: Cormorant Garamond & DM Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap"
+        rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Leaflet CSS for Interactive OpenStreetMap Route -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/chatbot.css">
     <!-- Favicon & Web App Manifest -->
@@ -23,6 +27,7 @@
     <!-- Theme Switcher -->
     <script src="js/theme.js"></script>
 </head>
+
 <body>
 
     <!-- NAVBAR -->
@@ -30,7 +35,8 @@
         <div class="nav-inner">
             <a href="index.html" class="nav-logo">
                 <img src="assets/brand/logo-dark.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-dark">
-                <img src="assets/brand/logo-light.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-light">
+                <img src="assets/brand/logo-light.png" alt="Tourist Chatbot Logo"
+                    class="brand-logo-img brand-logo-light">
                 <span>TouristAI</span>
             </a>
 
@@ -38,7 +44,8 @@
                 <a href="index.html" class="nav-link" data-i18n="nav_home">Home</a>
                 <a href="destinations.html" class="nav-link" data-i18n="nav_destinations">Destinations</a>
                 <a href="planner.html" class="nav-link active" data-i18n="nav_planner">Plan Trip</a>
-                <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Chat</span></a>
+                <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles"
+                        style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Chat</span></a>
 
                 <!-- Language Selector -->
                 <button type="button" class="lang-selector-trigger" id="langSelectorBtn" title="Change Language">
@@ -46,7 +53,7 @@
                     <span id="currentLangLabel">Language</span>
                     <i class="fas fa-chevron-down" style="font-size:10px; opacity:0.7;"></i>
                 </button>
-                
+
                 <!-- Theme Toggle Button -->
                 <button type="button" class="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
                     <i class="fas fa-sun"></i>
@@ -57,11 +64,12 @@
 
     <!-- PLANNER MAIN WRAPPER (Screen 4 & 5 Mockup) -->
     <div class="planner-page-container">
-        
+
         <div class="planner-layout-split">
-            <!-- Left Stepper (Screen 4 Mockup) -->
-            <aside class="planner-stepper">
-                <div class="stepper-item active" id="stepIndicator1">
+            <!-- Left Stepper (Screen 4 & 5 Mockup) -->
+            <aside class="planner-stepper" id="plannerStepper">
+                <div class="stepper-item active" id="stepIndicator1" onclick="goToStep(1)" role="button" tabindex="0"
+                    title="Go to Step 1: Trip Details">
                     <div class="stepper-circle">1</div>
                     <div class="stepper-text">
                         <h4>Trip Details</h4>
@@ -69,7 +77,8 @@
                     </div>
                 </div>
 
-                <div class="stepper-item" id="stepIndicator2">
+                <div class="stepper-item" id="stepIndicator2" onclick="goToStep(2)" role="button" tabindex="0"
+                    title="Go to Step 2: Travel Style & Budget">
                     <div class="stepper-circle">2</div>
                     <div class="stepper-text">
                         <h4>Travel Style</h4>
@@ -77,7 +86,8 @@
                     </div>
                 </div>
 
-                <div class="stepper-item" id="stepIndicator3">
+                <div class="stepper-item" id="stepIndicator3" onclick="goToStep(3)" role="button" tabindex="0"
+                    title="Go to Step 3: AI Itinerary">
                     <div class="stepper-circle">3</div>
                     <div class="stepper-text">
                         <h4>AI Itinerary</h4>
@@ -85,7 +95,8 @@
                     </div>
                 </div>
 
-                <div class="stepper-item" id="stepIndicator4">
+                <div class="stepper-item" id="stepIndicator4" onclick="goToStep(4)" role="button" tabindex="0"
+                    title="Go to Step 4: Save & Export">
                     <div class="stepper-circle">4</div>
                     <div class="stepper-text">
                         <h4>Save &amp; Export</h4>
@@ -94,127 +105,356 @@
                 </div>
             </aside>
 
-            <!-- Right: Plan Your Trip Form (Screen 4 Mockup) -->
+            <!-- Right: Plan Your Trip Form Card -->
             <main class="planner-form-card" id="plannerFormCard">
-                <h2 style="font-family:var(--font-display); font-size:28px; color:var(--text-main); margin-bottom:8px;">Plan Your Trip</h2>
-                <p style="color:var(--text-muted); font-size:14px; margin-bottom:24px;">Configure your journey parameters and let Gemini AI create a bespoke day-by-day travel plan.</p>
+                <div
+                    style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:8px;">
+                    <div>
+                        <h2
+                            style="font-family:var(--font-display); font-size:28px; color:var(--text-main); margin-bottom:4px;">
+                            Plan Your Trip</h2>
+                        <p style="color:var(--text-muted); font-size:14px;">Configure your journey parameters and let
+                            Gemini AI synthesize a personalized travel plan.</p>
+                    </div>
+                    <div id="plannerStepBadge"
+                        style="background:rgba(197,164,109,0.15); color:var(--accent-gold); border:1px solid rgba(197,164,109,0.3); padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">
+                        Step 1 of 2: Trip Details
+                    </div>
+                </div>
 
-                <form id="tripPlannerForm" onsubmit="generateItinerary(event)">
-                    <!-- Destination & Dates -->
-                    <div class="form-grid-2">
-                        <div class="form-field" style="position:relative;">
-                            <label for="tripDestination">Destination *</label>
-                            <input type="text" class="form-input" id="tripDestination" placeholder="e.g. Ooty, Manali, Goa, Paris" value="Ooty, Tamil Nadu" autocomplete="off" required>
-                            <div id="plannerAutocompleteDropdown" class="global-autocomplete-dropdown" style="display:none;"></div>
-                        </div>
+                <!-- Stale Parameters Alert (Visible if parameters are changed after generation) -->
+                <div class="stale-param-alert" id="staleParamAlert" style="display:none;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-rotate" style="font-size:16px;"></i>
+                        <span>Trip parameters modified. Click <strong>Regenerate Itinerary</strong> to apply
+                            changes.</span>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="generateItinerary(event)"
+                        style="padding:6px 14px; font-size:12px;">
+                        <i class="fas fa-sparkles"></i> Regenerate
+                    </button>
+                </div>
 
-                        <div class="form-field">
-                            <label>Travel Dates *</label>
-                            <div style="display:flex; gap:10px;">
-                                <input type="date" class="form-input" id="tripStartDate" style="flex:1;" required>
-                                <input type="date" class="form-input" id="tripEndDate" style="flex:1;" required>
+                <form id="tripPlannerForm" onsubmit="generateItinerary(event)" novalidate>
+
+                    <!-- STEP PANEL 1: TRIP DETAILS -->
+                    <div class="planner-step-panel active" id="stepPanel1">
+
+                        <!-- Destination & Travel Dates -->
+                        <div class="form-grid-2">
+                            <div class="form-field">
+                                <label for="tripDestination">
+                                    <span>Destination *</span>
+                                    <span style="font-size:11.5px; color:var(--text-dim); font-weight:400;">Worldwide
+                                        searchable</span>
+                                </label>
+                                <div class="input-clear-wrapper" style="position:relative;">
+                                    <input type="text" class="form-input" id="tripDestination"
+                                        placeholder="e.g. Ooty, Manali, Goa, Paris, Tokyo" value="Ooty, Tamil Nadu"
+                                        autocomplete="off" required>
+                                    <button type="button" class="btn-input-clear" id="btnClearDestination"
+                                        onclick="clearField('tripDestination')" title="Clear destination">
+                                        <i class="fas fa-xmark"></i>
+                                    </button>
+                                    <div id="plannerAutocompleteDropdown" class="global-autocomplete-dropdown"
+                                        style="display:none;"></div>
+                                </div>
+                                <div class="field-validation-msg" id="valMsgDestination" style="display:none;">
+                                    <i class="fas fa-circle-exclamation"></i> Please enter a valid destination city or
+                                    region.
+                                </div>
+                            </div>
+
+                            <div class="form-field">
+                                <label>
+                                    <span>Travel Dates *</span>
+                                    <span class="duration-badge" id="tripDurationBadge"><i
+                                            class="fas fa-calendar-days"></i> <span id="durationText">5 Days / 4
+                                            Nights</span></span>
+                                </label>
+                                <div style="display:flex; gap:10px;">
+                                    <div style="flex:1;">
+                                        <input type="date" class="form-input" id="tripStartDate" title="Start date"
+                                            required>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <input type="date" class="form-input" id="tripEndDate" title="End date"
+                                            required>
+                                    </div>
+                                </div>
+                                <div class="field-validation-msg" id="valMsgDates" style="display:none;">
+                                    <i class="fas fa-circle-exclamation"></i> End date must be the same as or after
+                                    start date.
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Number of Travelers & Budget -->
-                    <div class="form-grid-2">
-                        <div class="form-field">
-                            <label for="tripTravelers">Number of Travelers</label>
-                            <select class="form-select" id="tripTravelers">
-                                <option value="1">1 Solo Traveler</option>
-                                <option value="2" selected>2 Travelers (Couple / Friends)</option>
-                                <option value="3">3 Friends</option>
-                                <option value="4">4 Family Members</option>
-                                <option value="6">6+ Group Travelers</option>
-                            </select>
+                        <!-- Number of Travelers & Starting City -->
+                        <div class="form-grid-2">
+                            <div class="form-field">
+                                <label for="tripTravelers">Number of Travelers</label>
+                                <select class="form-select" id="tripTravelers">
+                                    <option value="1">1 Solo Traveler</option>
+                                    <option value="2" selected>2 Travelers (Couple / Duo)</option>
+                                    <option value="3">3 Travelers (Small Group / Friends)</option>
+                                    <option value="4">4 Travelers (Family / Friends)</option>
+                                    <option value="5">5 Travelers (Family / Group)</option>
+                                    <option value="6">6+ Large Group</option>
+                                    <option value="custom">Custom count…</option>
+                                </select>
+                                <div id="customTravelersWrapper" style="display:none; margin-top:8px;">
+                                    <input type="number" class="form-input" id="tripCustomTravelers" min="1" max="50"
+                                        placeholder="Enter number of travelers (e.g. 8)">
+                                </div>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="tripOriginCity">
+                                    <span>Starting City (Optional)</span>
+                                    <span style="font-size:11.5px; color:var(--text-dim); font-weight:400;">For transit
+                                        routing</span>
+                                </label>
+                                <div class="input-clear-wrapper" style="position:relative;">
+                                    <input type="text" class="form-input" id="tripOriginCity"
+                                        placeholder="e.g. Chennai, Bangalore, Mumbai, London" autocomplete="off">
+                                    <button type="button" class="btn-input-clear" id="btnClearOrigin"
+                                        onclick="clearField('tripOriginCity')" title="Clear starting city"
+                                        style="display:none;">
+                                        <i class="fas fa-xmark"></i>
+                                    </button>
+                                    <div id="originAutocompleteDropdown" class="global-autocomplete-dropdown"
+                                        style="display:none;"></div>
+                                </div>
+                            </div>
                         </div>
 
+                        <!-- Preferred Transit Mode -->
                         <div class="form-field">
-                            <label for="tripBudget">Budget Comfort Tier</label>
-                            <select class="form-select" id="tripBudget">
-                                <option value="Budget">Budget Economy (₹5K - ₹10K per person)</option>
-                                <option value="Moderate" selected>Moderate Comfort (₹10K - ₹25K per person)</option>
-                                <option value="Luxury">Luxury Premium (₹25K+ per person)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Starting City (Optional) -->
-                    <div class="form-grid-2">
-                        <div class="form-field">
-                            <label for="tripOriginCity">Starting City (Optional)</label>
-                            <input type="text" class="form-input" id="tripOriginCity" placeholder="e.g. Chennai, Bangalore, Mumbai, Delhi">
-                        </div>
-
-                        <div class="form-field">
-                            <label for="tripTransitPref">Preferred Transit Mode</label>
+                            <label for="tripTransitPref">Preferred Transport Mode</label>
                             <select class="form-select" id="tripTransitPref">
-                                <option value="Any">Fastest &amp; Convenient (Mixed)</option>
-                                <option value="Train">Scenic Train / Railways</option>
+                                <option value="Mixed" selected>Fastest &amp; Convenient (Mixed Transit)</option>
+                                <option value="No preference">No preference</option>
                                 <option value="Flight">Flight &amp; Airport Transfer</option>
-                                <option value="Road">Road Trip / Volvo Bus</option>
+                                <option value="Train">Scenic Train / Railways</option>
+                                <option value="Bus">Intercity Bus / Volvo Express</option>
+                                <option value="Car or taxi">Private Car / Taxi / Road Trip</option>
+                                <option value="Public transport">Public Transport (Metro, Local Bus &amp; Transit)
+                                </option>
                             </select>
                         </div>
-                    </div>
 
-                    <!-- Your Interests (Screen 4 Mockup) -->
-                    <div class="form-field" style="margin-top:6px;">
-                        <label>Travel Interests &amp; Preferred Activities</label>
-                        <div class="interests-grid" id="interestsContainer">
-                            <div class="interest-card selected" onclick="toggleInterest(this, 'Sightseeing')">
-                                <i class="fas fa-landmark"></i>
-                                <span>Sightseeing</span>
-                            </div>
-                            <div class="interest-card selected" onclick="toggleInterest(this, 'Adventure')">
-                                <i class="fas fa-hiking"></i>
-                                <span>Adventure</span>
-                            </div>
-                            <div class="interest-card" onclick="toggleInterest(this, 'Food')">
-                                <i class="fas fa-utensils"></i>
-                                <span>Food &amp; Dining</span>
-                            </div>
-                            <div class="interest-card selected" onclick="toggleInterest(this, 'Nature')">
-                                <i class="fas fa-leaf"></i>
-                                <span>Nature &amp; Lakes</span>
-                            </div>
-                            <div class="interest-card" onclick="toggleInterest(this, 'Shopping')">
-                                <i class="fas fa-bag-shopping"></i>
-                                <span>Shopping</span>
-                            </div>
-                            <div class="interest-card" onclick="toggleInterest(this, 'Spiritual')">
-                                <i class="fas fa-om"></i>
-                                <span>Spiritual</span>
-                            </div>
+                        <!-- Step 1 Footer -->
+                        <div class="step-nav-footer">
+                            <span style="font-size:12.5px; color:var(--text-dim);">All parameters remain fully editable
+                                anytime.</span>
+                            <button type="button" class="btn btn-primary" onclick="goToStep(2)">
+                                Continue to Travel Style &amp; Budget <i class="fas fa-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Generate Button -->
-                    <div style="margin-top:28px; text-align:right;">
-                        <button type="submit" class="btn btn-primary" id="btnGenerateTrip" style="padding:14px 34px; font-size:16px;">
-                            <i class="fas fa-sparkles"></i> Generate Itinerary ✨
-                        </button>
+                    <!-- STEP PANEL 2: TRAVEL STYLE & BUDGET -->
+                    <div class="planner-step-panel" id="stepPanel2">
+
+                        <!-- Budget Comfort Tier & Custom Budget -->
+                        <div class="form-field">
+                            <label for="tripBudget">
+                                <span>Budget Comfort Tier</span>
+                                <span style="font-size:11.5px; color:var(--accent-gold); font-weight:600;"
+                                    id="currentBudgetBadge">Moderate Comfort</span>
+                            </label>
+                            <select class="form-select" id="tripBudget">
+                                <option value="Budget">Budget Economy (₹5,000 - ₹10,000 / $60 - $120 per person)
+                                </option>
+                                <option value="Moderate" selected>Moderate Comfort (₹10,000 - ₹25,000 / $120 - $300 per
+                                    person)</option>
+                                <option value="Premium">Premium Comfort (₹25,000 - ₹50,000 / $300 - $600 per person)
+                                </option>
+                                <option value="Luxury">Luxury Premium &amp; Heritage (₹50,000+ / $600+ per person)
+                                </option>
+                                <option value="Custom">Custom Exact Budget…</option>
+                            </select>
+
+                            <!-- Custom Budget Card -->
+                            <div class="custom-budget-card" id="customBudgetSection" style="display:none;">
+                                <span
+                                    style="font-size:12px; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:10px;">
+                                    <i class="fas fa-wallet" style="color:var(--accent-gold);"></i> Custom Budget
+                                    Constraint
+                                </span>
+                                <div class="custom-budget-grid">
+                                    <div>
+                                        <select class="form-select" id="tripCustomCurrency" title="Select currency">
+                                            <option value="INR" selected>INR (₹)</option>
+                                            <option value="USD">USD ($)</option>
+                                            <option value="EUR">EUR (€)</option>
+                                            <option value="GBP">GBP (£)</option>
+                                            <option value="AUD">AUD (A$)</option>
+                                            <option value="CAD">CAD (C$)</option>
+                                            <option value="AED">AED (AED)</option>
+                                            <option value="SGD">SGD (S$)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <input type="number" class="form-input" id="tripCustomBudgetAmount" min="500"
+                                            step="500" placeholder="e.g. 35000">
+                                    </div>
+                                    <div>
+                                        <div class="budget-toggle-group">
+                                            <button type="button" class="budget-toggle-btn active"
+                                                id="btnBudgetPerPerson" onclick="setBudgetType('per_person')">Per
+                                                Person</button>
+                                            <button type="button" class="budget-toggle-btn" id="btnBudgetTotal"
+                                                onclick="setBudgetType('total')">Total Trip</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="custom-budget-preview" id="customBudgetPreview">
+                                    <i class="fas fa-coins"></i> <span>Enter an amount to guide real-time itinerary
+                                        allocation.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Travel Interests (All 12 independently selectable & deselectable cards) -->
+                        <div class="form-field" style="margin-top:6px;">
+                            <label>
+                                <span>Travel Interests &amp; Preferred Activities</span>
+                                <span style="font-size:12px; color:var(--accent-gold); font-weight:600;"
+                                    id="interestsCountBadge">3 selected</span>
+                            </label>
+                            <div class="interests-grid" id="interestsContainer">
+                                <div class="interest-card selected" onclick="toggleInterest(this, 'Sightseeing')"
+                                    role="checkbox" aria-checked="true" tabindex="0">
+                                    <i class="fas fa-check-circle interest-check-indicator"></i>
+                                    <i class="fas fa-landmark"></i>
+                                    <span>Sightseeing</span>
+                                </div>
+                                <div class="interest-card selected" onclick="toggleInterest(this, 'Adventure')"
+                                    role="checkbox" aria-checked="true" tabindex="0">
+                                    <i class="fas fa-check-circle interest-check-indicator"></i>
+                                    <i class="fas fa-person-hiking"></i>
+                                    <span>Adventure</span>
+                                </div>
+                                <div class="interest-card" onclick="toggleInterest(this, 'Food and dining')"
+                                    role="checkbox" aria-checked="false" tabindex="0">
+                                    <i class="fas fa-check-circle interest-check-indicator"></i>
+                                    <i class="fas fa-utensils"></i>
+                                    <span>Food &amp; Dining</span>
+                                </div>
+                                <div class="interest-card selected" onclick="toggleInterest(this, 'Nature and lakes')"
+                                    role="checkbox" aria-checked="true" tabindex="0">
+                                    <i class="fas fa-check-circle interest-check-indicator"></i>
+                                    <i class="fas fa-leaf"></i>
+                                    <span>Nature &amp; Lakes</span>
+                                </div>
+                                <div class="interest-card" onclick="toggleInterest(this, 'Shopping')" role="checkbox"
+                                    aria-checked="false" tabindex="0">
+                                    <i class="fas fa-check-circle interest-check-indicator"></i>
+                                    <i class="fas fa-bag-shopping"></i>
+                                    <span>Shopping</span>
+                                </div>
+                                <div class="interest-card"
+                                    onclick="toggleInterest(this, 'Spiritual and cultural experiences')" role="checkbox"
+                                    aria-checked="false" tabindex="0">
+                                    <i class="fas fa-check-circle interest-check-indicator"></i>
+                                    <i class="fas fa-om"></i>
+                                    <span>Spiritual &amp; Cultural</span>
+                                </div>
+                                <div class="interest-card" onclick="toggleInterest(this, 'Historical places')"
+                                    role="checkbox" aria-checked="false" tabindex="0">
+                                    <i class="fas fa-check-circle interest-check-indicator"></i>
+                                    <i class="fas fa-monument"></i>
+                                    <span>Historical Places</span>
+                                </div>
+                                <div class="interest-card" onclick="toggleInterest(this, 'Beaches')" role="checkbox"
+                                    aria-checked="false" tabindex="0">
+                                    <i class="fas fa-check-circle interest-check-indicator"></i>
+                                    <i class="fas fa-umbrella-beach"></i>
+                                    <span>Beaches</span>
+                                </div>
+                                <div class="interest-card" onclick="toggleInterest(this, 'Wildlife')" role="checkbox"
+                                    aria-checked="false" tabindex="0">
+                                    <i class="fas fa-check-circle interest-check-indicator"></i>
+                                    <i class="fas fa-paw"></i>
+                                    <span>Wildlife</span>
+                                </div>
+                                <div class="interest-card" onclick="toggleInterest(this, 'Photography')" role="checkbox"
+                                    aria-checked="false" tabindex="0">
+                                    <i class="fas fa-check-circle interest-check-indicator"></i>
+                                    <i class="fas fa-camera"></i>
+                                    <span>Photography</span>
+                                </div>
+                                <div class="interest-card" onclick="toggleInterest(this, 'Family activities')"
+                                    role="checkbox" aria-checked="false" tabindex="0">
+                                    <i class="fas fa-check-circle interest-check-indicator"></i>
+                                    <i class="fas fa-people-roof"></i>
+                                    <span>Family Activities</span>
+                                </div>
+                                <div class="interest-card" onclick="toggleInterest(this, 'Relaxation')" role="checkbox"
+                                    aria-checked="false" tabindex="0">
+                                    <i class="fas fa-check-circle interest-check-indicator"></i>
+                                    <i class="fas fa-spa"></i>
+                                    <span>Relaxation</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Travel Preferences -->
+                        <div class="form-field" style="margin-top:14px;">
+                            <label for="tripAdditionalNotes">
+                                <span>Additional Travel Preferences &amp; Special Requests (Optional)</span>
+                                <span style="font-size:11.5px; color:var(--text-dim); font-weight:400;">Pace, dietary,
+                                    mobility</span>
+                            </label>
+                            <textarea class="form-textarea" id="tripAdditionalNotes"
+                                placeholder="e.g. Vegetarian dining only, traveling with senior citizens, early riser, pet-friendly recommendations, preference for quiet scenic spots..."></textarea>
+                        </div>
+
+                        <!-- Step 2 Footer Navigation & Submission -->
+                        <div class="step-nav-footer">
+                            <button type="button" class="btn btn-outline" onclick="goToStep(1)">
+                                <i class="fas fa-arrow-left"></i> Back to Trip Details
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="btnGenerateTrip"
+                                style="padding:14px 34px; font-size:16px;">
+                                <i class="fas fa-sparkles"></i> Generate Itinerary ✨
+                            </button>
+                        </div>
                     </div>
                 </form>
             </main>
         </div>
 
-        <!-- SAMPLE ITINERARY OUTPUT (Screen 5 Mockup) -->
+        <!-- ITINERARY OUTPUT SECTION (Screen 5 Mockup) -->
         <section class="itinerary-output-box" id="itineraryOutputSection" style="display:none; margin-top:48px;">
             <div class="itinerary-output-head">
                 <div class="itinerary-head-title">
                     <h2 id="outItineraryTitle">Your Itinerary</h2>
                     <p id="outItinerarySubtitle">Customised plan</p>
+                    <!-- Parameters Summary Pill Bar -->
+                    <div class="itinerary-params-bar" id="itineraryParamsBar"></div>
                 </div>
 
                 <div class="itinerary-actions">
-                    <button type="button" class="btn btn-outline btn-sm btn-action" onclick="copyItineraryText()" title="Copy to clipboard">
+                    <button type="button" class="btn btn-outline btn-sm btn-action" onclick="goToStep(1)"
+                        title="Modify trip parameters">
+                        <i class="fas fa-pen-to-square"></i> Edit Trip
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm btn-action" onclick="generateItinerary(event)"
+                        id="btnRegenerateAction" title="Regenerate itinerary with current parameters">
+                        <i class="fas fa-rotate"></i> Regenerate
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm btn-action" onclick="copyItineraryText()"
+                        title="Copy to clipboard">
                         <i class="fas fa-copy"></i> Copy
                     </button>
-                    <button type="button" class="btn btn-outline btn-sm btn-action" onclick="exportItineraryPdf()" title="Print or export as PDF">
+                    <button type="button" class="btn btn-outline btn-sm btn-action" onclick="exportItineraryPdf()"
+                        title="Print or export as PDF">
                         <i class="fas fa-file-pdf"></i> Export PDF
                     </button>
-                    <button type="button" class="btn btn-primary btn-sm btn-action" onclick="saveTripToProfile()" id="btnSaveTrip">
+                    <button type="button" class="btn btn-primary btn-sm btn-action" onclick="saveTripToProfile()"
+                        id="btnSaveTrip">
                         <i class="fas fa-bookmark"></i> Save Trip
                     </button>
                 </div>
@@ -224,14 +464,18 @@
             <div class="trip-cost-summary-card" id="integratedCostSummary">
                 <div class="cost-hero-row">
                     <div>
-                        <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">Total Estimated Trip Cost</span>
+                        <span
+                            style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">Total
+                            Estimated Trip Cost</span>
                         <div class="cost-hero-total" id="costHeroTotal">₹24,800</div>
                         <div style="font-size:13px; color:var(--text-muted); margin-top:2px;" id="costHeroSub">
-                            For <span id="costTravelersCount">2</span> travelers • <span id="costDaysCount">5</span> days (<span id="costPerPerson">₹12,400</span> / person)
+                            For <span id="costTravelersCount">2</span> travelers • <span id="costDaysCount">5</span>
+                            days (<span id="costPerPerson">₹12,400</span> / person)
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <span class="badge-tag" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); font-weight:700;">
+                        <span class="badge-tag"
+                            style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); font-weight:700;">
                             <i class="fas fa-check-circle"></i> 10% Emergency Contingency Included
                         </span>
                     </div>
@@ -240,27 +484,33 @@
                 <!-- Complete 6-item Cost Breakdown Grid -->
                 <div class="cost-pill-grid" id="costPillGrid">
                     <div class="cost-pill-item">
-                        <div class="cost-pill-label"><i class="fas fa-plane-departure" style="color:var(--accent-cyan);"></i> Intercity Transit</div>
+                        <div class="cost-pill-label"><i class="fas fa-plane-departure"
+                                style="color:var(--accent-cyan);"></i> Intercity Transit</div>
                         <div class="cost-pill-val" id="pillTransit">₹6,000</div>
                     </div>
                     <div class="cost-pill-item">
-                        <div class="cost-pill-label"><i class="fas fa-taxi" style="color:var(--accent-gold);"></i> Local Transit</div>
+                        <div class="cost-pill-label"><i class="fas fa-taxi" style="color:var(--accent-gold);"></i> Local
+                            Transit</div>
                         <div class="cost-pill-val" id="pillLocalTransit">₹2,800</div>
                     </div>
                     <div class="cost-pill-item">
-                        <div class="cost-pill-label"><i class="fas fa-hotel" style="color:var(--primary-light);"></i> Lodging &amp; Stays</div>
+                        <div class="cost-pill-label"><i class="fas fa-hotel" style="color:var(--primary-light);"></i>
+                            Lodging &amp; Stays</div>
                         <div class="cost-pill-val" id="pillLodging">₹8,500</div>
                     </div>
                     <div class="cost-pill-item">
-                        <div class="cost-pill-label"><i class="fas fa-utensils" style="color:#F59E0B;"></i> Food &amp; Dining</div>
+                        <div class="cost-pill-label"><i class="fas fa-utensils" style="color:#F59E0B;"></i> Food &amp;
+                            Dining</div>
                         <div class="cost-pill-val" id="pillFood">₹4,500</div>
                     </div>
                     <div class="cost-pill-item">
-                        <div class="cost-pill-label"><i class="fas fa-ticket-alt" style="color:var(--accent-emerald);"></i> Sightseeing &amp; Entry</div>
+                        <div class="cost-pill-label"><i class="fas fa-ticket-alt"
+                                style="color:var(--accent-emerald);"></i> Sightseeing &amp; Entry</div>
                         <div class="cost-pill-val" id="pillActivities">₹1,800</div>
                     </div>
                     <div class="cost-pill-item">
-                        <div class="cost-pill-label"><i class="fas fa-shield-halved" style="color:var(--accent-rose);"></i> Emergency Fund (10%)</div>
+                        <div class="cost-pill-label"><i class="fas fa-shield-halved"
+                                style="color:var(--accent-rose);"></i> Emergency Fund (10%)</div>
                         <div class="cost-pill-val" id="pillContingency">₹2,200</div>
                     </div>
                 </div>
@@ -268,13 +518,20 @@
 
             <!-- Interactive Route Map Container (Leaflet.js) -->
             <div style="margin-bottom:32px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-                    <h3 style="font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--text-main);">
-                        <i class="fas fa-map-location-dot" style="color:var(--accent-gold);"></i> Itinerary Route &amp; Stopovers Map
+                <div
+                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                    <h3
+                        style="font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--text-main);">
+                        <i class="fas fa-map-location-dot" style="color:var(--accent-gold);"></i> Itinerary Route &amp;
+                        Stopovers Map
                     </h3>
-                    <span style="font-size:12.5px; color:var(--text-dim);"><i class="fas fa-layer-group" style="color:var(--accent-gold);"></i> Layer Switcher: Standard OSM &amp; Satellite View</span>
+                    <span style="font-size:12.5px; color:var(--text-dim);"><i class="fas fa-layer-group"
+                            style="color:var(--accent-gold);"></i> Layer Switcher: Standard OSM &amp; Satellite
+                        View</span>
                 </div>
-                <div id="itineraryRouteMap" style="height:380px; width:100%; border-radius:var(--radius-md); border:1px solid var(--border); overflow:hidden; z-index:10;"></div>
+                <div id="itineraryRouteMap"
+                    style="height:380px; width:100%; border-radius:var(--radius-md); border:1px solid var(--border); overflow:hidden; z-index:10;">
+                </div>
             </div>
 
             <!-- Day-by-Day Timeline (Screen 5 Mockup) -->
@@ -283,17 +540,23 @@
             </div>
 
             <!-- Budget Breakdown Summary Box -->
-            <div style="margin-top:40px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px;">
-                <h3 style="font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--text-main); margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+            <div
+                style="margin-top:40px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px;">
+                <h3
+                    style="font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--text-main); margin-bottom:16px; display:flex; align-items:center; gap:8px;">
                     <i class="fas fa-coins" style="color:var(--accent-gold);"></i> Estimated Budget Breakdown
                 </h3>
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;" id="outBudgetGrid"></div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;"
+                    id="outBudgetGrid"></div>
             </div>
 
             <!-- Travel Advice Box -->
-            <div style="margin-top:24px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px;">
-                <h3 style="font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--text-main); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-                    <i class="fas fa-circle-info" style="color:var(--accent-cyan);"></i> Practical Travel Guidance &amp; Tips
+            <div
+                style="margin-top:24px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px;">
+                <h3
+                    style="font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--text-main); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-circle-info" style="color:var(--accent-cyan);"></i> Practical Travel Guidance &amp;
+                    Tips
                 </h3>
                 <ul class="req-list" id="outTipsList"></ul>
             </div>
@@ -302,7 +565,8 @@
     </div>
 
     <!-- Leaflet JS for Map -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/i18n.js"></script>
@@ -310,4 +574,5 @@
     <script src="js/auth.js"></script>
     <script src="js/planner.js"></script>
 </body>
+
 </html>
