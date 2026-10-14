@@ -31,7 +31,7 @@
                 <img src="assets/brand/logo-light.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-light">
                 <span>TouristAI</span>
             </a>
-            <div class="nav-links">
+            <div class="nav-links" id="navAuthLinks">
                 <a href="index.html" class="nav-link" data-i18n="nav_home">Home</a>
                 <a href="destinations.html" class="nav-link" data-i18n="nav_destinations">Destinations</a>
                 <a href="planner.html" class="nav-link" data-i18n="nav_planner">Plan Trip</a>
@@ -101,18 +101,29 @@
     <script src="js/auth.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // If already logged in, redirect directly to Home Page
+            if (Auth.isAuthenticated()) {
+                window.location.replace('index.html');
+                return;
+            }
+
             const params = new URLSearchParams(window.location.search);
             const alertBox = document.getElementById('authAlert');
             if (params.get('registered') === 'true') {
                 alertBox.style.display = 'block';
                 alertBox.style.background = 'rgba(16,185,129,0.15)';
                 alertBox.style.color = '#34D399';
-                alertBox.textContent = 'Account registered successfully! Please log in.';
+                alertBox.innerHTML = '<i class="fas fa-check-circle"></i> Account registered successfully! Please log in.';
+            } else if (params.get('logout') === 'true') {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(197,164,109,0.15)';
+                alertBox.style.color = '#C5A46D';
+                alertBox.innerHTML = '<i class="fas fa-info-circle"></i> You have been securely signed out.';
             } else if (params.get('expired') === 'true') {
                 alertBox.style.display = 'block';
                 alertBox.style.background = 'rgba(244,63,94,0.15)';
                 alertBox.style.color = '#F43F5E';
-                alertBox.textContent = 'Your session expired. Please sign in again.';
+                alertBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> Your session expired. Please sign in again.';
             }
         });
 
@@ -139,13 +150,20 @@
                 alertBox.style.display = 'block';
                 alertBox.style.background = 'rgba(16,185,129,0.15)';
                 alertBox.style.color = '#34D399';
-                alertBox.textContent = 'Welcome back! Redirecting…';
+                alertBox.innerHTML = '<i class="fas fa-check-circle"></i> Welcome back! Redirecting to Home…';
 
                 const params = new URLSearchParams(window.location.search);
-                const redirect = params.get('redirect') || 'dashboard.html';
+                let redirect = params.get('redirect');
+
+                // Requirement 1: Login Page -> Successful Login -> Home Page.
+                // Do not make the Dashboard the mandatory landing page after login.
+                if (!redirect || redirect === 'dashboard.html' || redirect.includes('login') || redirect.includes('register')) {
+                    redirect = 'index.html';
+                }
+
                 setTimeout(() => {
-                    window.location.href = redirect;
-                }, 400);
+                    window.location.replace(redirect);
+                }, 350);
             } catch (err) {
                 alertBox.style.display = 'block';
                 alertBox.style.background = 'rgba(244,63,94,0.15)';
