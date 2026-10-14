@@ -1,127 +1,650 @@
 // @ts-nocheck
 /**
  * TouristAI — Itinerary Planner Controller (Screen 4 & 5)
- * Luxury Travel Editorial Architecture, Dynamic Trip Cost Engine & Leaflet Satellite Route Visualizer
+ * Reactive Form State Management, Worldwide Autocomplete, Dynamic Trip Cost Engine & Leaflet Route Visualizer
  */
 
-let selectedInterests = ['Sightseeing', 'Adventure', 'Nature'];
+// 1. Centralized Form State Architecture
+const plannerState = {
+    destination: 'Ooty, Tamil Nadu',
+    startDate: '',
+    endDate: '',
+    days: 5,
+    travelers: 2,
+    customTravelers: null,
+    budgetTier: 'Moderate',
+    customBudgetAmount: null,
+    customCurrency: 'INR',
+    budgetType: 'per_person', // 'per_person' or 'total'
+    originCity: '',
+    transitMode: 'Mixed',
+    interests: ['Sightseeing', 'Adventure', 'Nature and lakes'],
+    additionalNotes: '',
+    currentStep: 1,
+    isGenerated: false,
+    isStale: false
+};
+
 let currentGeneratedItinerary = null;
 let plannerMap = null;
 let routeMarkers = [];
 
+// Helper: Active Travelers Count
+function getActiveTravelersCount() {
+    if (plannerState.travelers === 'custom' && plannerState.customTravelers) {
+        return Math.max(1, parseInt(plannerState.customTravelers) || 2);
+    }
+    return Math.max(1, parseInt(plannerState.travelers) || 2);
+}
+
+// Helper: Currency Symbol
+function getCurrencySymbol(curr) {
+    const c = (curr || plannerState.customCurrency || 'INR').toUpperCase();
+    if (c === 'USD') return '$';
+    if (c === 'EUR') return '€';
+    if (c === 'GBP') return '£';
+    if (c === 'AUD') return 'A$';
+    if (c === 'CAD') return 'C$';
+    if (c === 'AED') return 'AED ';
+    if (c === 'SGD') return 'S$';
+    return '₹';
+}
+
+// Initialize on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Set default dates: 5 days starting 3 days from now
-    const startInput = document.getElementById('tripStartDate');
-    const endInput = document.getElementById('tripEndDate');
+    initDefaultDates();
+    bindFormStateListeners();
+    bindAutocompleteListeners();
+    parseUrlParameters();
+    updateDateRangeAndDuration();
+    updateCustomBudgetPreview();
 
-    const today = new Date();
-    const startDate = new Date();
-    startDate.setDate(today.getDate() + 3);
-    const endDate = new Date();
-    endDate.setDate(today.getDate() + 7);
-
-    if (startInput) startInput.value = startDate.toISOString().split('T')[0];
-    if (endInput) endInput.value = endDate.toISOString().split('T')[0];
-
-    // Check query params
-    const params = new URLSearchParams(window.location.search);
-    const dest = params.get('destination') || params.get('dest');
-    const travelers = params.get('travelers');
-    const budget = params.get('budget');
-
-    if (dest) {
-        document.getElementById('tripDestination').value = dest;
-    }
-
-    // Global Autocomplete for Destination
-    const destInput = document.getElementById('tripDestination');
-    const plannerDropdown = document.getElementById('plannerAutocompleteDropdown');
-    if (destInput && plannerDropdown && typeof window.setupGlobalAutocomplete === 'function') {
-        window.setupGlobalAutocomplete(destInput, plannerDropdown, (item) => {
-            destInput.value = item.name + (item.country ? `, ${item.country}` : '');
-        });
-    }
-    if (travelers) {
-        document.getElementById('tripTravelers').value = travelers;
-    }
-    if (budget) {
-        const budgetSel = document.getElementById('tripBudget');
-        if (budget === 'budget') budgetSel.value = 'Budget';
-        else if (budget === 'luxury') budgetSel.value = 'Luxury';
-        else budgetSel.value = 'Moderate';
-    }
-
-    // Dynamic cost update on parameter changes
-    const travelersInput = document.getElementById('tripTravelers');
-    if (travelersInput) {
-        travelersInput.addEventListener('change', () => {
-            if (currentGeneratedItinerary) {
-                currentGeneratedItinerary.travelers = parseInt(travelersInput.value) || 2;
-                recalculateAndRenderTripCost();
-            }
-        });
-    }
-
-    const budgetInput = document.getElementById('tripBudget');
-    if (budgetInput) {
-        budgetInput.addEventListener('change', () => {
-            if (currentGeneratedItinerary) {
-                currentGeneratedItinerary.budgetTier = budgetInput.value || 'Moderate';
-                recalculateAndRenderTripCost();
-            }
-        });
-    }
-
-    // Invalidate map size on theme switch
+    // Map resize on theme change
     window.addEventListener('themeChanged', () => {
         if (plannerMap) plannerMap.invalidateSize();
     });
 });
 
-function toggleInterest(el, interestName) {
-    if (el.classList.contains('selected')) {
-        el.classList.remove('selected');
-        selectedInterests = selectedInterests.filter(i => i !== interestName);
-    } else {
-        el.classList.add('selected');
-        if (!selectedInterests.includes(interestName)) {
-            selectedInterests.push(interestName);
+/**
+ * 2. Smart Defaults Initialization
+ */
+function initDefaultDates() {
+    const startInput = document.getElementById('tripStartDate');
+    const endInput = document.getElementById('tripEndDate');
+
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    const startDate = new Date();
+    startDate.setDate(today.getDate() + 3);
+    const startDateStr = startDate.toISOString().split('T')[0];
+
+    const endDate = new Date();
+    endDate.setDate(today.getDate() + 7);
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    if (startInput) {
+        startInput.min = todayStr;
+        startInput.value = startDateStr;
+        plannerState.startDate = startDateStr;
+    }
+
+    if (endInput) {
+        endInput.min = startDateStr;
+        endInput.value = endDateStr;
+        plannerState.endDate = endDateStr;
+    }
+}
+
+/**
+ * 3. Bind Form Input Event Handlers
+ */
+function bindFormStateListeners() {
+    // Destination Input
+    const destInput = document.getElementById('tripDestination');
+    const btnClearDest = document.getElementById('btnClearDestination');
+    if (destInput) {
+        destInput.addEventListener('input', () => {
+            plannerState.destination = destInput.value.trim();
+            if (btnClearDest) btnClearDest.style.display = destInput.value ? 'flex' : 'none';
+            validateDestination();
+            markParametersChanged();
+        });
+    }
+
+    // Travel Dates
+    const startInput = document.getElementById('tripStartDate');
+    const endInput = document.getElementById('tripEndDate');
+
+    if (startInput) {
+        startInput.addEventListener('change', () => {
+            plannerState.startDate = startInput.value;
+            if (endInput) {
+                endInput.min = startInput.value;
+                if (endInput.value && endInput.value < startInput.value) {
+                    endInput.value = startInput.value;
+                    plannerState.endDate = startInput.value;
+                }
+            }
+            updateDateRangeAndDuration();
+            markParametersChanged();
+        });
+    }
+
+    if (endInput) {
+        endInput.addEventListener('change', () => {
+            plannerState.endDate = endInput.value;
+            updateDateRangeAndDuration();
+            markParametersChanged();
+        });
+    }
+
+    // Travelers Select
+    const travelersSelect = document.getElementById('tripTravelers');
+    const customTravelersWrapper = document.getElementById('customTravelersWrapper');
+    const customTravelersInput = document.getElementById('tripCustomTravelers');
+
+    if (travelersSelect) {
+        travelersSelect.addEventListener('change', () => {
+            plannerState.travelers = travelersSelect.value;
+            if (travelersSelect.value === 'custom') {
+                if (customTravelersWrapper) customTravelersWrapper.style.display = 'block';
+                if (customTravelersInput) customTravelersInput.focus();
+            } else {
+                if (customTravelersWrapper) customTravelersWrapper.style.display = 'none';
+            }
+            updateCustomBudgetPreview();
+            if (currentGeneratedItinerary) recalculateAndRenderTripCost();
+            markParametersChanged();
+        });
+    }
+
+    if (customTravelersInput) {
+        customTravelersInput.addEventListener('input', () => {
+            plannerState.customTravelers = customTravelersInput.value;
+            updateCustomBudgetPreview();
+            if (currentGeneratedItinerary) recalculateAndRenderTripCost();
+            markParametersChanged();
+        });
+    }
+
+    // Starting City Input
+    const originInput = document.getElementById('tripOriginCity');
+    const btnClearOrigin = document.getElementById('btnClearOrigin');
+    if (originInput) {
+        originInput.addEventListener('input', () => {
+            plannerState.originCity = originInput.value.trim();
+            if (btnClearOrigin) btnClearOrigin.style.display = originInput.value ? 'flex' : 'none';
+            markParametersChanged();
+        });
+    }
+
+    // Preferred Transit Mode
+    const transitSelect = document.getElementById('tripTransitPref');
+    if (transitSelect) {
+        transitSelect.addEventListener('change', () => {
+            plannerState.transitMode = transitSelect.value;
+            markParametersChanged();
+        });
+    }
+
+    // Budget Tier
+    const budgetSelect = document.getElementById('tripBudget');
+    const customBudgetSection = document.getElementById('customBudgetSection');
+    const currentBudgetBadge = document.getElementById('currentBudgetBadge');
+
+    if (budgetSelect) {
+        budgetSelect.addEventListener('change', () => {
+            plannerState.budgetTier = budgetSelect.value;
+            if (budgetSelect.value === 'Custom') {
+                if (customBudgetSection) customBudgetSection.style.display = 'block';
+                if (currentBudgetBadge) currentBudgetBadge.textContent = 'Custom Exact Budget';
+            } else {
+                if (customBudgetSection) customBudgetSection.style.display = 'none';
+                if (currentBudgetBadge) {
+                    const optText = budgetSelect.options[budgetSelect.selectedIndex]?.text.split('(')[0].trim();
+                    currentBudgetBadge.textContent = optText || budgetSelect.value;
+                }
+            }
+            updateCustomBudgetPreview();
+            if (currentGeneratedItinerary) recalculateAndRenderTripCost();
+            markParametersChanged();
+        });
+    }
+
+    // Custom Budget Inputs
+    const customAmountInput = document.getElementById('tripCustomBudgetAmount');
+    if (customAmountInput) {
+        customAmountInput.addEventListener('input', () => {
+            plannerState.customBudgetAmount = customAmountInput.value ? parseFloat(customAmountInput.value) : null;
+            updateCustomBudgetPreview();
+            if (currentGeneratedItinerary) recalculateAndRenderTripCost();
+            markParametersChanged();
+        });
+    }
+
+    const customCurrencySelect = document.getElementById('tripCustomCurrency');
+    if (customCurrencySelect) {
+        customCurrencySelect.addEventListener('change', () => {
+            plannerState.customCurrency = customCurrencySelect.value;
+            updateCustomBudgetPreview();
+            if (currentGeneratedItinerary) recalculateAndRenderTripCost();
+            markParametersChanged();
+        });
+    }
+
+    // Additional Preferences
+    const notesInput = document.getElementById('tripAdditionalNotes');
+    if (notesInput) {
+        notesInput.addEventListener('input', () => {
+            plannerState.additionalNotes = notesInput.value.trim();
+            markParametersChanged();
+        });
+    }
+}
+
+/**
+ * 4. Destination & Starting City Autocomplete Bindings
+ */
+function bindAutocompleteListeners() {
+    // Destination Autocomplete
+    const destInput = document.getElementById('tripDestination');
+    const destDropdown = document.getElementById('plannerAutocompleteDropdown');
+    if (destInput && destDropdown && typeof window.setupGlobalAutocomplete === 'function') {
+        window.setupGlobalAutocomplete(destInput, destDropdown, (item) => {
+            const formatted = item.name + (item.country ? `, ${item.country}` : '');
+            destInput.value = formatted;
+            plannerState.destination = formatted;
+            const btnClear = document.getElementById('btnClearDestination');
+            if (btnClear) btnClear.style.display = 'flex';
+            validateDestination();
+            markParametersChanged();
+        });
+    }
+
+    // Starting City Autocomplete
+    const originInput = document.getElementById('tripOriginCity');
+    const originDropdown = document.getElementById('originAutocompleteDropdown');
+    if (originInput && originDropdown && typeof window.setupGlobalAutocomplete === 'function') {
+        window.setupGlobalAutocomplete(originInput, originDropdown, (item) => {
+            const formatted = item.name + (item.country ? `, ${item.country}` : '');
+            originInput.value = formatted;
+            plannerState.originCity = formatted;
+            const btnClear = document.getElementById('btnClearOrigin');
+            if (btnClear) btnClear.style.display = 'flex';
+            markParametersChanged();
+        });
+    }
+}
+
+/**
+ * 5. Parse Query Parameters for Deep Linking
+ */
+function parseUrlParameters() {
+    const params = new URLSearchParams(window.location.search);
+    const dest = params.get('destination') || params.get('dest');
+    const travelers = params.get('travelers');
+    const budget = params.get('budget');
+    const origin = params.get('origin');
+
+    if (dest) {
+        const destInput = document.getElementById('tripDestination');
+        if (destInput) {
+            destInput.value = dest;
+            plannerState.destination = dest;
+            const btnClear = document.getElementById('btnClearDestination');
+            if (btnClear) btnClear.style.display = 'flex';
+        }
+    }
+
+    if (origin) {
+        const originInput = document.getElementById('tripOriginCity');
+        if (originInput) {
+            originInput.value = origin;
+            plannerState.originCity = origin;
+            const btnClear = document.getElementById('btnClearOrigin');
+            if (btnClear) btnClear.style.display = 'flex';
+        }
+    }
+
+    if (travelers) {
+        const travelersInput = document.getElementById('tripTravelers');
+        if (travelersInput) {
+            travelersInput.value = travelers;
+            plannerState.travelers = travelers;
+        }
+    }
+
+    if (budget) {
+        const budgetSel = document.getElementById('tripBudget');
+        if (budgetSel) {
+            if (budget.toLowerCase() === 'budget') budgetSel.value = 'Budget';
+            else if (budget.toLowerCase() === 'luxury') budgetSel.value = 'Luxury';
+            else if (budget.toLowerCase() === 'premium') budgetSel.value = 'Premium';
+            else if (budget.toLowerCase() === 'custom') {
+                budgetSel.value = 'Custom';
+                const customSection = document.getElementById('customBudgetSection');
+                if (customSection) customSection.style.display = 'block';
+            } else {
+                budgetSel.value = 'Moderate';
+            }
+            plannerState.budgetTier = budgetSel.value;
         }
     }
 }
 
-async function generateItinerary(e) {
-    if (e && e.preventDefault) e.preventDefault();
+/**
+ * 6. Dynamic Date Range & Duration Calculator
+ */
+function updateDateRangeAndDuration() {
+    const startVal = document.getElementById('tripStartDate')?.value;
+    const endVal = document.getElementById('tripEndDate')?.value;
+    const badgeEl = document.getElementById('tripDurationBadge');
+    const textEl = document.getElementById('durationText');
+    const subTextEl = document.getElementById('dateRangeSubtitle');
+    const valMsg = document.getElementById('valMsgDates');
 
-    const destination = document.getElementById('tripDestination').value.trim();
-    const startDate = document.getElementById('tripStartDate').value;
-    const endDate = document.getElementById('tripEndDate').value;
-    const travelers = parseInt(document.getElementById('tripTravelers').value) || 2;
-    const budgetTier = document.getElementById('tripBudget').value || 'Moderate';
-    const originCity = document.getElementById('tripOriginCity') ? document.getElementById('tripOriginCity').value.trim() : '';
+    if (!startVal || !endVal) return;
 
-    if (!destination) {
-        alert('Please enter a destination.');
+    const start = new Date(startVal);
+    const end = new Date(endVal);
+
+    if (end < start) {
+        if (valMsg) valMsg.style.display = 'flex';
+        if (textEl) textEl.textContent = 'Invalid Range';
         return;
     }
 
-    const btn = document.getElementById('btnGenerateTrip');
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Synthesizing Itinerary with Gemini…';
+    if (valMsg) valMsg.style.display = 'none';
 
-    // Update stepper: Step 3 active
-    setStepActive(3);
+    const diffMs = end.getTime() - start.getTime();
+    const diffDays = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1);
+    const nights = Math.max(0, diffDays - 1);
+
+    plannerState.days = diffDays;
+    plannerState.startDate = startVal;
+    plannerState.endDate = endVal;
+
+    if (textEl) {
+        textEl.textContent = `${diffDays} Days / ${nights} Nights`;
+    }
+
+    if (subTextEl) {
+        const fmtStart = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const fmtEnd = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        subTextEl.textContent = `${fmtStart} – ${fmtEnd}`;
+    }
+}
+
+/**
+ * 7. Live Custom Budget Preview
+ */
+function updateCustomBudgetPreview() {
+    const previewEl = document.getElementById('customBudgetPreview');
+    if (!previewEl) return;
+
+    const travelers = getActiveTravelersCount();
+    const symbol = getCurrencySymbol(plannerState.customCurrency);
+    const amount = plannerState.customBudgetAmount;
+
+    if (!amount || amount <= 0) {
+        previewEl.innerHTML = `<i class="fas fa-coins"></i> <span>Enter an amount to guide real-time itinerary allocation.</span>`;
+        return;
+    }
+
+    if (plannerState.budgetType === 'per_person') {
+        const total = Math.round(amount * travelers);
+        previewEl.innerHTML = `<i class="fas fa-coins" style="color:var(--accent-gold);"></i> <span><strong>${symbol}${amount.toLocaleString()} / person</strong> • Total Estimated Trip Budget: <strong>${symbol}${total.toLocaleString()}</strong> for ${travelers} travelers</span>`;
+    } else {
+        const perPerson = Math.round(amount / travelers);
+        previewEl.innerHTML = `<i class="fas fa-coins" style="color:var(--accent-gold);"></i> <span><strong>${symbol}${amount.toLocaleString()} Total Trip</strong> • Estimated <strong>${symbol}${perPerson.toLocaleString()} / person</strong> for ${travelers} travelers</span>`;
+    }
+}
+
+/**
+ * 8. Clear Single Field Utility
+ */
+function clearField(fieldId) {
+    const input = document.getElementById(fieldId);
+    if (!input) return;
+
+    input.value = '';
+    if (fieldId === 'tripDestination') {
+        plannerState.destination = '';
+        const btn = document.getElementById('btnClearDestination');
+        if (btn) btn.style.display = 'none';
+        validateDestination();
+    } else if (fieldId === 'tripOriginCity') {
+        plannerState.originCity = '';
+        const btn = document.getElementById('btnClearOrigin');
+        if (btn) btn.style.display = 'none';
+    }
+
+    input.focus();
+    markParametersChanged();
+}
+
+/**
+ * 9. Set Budget Type (Per Person vs Total)
+ */
+function setBudgetType(type) {
+    plannerState.budgetType = type;
+    const btnPerPerson = document.getElementById('btnBudgetPerPerson');
+    const btnTotal = document.getElementById('btnBudgetTotal');
+
+    if (btnPerPerson && btnTotal) {
+        btnPerPerson.classList.toggle('active', type === 'per_person');
+        btnTotal.classList.toggle('active', type === 'total');
+    }
+
+    updateCustomBudgetPreview();
+    if (currentGeneratedItinerary) recalculateAndRenderTripCost();
+    markParametersChanged();
+}
+
+/**
+ * 10. Travel Interest Cards Toggle
+ */
+function toggleInterest(el, interestName) {
+    const isSelected = el.classList.contains('selected');
+
+    if (isSelected) {
+        // Prevent deselecting everything to maintain at least 1 interest
+        if (plannerState.interests.length <= 1) {
+            alert('Please keep at least one interest selected for tailored travel recommendations.');
+            return;
+        }
+        el.classList.remove('selected');
+        el.setAttribute('aria-checked', 'false');
+        plannerState.interests = plannerState.interests.filter(i => i.toLowerCase() !== interestName.toLowerCase());
+    } else {
+        el.classList.add('selected');
+        el.setAttribute('aria-checked', 'true');
+        if (!plannerState.interests.some(i => i.toLowerCase() === interestName.toLowerCase())) {
+            plannerState.interests.push(interestName);
+        }
+    }
+
+    const badge = document.getElementById('interestsCountBadge');
+    if (badge) {
+        badge.textContent = `${plannerState.interests.length} selected`;
+    }
+
+    markParametersChanged();
+}
+
+/**
+ * 11. Validation Utilities
+ */
+function validateDestination() {
+    const dest = (document.getElementById('tripDestination')?.value || '').trim();
+    const valMsg = document.getElementById('valMsgDestination');
+    const input = document.getElementById('tripDestination');
+
+    if (!dest) {
+        if (valMsg) valMsg.style.display = 'flex';
+        if (input) input.classList.add('is-invalid');
+        return false;
+    }
+
+    if (valMsg) valMsg.style.display = 'none';
+    if (input) input.classList.remove('is-invalid');
+    return true;
+}
+
+function validateDates() {
+    const startVal = document.getElementById('tripStartDate')?.value;
+    const endVal = document.getElementById('tripEndDate')?.value;
+    const valMsg = document.getElementById('valMsgDates');
+
+    if (!startVal || !endVal) return false;
+
+    const start = new Date(startVal);
+    const end = new Date(endVal);
+
+    if (end < start) {
+        if (valMsg) valMsg.style.display = 'flex';
+        return false;
+    }
+
+    if (valMsg) valMsg.style.display = 'none';
+    return true;
+}
+
+/**
+ * 12. Stepper Navigation Controller
+ */
+function goToStep(stepNum) {
+    if (stepNum === 2) {
+        // Validate Step 1 before advancing
+        const destValid = validateDestination();
+        const datesValid = validateDates();
+        if (!destValid || !datesValid) {
+            const firstInvalid = !destValid ? document.getElementById('tripDestination') : document.getElementById('tripStartDate');
+            if (firstInvalid) firstInvalid.focus();
+            return;
+        }
+    }
+
+    if (stepNum >= 3) {
+        if (!plannerState.isGenerated) {
+            // If user hasn't generated yet, focus on step 2 with generate button
+            goToStep(2);
+            const genBtn = document.getElementById('btnGenerateTrip');
+            if (genBtn) genBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        // Scroll down to itinerary view
+        const outSection = document.getElementById('itineraryOutputSection');
+        if (outSection && outSection.style.display !== 'none') {
+            outSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    plannerState.currentStep = stepNum;
+
+    // Show appropriate step panel
+    const panel1 = document.getElementById('stepPanel1');
+    const panel2 = document.getElementById('stepPanel2');
+    const stepBadge = document.getElementById('plannerStepBadge');
+
+    if (stepNum === 1) {
+        if (panel1) panel1.classList.add('active');
+        if (panel2) panel2.classList.remove('active');
+        if (stepBadge) stepBadge.textContent = 'Step 1 of 2: Trip Details';
+        document.getElementById('plannerFormCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (stepNum === 2) {
+        if (panel1) panel1.classList.remove('active');
+        if (panel2) panel2.classList.add('active');
+        if (stepBadge) stepBadge.textContent = 'Step 2 of 2: Travel Style & Budget';
+        document.getElementById('plannerFormCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Update Stepper Indicator Circles
+    updateStepperIndicators(stepNum);
+}
+
+function updateStepperIndicators(stepNum) {
+    for (let i = 1; i <= 4; i++) {
+        const indicator = document.getElementById('stepIndicator' + i);
+        if (!indicator) continue;
+
+        if (i < stepNum) {
+            indicator.className = 'stepper-item completed';
+        } else if (i === stepNum) {
+            indicator.className = 'stepper-item active';
+        } else {
+            indicator.className = 'stepper-item';
+        }
+    }
+}
+
+/**
+ * 13. Mark Parameters Changed (Stale Detection)
+ */
+function markParametersChanged() {
+    if (plannerState.isGenerated) {
+        plannerState.isStale = true;
+        const staleAlert = document.getElementById('staleParamAlert');
+        if (staleAlert) staleAlert.style.display = 'flex';
+    }
+}
+
+/**
+ * 14. Generate Itinerary (Real Backend Submission)
+ */
+async function generateItinerary(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    if (!validateDestination() || !validateDates()) {
+        goToStep(1);
+        return;
+    }
+
+    const destination = (document.getElementById('tripDestination')?.value || plannerState.destination).trim();
+    const startDate = document.getElementById('tripStartDate')?.value || plannerState.startDate;
+    const endDate = document.getElementById('tripEndDate')?.value || plannerState.endDate;
+    const travelers = getActiveTravelersCount();
+    const budgetTier = document.getElementById('tripBudget')?.value || plannerState.budgetTier;
+    const originCity = (document.getElementById('tripOriginCity')?.value || plannerState.originCity).trim();
+    const transitMode = document.getElementById('tripTransitPref')?.value || plannerState.transitMode;
+    const additionalPrefs = (document.getElementById('tripAdditionalNotes')?.value || plannerState.additionalNotes).trim();
+
+    const isCustomBudget = budgetTier === 'Custom';
+    const customBudgetAmount = isCustomBudget ? plannerState.customBudgetAmount : null;
+    const customCurrency = isCustomBudget ? (document.getElementById('tripCustomCurrency')?.value || 'INR') : 'INR';
+
+    const btn = document.getElementById('btnGenerateTrip');
+    const regenBtn = document.getElementById('btnRegenerateAction');
+    const originalText = btn ? btn.innerHTML : 'Generate Itinerary ✨';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Synthesizing Itinerary with Gemini…';
+    }
+    if (regenBtn) {
+        regenBtn.disabled = true;
+        regenBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Regenerating…';
+    }
+
+    updateStepperIndicators(3);
 
     const activeLang = (typeof I18n !== 'undefined') ? I18n.getCurrentLanguage() : 'en';
     const payload = {
         destination,
+        originCity,
+        transitMode,
         startDate,
         endDate,
+        days: plannerState.days,
         travelers,
-        budgetTier,
-        currency: 'INR',
-        interests: selectedInterests.length > 0 ? selectedInterests : ['Sightseeing', 'Nature'],
+        budgetTier: isCustomBudget ? 'Custom' : budgetTier,
+        customBudget: customBudgetAmount,
+        budgetType: plannerState.budgetType,
+        currency: customCurrency,
+        interests: plannerState.interests.length > 0 ? plannerState.interests : ['Sightseeing', 'Nature and lakes'],
+        additionalPreferences: additionalPrefs,
         language: activeLang
     };
 
@@ -130,36 +653,95 @@ async function generateItinerary(e) {
         const data = res.data || res;
 
         currentGeneratedItinerary = data;
+        plannerState.isGenerated = true;
+        plannerState.isStale = false;
+
+        // Hide stale alert
+        const staleAlert = document.getElementById('staleParamAlert');
+        if (staleAlert) staleAlert.style.display = 'none';
+
+        // Render UI sections
         renderItineraryOutput(data);
+        renderItineraryParametersBar(payload);
         recalculateAndRenderTripCost();
-        setStepActive(4);
+        updateStepperIndicators(4);
 
-        // Scroll down to results
+        // Display results section smoothly
         const outSection = document.getElementById('itineraryOutputSection');
-        outSection.style.display = 'block';
-        outSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (outSection) {
+            outSection.style.display = 'block';
+            outSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
 
-        // Initialize or update Leaflet route map
+        // Initialize or refresh Leaflet map
         setTimeout(() => {
             initPlannerRouteMap(data);
-        }, 150);
+        }, 180);
+
     } catch (err) {
         console.error('Failed to generate itinerary:', err);
-        alert('Could not connect to AI trip planner. Please check your network or try again.');
+        alert('Could not connect to AI trip planner. Please check your network connection and try again.');
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+        if (regenBtn) {
+            regenBtn.disabled = false;
+            regenBtn.innerHTML = '<i class="fas fa-rotate"></i> Regenerate';
+        }
     }
 }
 
+/**
+ * 15. Render Summary Parameters Bar in Itinerary View
+ */
+function renderItineraryParametersBar(params) {
+    const bar = document.getElementById('itineraryParamsBar');
+    if (!bar) return;
+
+    const symbol = getCurrencySymbol(params.currency);
+    let budgetDisplay = `${params.budgetTier || 'Moderate'} Budget`;
+    if (params.budgetTier === 'Custom' && params.customBudget) {
+        budgetDisplay = `Custom ${symbol}${params.customBudget.toLocaleString()} (${params.budgetType === 'total' ? 'Total' : 'Per person'})`;
+    }
+
+    const transitDisplay = (params.transitMode && params.transitMode !== 'No preference')
+        ? (params.originCity ? `From ${params.originCity} via ${params.transitMode}` : `Via ${params.transitMode}`)
+        : (params.originCity ? `From ${params.originCity}` : null);
+
+    const interestsList = (params.interests || []).slice(0, 4);
+
+    bar.innerHTML = `
+        <span class="param-pill"><i class="fas fa-location-dot"></i> ${escapeHtml(params.destination)}</span>
+        <span class="param-pill"><i class="fas fa-calendar"></i> ${params.days} Days (${params.startDate} to ${params.endDate})</span>
+        <span class="param-pill"><i class="fas fa-user-group"></i> ${params.travelers} ${params.travelers === 1 ? 'Traveler' : 'Travelers'}</span>
+        <span class="param-pill"><i class="fas fa-wallet"></i> ${escapeHtml(budgetDisplay)}</span>
+        ${transitDisplay ? `<span class="param-pill"><i class="fas fa-route"></i> ${escapeHtml(transitDisplay)}</span>` : ''}
+        ${interestsList.map(int => `<span class="param-pill"><i class="fas fa-tag"></i> ${escapeHtml(int)}</span>`).join('')}
+    `;
+}
+
+/**
+ * 16. Render Itinerary Details & Day-by-Day Timeline
+ */
 function renderItineraryOutput(itinerary) {
-    document.getElementById('outItineraryTitle').textContent = itinerary.title || `Your Trip to ${itinerary.destination}`;
-    document.getElementById('outItinerarySubtitle').textContent = 
-        `Customised for ${itinerary.travelers || 2} travelers • ${itinerary.budgetTier || 'Moderate'} Budget • Real-time Cost Estimation`;
+    const titleEl = document.getElementById('outItineraryTitle');
+    const subtitleEl = document.getElementById('outItinerarySubtitle');
+
+    if (titleEl) {
+        titleEl.textContent = itinerary.title || `Your Trip to ${itinerary.destination}`;
+    }
+
+    if (subtitleEl) {
+        const travelers = itinerary.travelers || getActiveTravelersCount();
+        const days = itinerary.days || plannerState.days;
+        subtitleEl.textContent = `Customised for ${travelers} travelers • ${days} Days Journey • Dynamic Cost Estimation`;
+    }
 
     renderTimelineNodesOnly();
 
-    // Travel Tips
+    // Practical Travel Guidance List
     const tipsList = document.getElementById('outTipsList');
     if (itinerary.travelTips && tipsList) {
         tipsList.innerHTML = itinerary.travelTips.map(t => `
@@ -209,47 +791,73 @@ function renderTimelineNodesOnly() {
     });
 }
 
-// Requirement 6: Dynamic Trip Cost Engine with 10% Emergency Contingency
+/**
+ * 17. Dynamic Trip Cost Engine with 10% Emergency Contingency
+ */
 function recalculateAndRenderTripCost() {
     if (!currentGeneratedItinerary) return;
 
-    const daysCount = (currentGeneratedItinerary.daysPlan && currentGeneratedItinerary.daysPlan.length) || parseInt(currentGeneratedItinerary.days) || 3;
-    const travelersCount = parseInt(document.getElementById('tripTravelers')?.value) || parseInt(currentGeneratedItinerary.travelers) || 2;
-    const budgetTier = document.getElementById('tripBudget')?.value || currentGeneratedItinerary.budgetTier || 'Moderate';
-    const isInternational = (currentGeneratedItinerary.destination || '').toLowerCase().includes('paris') || (currentGeneratedItinerary.destination || '').toLowerCase().includes('international');
+    const daysCount = (currentGeneratedItinerary.daysPlan && currentGeneratedItinerary.daysPlan.length) || parseInt(currentGeneratedItinerary.days) || plannerState.days || 3;
+    const travelersCount = getActiveTravelersCount();
+    const budgetTier = plannerState.budgetTier || 'Moderate';
+    const currency = plannerState.budgetTier === 'Custom' ? plannerState.customCurrency : 'INR';
+    const symbol = getCurrencySymbol(currency);
+    const destName = (currentGeneratedItinerary.destination || plannerState.destination || '').toLowerCase();
+    const isInternational = destName.includes('paris') || destName.includes('tokyo') || destName.includes('london') || destName.includes('new york') || destName.includes('international') || destName.includes('dubai');
 
-    let baseDailyStay = 2200;
-    let baseDailyFood = 800;
-    let baseTransit = 1800;
-    let baseActivities = 400;
-    let baseDailyLocalTransit = 400;
+    let lodgingTotal, transitTotal, localTransitTotal, foodTotal, activitiesTotal;
 
-    if (budgetTier === 'Budget') {
-        baseDailyStay = 1200;
-        baseDailyFood = 500;
-        baseTransit = 900;
-        baseActivities = 250;
-        baseDailyLocalTransit = 250;
-    } else if (budgetTier === 'Luxury') {
-        baseDailyStay = 6500;
-        baseDailyFood = 2200;
-        baseTransit = 5000;
-        baseActivities = 1000;
-        baseDailyLocalTransit = 1200;
+    if (budgetTier === 'Custom' && plannerState.customBudgetAmount && plannerState.customBudgetAmount > 0) {
+        let totalAllocated = plannerState.customBudgetAmount;
+        if (plannerState.budgetType === 'per_person') {
+            totalAllocated = totalAllocated * travelersCount;
+        }
+
+        lodgingTotal = Math.round(totalAllocated * 0.38);
+        transitTotal = Math.round(totalAllocated * 0.22);
+        foodTotal = Math.round(totalAllocated * 0.25);
+        activitiesTotal = Math.round(totalAllocated * 0.15);
+        localTransitTotal = Math.round(totalAllocated * 0.08);
+    } else {
+        let baseDailyStay = 2200;
+        let baseDailyFood = 800;
+        let baseTransit = 1800;
+        let baseActivities = 400;
+        let baseDailyLocalTransit = 400;
+
+        if (budgetTier === 'Budget') {
+            baseDailyStay = 1200;
+            baseDailyFood = 500;
+            baseTransit = 900;
+            baseActivities = 250;
+            baseDailyLocalTransit = 250;
+        } else if (budgetTier === 'Premium') {
+            baseDailyStay = 4200;
+            baseDailyFood = 1400;
+            baseTransit = 3200;
+            baseActivities = 700;
+            baseDailyLocalTransit = 750;
+        } else if (budgetTier === 'Luxury') {
+            baseDailyStay = 7500;
+            baseDailyFood = 2500;
+            baseTransit = 5500;
+            baseActivities = 1200;
+            baseDailyLocalTransit = 1400;
+        }
+
+        if (isInternational) {
+            baseDailyStay *= 3.5;
+            baseDailyFood *= 3.5;
+            baseTransit = 28000;
+        }
+
+        const roomsNeeded = Math.ceil(travelersCount / 2);
+        lodgingTotal = Math.round(baseDailyStay * Math.max(1, daysCount - 1) * roomsNeeded);
+        transitTotal = Math.round(baseTransit * travelersCount);
+        localTransitTotal = Math.round(baseDailyLocalTransit * daysCount * Math.ceil(travelersCount / 3));
+        foodTotal = Math.round(baseDailyFood * daysCount * travelersCount);
+        activitiesTotal = Math.round(baseActivities * daysCount * travelersCount);
     }
-
-    if (isInternational) {
-        baseDailyStay *= 3.5;
-        baseDailyFood *= 3.5;
-        baseTransit = 28000;
-    }
-
-    const roomsNeeded = Math.ceil(travelersCount / 2);
-    const lodgingTotal = Math.round(baseDailyStay * Math.max(1, daysCount - 1) * roomsNeeded);
-    const transitTotal = Math.round(baseTransit * travelersCount);
-    const localTransitTotal = Math.round(baseDailyLocalTransit * daysCount * Math.ceil(travelersCount / 3));
-    const foodTotal = Math.round(baseDailyFood * daysCount * travelersCount);
-    const activitiesTotal = Math.round(baseActivities * daysCount * travelersCount);
 
     const subTotal = lodgingTotal + transitTotal + localTransitTotal + foodTotal + activitiesTotal;
     const contingency = Math.round(subTotal * 0.10);
@@ -258,18 +866,21 @@ function recalculateAndRenderTripCost() {
 
     // Update banner summary elements
     const totalEl = document.getElementById('costHeroTotal');
-    if (totalEl) totalEl.textContent = '₹' + grandTotal.toLocaleString('en-IN');
+    if (totalEl) totalEl.textContent = `${symbol}${grandTotal.toLocaleString()}`;
+
     const perPersonEl = document.getElementById('costPerPerson');
-    if (perPersonEl) perPersonEl.textContent = '₹' + perPerson.toLocaleString('en-IN');
+    if (perPersonEl) perPersonEl.textContent = `${symbol}${perPerson.toLocaleString()}`;
+
     const travelersEl = document.getElementById('costTravelersCount');
     if (travelersEl) travelersEl.textContent = travelersCount;
+
     const daysEl = document.getElementById('costDaysCount');
     if (daysEl) daysEl.textContent = daysCount;
 
-    // Update pill values
+    // Update Pill Breakdown
     const setPill = (id, val) => {
         const el = document.getElementById(id);
-        if (el) el.textContent = '₹' + val.toLocaleString('en-IN');
+        if (el) el.textContent = `${symbol}${val.toLocaleString()}`;
     };
     setPill('pillTransit', transitTotal);
     setPill('pillLocalTransit', localTransitTotal);
@@ -278,41 +889,43 @@ function recalculateAndRenderTripCost() {
     setPill('pillActivities', activitiesTotal);
     setPill('pillContingency', contingency);
 
-    // Update bottom budget breakdown cards
+    // Update Bottom Budget Grid
     const budgetGrid = document.getElementById('outBudgetGrid');
     if (budgetGrid) {
         budgetGrid.innerHTML = `
             <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
                 <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-hotel" style="color:var(--accent-gold);"></i> Lodging &amp; Stays</span>
-                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">₹${lodgingTotal.toLocaleString('en-IN')}</h4>
+                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">${symbol}${lodgingTotal.toLocaleString()}</h4>
             </div>
             <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
                 <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-plane-departure" style="color:var(--accent-cyan);"></i> Intercity Transit</span>
-                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">₹${transitTotal.toLocaleString('en-IN')}</h4>
+                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">${symbol}${transitTotal.toLocaleString()}</h4>
             </div>
             <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
                 <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-taxi" style="color:var(--accent-gold);"></i> Local Transit</span>
-                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">₹${localTransitTotal.toLocaleString('en-IN')}</h4>
+                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">${symbol}${localTransitTotal.toLocaleString()}</h4>
             </div>
             <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
                 <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-utensils" style="color:#F59E0B;"></i> Food &amp; Dining</span>
-                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">₹${foodTotal.toLocaleString('en-IN')}</h4>
+                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">${symbol}${foodTotal.toLocaleString()}</h4>
             </div>
             <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
                 <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-ticket-alt" style="color:var(--accent-emerald);"></i> Sightseeing &amp; Activities</span>
-                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">₹${activitiesTotal.toLocaleString('en-IN')}</h4>
+                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">${symbol}${activitiesTotal.toLocaleString()}</h4>
             </div>
             <div style="background:var(--bg-surface); border:1px solid var(--border); padding:18px; border-radius:10px;">
-                <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-shield-halved" style="color:var(--accent-rose);"></i> Emergency Contingency (10%)</span>
-                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">₹${contingency.toLocaleString('en-IN')}</h4>
+                <span style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;"><i class="fas fa-shield-halved" style="color:var(--accent-rose);"></i> Contingency Reserve (10%)</span>
+                <h4 style="font-size:20px; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">${symbol}${contingency.toLocaleString()}</h4>
             </div>
         `;
     }
 
-    currentGeneratedItinerary.estimatedBudget = '₹' + grandTotal.toLocaleString('en-IN');
+    currentGeneratedItinerary.estimatedBudget = `${symbol}${grandTotal.toLocaleString()}`;
 }
 
-// Requirement 8: Interactive Map & Itinerary Synchronization
+/**
+ * 18. Remove Stop Day from Timeline
+ */
 function removeItineraryDay(dayIdx) {
     if (!currentGeneratedItinerary || !currentGeneratedItinerary.daysPlan) return;
     if (currentGeneratedItinerary.daysPlan.length <= 1) {
@@ -320,26 +933,20 @@ function removeItineraryDay(dayIdx) {
         return;
     }
 
-    // Remove day
     currentGeneratedItinerary.daysPlan.splice(dayIdx, 1);
-
-    // Renumber remaining days
     currentGeneratedItinerary.daysPlan.forEach((d, i) => {
         d.dayNumber = i + 1;
     });
     currentGeneratedItinerary.days = currentGeneratedItinerary.daysPlan.length;
 
-    // Smoothly re-render timeline nodes without full page reload
     renderTimelineNodesOnly();
-
-    // Recalculate trip cost dynamically
     recalculateAndRenderTripCost();
-
-    // Redraw map route markers and polyline
     updatePlannerRouteMap(currentGeneratedItinerary);
 }
 
-// Requirement 7: Leaflet Standard Map & Satellite View Layer Switcher
+/**
+ * 19. Leaflet OpenStreetMap & Esri Satellite Layer Switcher
+ */
 function initPlannerRouteMap(itinerary) {
     const mapEl = document.getElementById('itineraryRouteMap');
     if (!mapEl) return;
@@ -352,23 +959,24 @@ function initPlannerRouteMap(itinerary) {
         'paris': [48.8566, 2.3522],
         'tokyo': [35.6762, 139.6503],
         'jaipur': [26.9124, 75.7873],
-        'shimla': [31.1048, 77.1734]
+        'shimla': [31.1048, 77.1734],
+        'kodaikanal': [10.2381, 77.4892],
+        'london': [51.5074, -0.1278],
+        'dubai': [25.2048, 55.2708]
     };
 
     const destKey = (itinerary.destination || '').toLowerCase().split(',')[0].trim();
     const center = coordsMap[destKey] || [11.4102, 76.6950];
 
     if (!plannerMap) {
-        // Standard OSM Layer
         const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
         });
 
-        // Esri Satellite Imagery Layer (Free, no API key required)
         const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS'
         });
 
         plannerMap = L.map('itineraryRouteMap', {
@@ -394,7 +1002,6 @@ function initPlannerRouteMap(itinerary) {
 function updatePlannerRouteMap(itinerary) {
     if (!plannerMap) return;
 
-    // Clear old markers and polylines
     routeMarkers.forEach(m => plannerMap.removeLayer(m));
     routeMarkers = [];
 
@@ -406,7 +1013,10 @@ function updatePlannerRouteMap(itinerary) {
         'paris': [48.8566, 2.3522],
         'tokyo': [35.6762, 139.6503],
         'jaipur': [26.9124, 75.7873],
-        'shimla': [31.1048, 77.1734]
+        'shimla': [31.1048, 77.1734],
+        'kodaikanal': [10.2381, 77.4892],
+        'london': [51.5074, -0.1278],
+        'dubai': [25.2048, 55.2708]
     };
 
     const destKey = (itinerary.destination || '').toLowerCase().split(',')[0].trim();
@@ -435,9 +1045,12 @@ function updatePlannerRouteMap(itinerary) {
     }
 }
 
+/**
+ * 20. Save Trip Plan to User Profile
+ */
 async function saveTripToProfile() {
     if (!Auth.isAuthenticated()) {
-        alert('Please login to save this trip to your account!');
+        alert('Please login to bookmark and save this trip to your account.');
         window.location.href = 'login.html?redirect=planner.html';
         return;
     }
@@ -445,20 +1058,23 @@ async function saveTripToProfile() {
     if (!currentGeneratedItinerary) return;
 
     const btn = document.getElementById('btnSaveTrip');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+    }
 
     try {
         const payload = {
             title: currentGeneratedItinerary.title,
+            origin: plannerState.originCity,
             destination: currentGeneratedItinerary.destination,
-            days: currentGeneratedItinerary.days || 3,
-            people: currentGeneratedItinerary.travelers || 2,
-            hotelTier: currentGeneratedItinerary.budgetTier || 'Moderate',
-            currency: currentGeneratedItinerary.currency || 'INR',
-            startDate: document.getElementById('tripStartDate').value,
-            endDate: document.getElementById('tripEndDate').value,
-            interests: selectedInterests,
+            days: currentGeneratedItinerary.days || plannerState.days,
+            people: getActiveTravelersCount(),
+            hotelTier: plannerState.budgetTier || 'Moderate',
+            currency: plannerState.customCurrency || 'INR',
+            startDate: plannerState.startDate,
+            endDate: plannerState.endDate,
+            interests: plannerState.interests,
             status: 'upcoming',
             imageUrl: currentGeneratedItinerary.imageUrl,
             daysPlan: currentGeneratedItinerary.daysPlan,
@@ -467,27 +1083,37 @@ async function saveTripToProfile() {
         };
 
         await Api.post('/trips', payload);
-        btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
-        btn.style.background = 'var(--accent-emerald)';
+
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+            btn.style.background = 'var(--accent-emerald)';
+        }
 
         setTimeout(() => {
             if (confirm('Trip saved successfully! Would you like to view your Saved Trips in the Dashboard?')) {
-                window.location.href = 'dashboard.html';
+                window.location.href = 'dashboard.html?tab=trips';
             }
         }, 300);
     } catch (e) {
         console.error('Save trip failed:', e);
         alert('Could not save trip. Please try again.');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-bookmark"></i> Save Trip';
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-bookmark"></i> Save Trip';
+        }
     }
 }
 
+/**
+ * 21. Export & Clipboard Actions
+ */
 function copyItineraryText() {
     if (!currentGeneratedItinerary) return;
+
     let text = `${currentGeneratedItinerary.title}\n`;
     text += `Destination: ${currentGeneratedItinerary.destination}\n`;
-    text += `Duration: ${currentGeneratedItinerary.days} Days • Travelers: ${currentGeneratedItinerary.travelers}\n`;
+    if (plannerState.originCity) text += `Starting From: ${plannerState.originCity} (Transit: ${plannerState.transitMode})\n`;
+    text += `Duration: ${currentGeneratedItinerary.days} Days • Travelers: ${getActiveTravelersCount()}\n`;
     text += `Estimated Budget: ${currentGeneratedItinerary.estimatedBudget}\n\n`;
 
     (currentGeneratedItinerary.daysPlan || []).forEach(day => {
@@ -509,20 +1135,6 @@ function exportItineraryPdf() {
     window.print();
 }
 
-function setStepActive(stepNum) {
-    for (let i = 1; i <= 4; i++) {
-        const item = document.getElementById('stepIndicator' + i);
-        if (!item) continue;
-        if (i < stepNum) {
-            item.className = 'stepper-item completed';
-        } else if (i === stepNum) {
-            item.className = 'stepper-item active';
-        } else {
-            item.className = 'stepper-item';
-        }
-    }
-}
-
 function escapeHtml(str) {
     if (!str) return '';
     const div = document.createElement('div');
@@ -530,10 +1142,14 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// Global exposure
-window.removeItineraryDay = removeItineraryDay;
+// Global Window Bindings
+window.goToStep = goToStep;
+window.clearField = clearField;
+window.setBudgetType = setBudgetType;
 window.toggleInterest = toggleInterest;
 window.generateItinerary = generateItinerary;
+window.removeItineraryDay = removeItineraryDay;
 window.copyItineraryText = copyItineraryText;
 window.exportItineraryPdf = exportItineraryPdf;
 window.saveTripToProfile = saveTripToProfile;
+window.plannerState = plannerState;
