@@ -140,6 +140,8 @@ var Auth = window.Auth || {
         const isPlanner = currentPath.endsWith('planner.html');
         const isChat = currentPath.endsWith('chatbot.html');
         const isDash = currentPath.endsWith('dashboard.html');
+        const isLogin = currentPath.endsWith('login.html');
+        const isRegister = currentPath.endsWith('register.html');
 
         const currentLangMeta = (typeof I18n !== 'undefined') ? I18n.getLanguageMeta(I18n.getCurrentLanguage()) : { code: 'auto', nativeName: 'Language', flag: '🌐' };
         const langLabel = currentLangMeta.code === 'auto' ? 'Auto Detect' : currentLangMeta.nativeName;
@@ -213,8 +215,8 @@ var Auth = window.Auth || {
             `;
         } else {
             html += `
-                <a href="login.html" class="nav-btn-login" data-i18n="nav_login">Login</a>
-                <a href="register.html" class="nav-link" style="font-weight:600; color:var(--accent-gold);">Sign Up</a>
+                <a href="login.html" class="nav-btn-login ${isLogin ? 'active' : ''}" data-i18n="nav_login">Login</a>
+                <a href="register.html" class="nav-link ${isRegister ? 'active' : ''}" style="font-weight:600; color:var(--accent-gold);">Sign Up</a>
             `;
         }
 
@@ -250,23 +252,56 @@ var Auth = window.Auth || {
         const navInner = document.querySelector('.navbar .nav-inner');
         if (!navInner || document.getElementById('navMobileToggle')) return;
 
+        // Ensure backdrop overlay exists
+        let backdrop = document.getElementById('navBackdrop');
+        if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.id = 'navBackdrop';
+            backdrop.className = 'nav-backdrop';
+            document.body.appendChild(backdrop);
+            backdrop.onclick = () => {
+                this.closeMobileNav();
+            };
+        }
+
         const toggleBtn = document.createElement('button');
         toggleBtn.type = 'button';
         toggleBtn.className = 'nav-mobile-toggle';
         toggleBtn.id = 'navMobileToggle';
         toggleBtn.setAttribute('aria-label', 'Toggle Navigation Menu');
         toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-        toggleBtn.onclick = () => {
-            const links = document.getElementById('navAuthLinks');
-            if (links) {
-                links.classList.toggle('mobile-open');
-                toggleBtn.innerHTML = links.classList.contains('mobile-open')
-                    ? '<i class="fas fa-times"></i>'
-                    : '<i class="fas fa-bars"></i>';
-            }
+        toggleBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.toggleMobileNav();
         };
 
         navInner.appendChild(toggleBtn);
+    },
+
+    toggleMobileNav() {
+        const links = document.getElementById('navAuthLinks');
+        const toggleBtn = document.getElementById('navMobileToggle');
+        const backdrop = document.getElementById('navBackdrop');
+        if (!links) return;
+        const isOpen = links.classList.contains('mobile-open');
+        if (isOpen) {
+            this.closeMobileNav();
+        } else {
+            links.classList.add('mobile-open');
+            if (toggleBtn) toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
+            if (backdrop) backdrop.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+    },
+
+    closeMobileNav() {
+        const links = document.getElementById('navAuthLinks');
+        const toggleBtn = document.getElementById('navMobileToggle');
+        const backdrop = document.getElementById('navBackdrop');
+        if (links) links.classList.remove('mobile-open');
+        if (toggleBtn) toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+        if (backdrop) backdrop.classList.remove('show');
+        document.body.style.overflow = '';
     },
 
     init() {
@@ -278,14 +313,24 @@ var Auth = window.Auth || {
             if (wrap && !wrap.contains(e.target)) {
                 this.closeUserDropdown();
             }
+            // Close mobile menu if clicked on any link
+            if (e.target.closest('#navAuthLinks a')) {
+                this.closeMobileNav();
+            }
         });
 
         // Close mobile nav on escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this.closeUserDropdown();
-                const links = document.getElementById('navAuthLinks');
-                if (links) links.classList.remove('mobile-open');
+                this.closeMobileNav();
+            }
+        });
+
+        // Close mobile nav on resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 900) {
+                this.closeMobileNav();
             }
         });
 

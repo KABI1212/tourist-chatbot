@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,9 @@
     <!-- Google Fonts: Cormorant Garamond & DM Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap"
+        rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
@@ -21,6 +24,7 @@
     <!-- Theme Switcher -->
     <script src="js/theme.js"></script>
 </head>
+
 <body class="chat-page-body">
 
     <!-- NAVBAR -->
@@ -28,7 +32,8 @@
         <div class="nav-inner">
             <a href="index.html" class="nav-logo">
                 <img src="assets/brand/logo-dark.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-dark">
-                <img src="assets/brand/logo-light.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-light">
+                <img src="assets/brand/logo-light.png" alt="Tourist Chatbot Logo"
+                    class="brand-logo-img brand-logo-light">
                 <span>TouristAI</span>
             </a>
 
@@ -36,7 +41,8 @@
                 <a href="index.html" class="nav-link" data-i18n="nav_home">Home</a>
                 <a href="destinations.html" class="nav-link" data-i18n="nav_destinations">Destinations</a>
                 <a href="planner.html" class="nav-link" data-i18n="nav_planner">Plan Trip</a>
-                <a href="chatbot.html" class="nav-link active"><i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Chat</span></a>
+                <a href="chatbot.html" class="nav-link active"><i class="fas fa-sparkles"
+                        style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Chat</span></a>
 
                 <!-- Language Selector -->
                 <button type="button" class="lang-selector-trigger" id="langSelectorBtn" title="Change Language">
@@ -44,7 +50,7 @@
                     <span id="currentLangLabel">Language</span>
                     <i class="fas fa-chevron-down" style="font-size:10px; opacity:0.7;"></i>
                 </button>
-                
+
                 <!-- Theme Toggle Button -->
                 <button type="button" class="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
                     <i class="fas fa-sun"></i>
@@ -70,7 +76,8 @@
             <div class="sidebar-scroll-area">
                 <div class="sidebar-group-title">
                     <span data-i18n="chat_recent_conversations">Recent Conversations</span>
-                    <button type="button" class="sidebar-icon-btn" onclick="startNewChat()" title="Start New Conversation">
+                    <button type="button" class="sidebar-icon-btn" onclick="startNewChat()"
+                        title="Start New Conversation">
                         <i class="fas fa-pen-to-square"></i>
                     </button>
                 </div>
@@ -80,7 +87,8 @@
             </div>
 
             <div class="sidebar-bottom">
-                <button type="button" class="clear-history-btn" onclick="confirmClearHistory()" title="Clear all conversation history">
+                <button type="button" class="clear-history-btn" onclick="confirmClearHistory()"
+                    title="Clear all conversation history">
                     <i class="fas fa-trash-can"></i> <span data-i18n="chat_clear_history">Clear History</span>
                 </button>
             </div>
@@ -91,19 +99,24 @@
             <!-- Header -->
             <div class="chat-stage-header">
                 <div class="header-left-group">
-                    <button type="button" class="mobile-sidebar-toggle" id="sidebarToggleBtn" onclick="toggleSidebar(true)" title="Toggle Conversations Menu" aria-label="Toggle Conversations">
+                    <button type="button" class="mobile-sidebar-toggle" id="sidebarToggleBtn"
+                        onclick="toggleSidebar(true)" title="Toggle Conversations Menu"
+                        aria-label="Toggle Conversations">
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="assistant-headline">
                         <h2>Your AI Travel Concierge</h2>
-                        <p>Intelligent destination discovery, custom itineraries, transit directions &amp; live weather</p>
+                        <p>Intelligent destination discovery, custom itineraries, transit directions &amp; live weather
+                        </p>
                     </div>
                 </div>
 
                 <div class="header-right-group">
                     <!-- Chat Response Language Selector -->
                     <div class="chat-lang-selector-wrap" id="chatLangSelectorWrap">
-                        <button type="button" class="chat-lang-btn" id="chatLangBtn" onclick="toggleChatLangDropdown(event)" title="Choose AI Response Language" aria-expanded="false" aria-haspopup="true">
+                        <button type="button" class="chat-lang-btn" id="chatLangBtn"
+                            onclick="toggleChatLangDropdown(event)" title="Choose AI Response Language"
+                            aria-expanded="false" aria-haspopup="true">
                             <span class="chat-lang-flag" id="chatLangCurrentFlag">⚡</span>
                             <span class="chat-lang-label" id="chatLangCurrentLabel">Auto-detect</span>
                             <i class="fas fa-chevron-down chat-lang-chevron"></i>
@@ -113,81 +126,100 @@
                                 <span>AI Response Language</span>
                             </div>
                             <div class="chat-lang-options-list">
-                                <button type="button" class="chat-lang-opt" data-lang="auto" onclick="selectChatLanguage('auto')">
+                                <button type="button" class="chat-lang-opt" data-lang="auto"
+                                    onclick="selectChatLanguage('auto')">
                                     <span class="opt-flag">⚡</span>
                                     <span class="opt-name">Auto-detect</span>
                                     <span class="opt-hint">Replies in your language</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="en" onclick="selectChatLanguage('en')">
+                                <button type="button" class="chat-lang-opt" data-lang="en"
+                                    onclick="selectChatLanguage('en')">
                                     <span class="opt-flag">🌐</span>
                                     <span class="opt-name">English</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="ta" onclick="selectChatLanguage('ta')">
+                                <button type="button" class="chat-lang-opt" data-lang="ta"
+                                    onclick="selectChatLanguage('ta')">
                                     <span class="opt-flag">🇮🇳</span>
                                     <span class="opt-name">Tamil (தமிழ்)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="hi" onclick="selectChatLanguage('hi')">
+                                <button type="button" class="chat-lang-opt" data-lang="hi"
+                                    onclick="selectChatLanguage('hi')">
                                     <span class="opt-flag">🇮🇳</span>
                                     <span class="opt-name">Hindi (हिन्दी)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="te" onclick="selectChatLanguage('te')">
+                                <button type="button" class="chat-lang-opt" data-lang="te"
+                                    onclick="selectChatLanguage('te')">
                                     <span class="opt-flag">🇮🇳</span>
                                     <span class="opt-name">Telugu (తెలుగు)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="ml" onclick="selectChatLanguage('ml')">
+                                <button type="button" class="chat-lang-opt" data-lang="ml"
+                                    onclick="selectChatLanguage('ml')">
                                     <span class="opt-flag">🇮🇳</span>
                                     <span class="opt-name">Malayalam (മലയാളം)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="kn" onclick="selectChatLanguage('kn')">
+                                <button type="button" class="chat-lang-opt" data-lang="kn"
+                                    onclick="selectChatLanguage('kn')">
                                     <span class="opt-flag">🇮🇳</span>
                                     <span class="opt-name">Kannada (ಕನ್ನಡ)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="bn" onclick="selectChatLanguage('bn')">
+                                <button type="button" class="chat-lang-opt" data-lang="bn"
+                                    onclick="selectChatLanguage('bn')">
                                     <span class="opt-flag">🇮🇳</span>
                                     <span class="opt-name">Bengali (বাংলা)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="mr" onclick="selectChatLanguage('mr')">
+                                <button type="button" class="chat-lang-opt" data-lang="mr"
+                                    onclick="selectChatLanguage('mr')">
                                     <span class="opt-flag">🇮🇳</span>
                                     <span class="opt-name">Marathi (मराठी)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="gu" onclick="selectChatLanguage('gu')">
+                                <button type="button" class="chat-lang-opt" data-lang="gu"
+                                    onclick="selectChatLanguage('gu')">
                                     <span class="opt-flag">🇮🇳</span>
                                     <span class="opt-name">Gujarati (ગુજરાતી)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="pa" onclick="selectChatLanguage('pa')">
+                                <button type="button" class="chat-lang-opt" data-lang="pa"
+                                    onclick="selectChatLanguage('pa')">
                                     <span class="opt-flag">🇮🇳</span>
                                     <span class="opt-name">Punjabi (ਪੰਜਾਬੀ)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="ur" onclick="selectChatLanguage('ur')">
+                                <button type="button" class="chat-lang-opt" data-lang="ur"
+                                    onclick="selectChatLanguage('ur')">
                                     <span class="opt-flag">🇮🇳</span>
                                     <span class="opt-name">Urdu (اردو)</span>
                                 </button>
                                 <div class="chat-lang-divider"></div>
-                                <button type="button" class="chat-lang-opt" data-lang="fr" onclick="selectChatLanguage('fr')">
+                                <button type="button" class="chat-lang-opt" data-lang="fr"
+                                    onclick="selectChatLanguage('fr')">
                                     <span class="opt-flag">🇫🇷</span>
                                     <span class="opt-name">French (Français)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="es" onclick="selectChatLanguage('es')">
+                                <button type="button" class="chat-lang-opt" data-lang="es"
+                                    onclick="selectChatLanguage('es')">
                                     <span class="opt-flag">🇪🇸</span>
                                     <span class="opt-name">Spanish (Español)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="de" onclick="selectChatLanguage('de')">
+                                <button type="button" class="chat-lang-opt" data-lang="de"
+                                    onclick="selectChatLanguage('de')">
                                     <span class="opt-flag">🇩🇪</span>
                                     <span class="opt-name">German (Deutsch)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="ar" onclick="selectChatLanguage('ar')">
+                                <button type="button" class="chat-lang-opt" data-lang="ar"
+                                    onclick="selectChatLanguage('ar')">
                                     <span class="opt-flag">🇸🇦</span>
                                     <span class="opt-name">Arabic (العربية)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="zh" onclick="selectChatLanguage('zh')">
+                                <button type="button" class="chat-lang-opt" data-lang="zh"
+                                    onclick="selectChatLanguage('zh')">
                                     <span class="opt-flag">🇨🇳</span>
                                     <span class="opt-name">Chinese (中文)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="ja" onclick="selectChatLanguage('ja')">
+                                <button type="button" class="chat-lang-opt" data-lang="ja"
+                                    onclick="selectChatLanguage('ja')">
                                     <span class="opt-flag">🇯🇵</span>
                                     <span class="opt-name">Japanese (日本語)</span>
                                 </button>
-                                <button type="button" class="chat-lang-opt" data-lang="ko" onclick="selectChatLanguage('ko')">
+                                <button type="button" class="chat-lang-opt" data-lang="ko"
+                                    onclick="selectChatLanguage('ko')">
                                     <span class="opt-flag">🇰🇷</span>
                                     <span class="opt-name">Korean (한국어)</span>
                                 </button>
@@ -201,7 +233,8 @@
                     <button type="button" class="btn btn-outline btn-sm" onclick="startNewChat()" title="New Chat">
                         <i class="fas fa-plus"></i> <span class="hide-mobile">New Chat</span>
                     </button>
-                    <button type="button" class="btn btn-outline btn-sm" onclick="exportChat()" title="Export current chat as text">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="exportChat()"
+                        title="Export current chat as text">
                         <i class="fas fa-download"></i> <span class="hide-mobile">Export</span>
                     </button>
                 </div>
@@ -221,12 +254,14 @@
 
                     <h1 class="welcome-title">Where would you like to explore?</h1>
                     <p class="welcome-subtitle">
-                        Ask about any destination worldwide, request tailor-made itineraries, transit routes, budget estimates, or local weather in English, Tamil, or Tanglish.
+                        Ask about any destination worldwide, request tailor-made itineraries, transit routes, budget
+                        estimates, or local weather in English, Tamil, or Tanglish.
                     </p>
 
                     <!-- Starter Prompt Cards Grid -->
                     <div class="welcome-prompts-grid">
-                        <div class="welcome-card" onclick="useSuggestedChip('Plan a 3-day trip from Chennai to Ooty for 2 people under ₹8,000')">
+                        <div class="welcome-card"
+                            onclick="useSuggestedChip('Plan a 3-day trip from Chennai to Ooty for 2 people under ₹8,000')">
                             <div class="card-icon"><i class="fas fa-mountain"></i></div>
                             <div class="card-content">
                                 <h4>3-Day Ooty Budget Trip</h4>
@@ -234,7 +269,8 @@
                             </div>
                         </div>
 
-                        <div class="welcome-card" onclick="useSuggestedChip('5 days Kerala backwaters itinerary with houseboat and budget breakdown')">
+                        <div class="welcome-card"
+                            onclick="useSuggestedChip('5 days Kerala backwaters itinerary with houseboat and budget breakdown')">
                             <div class="card-icon"><i class="fas fa-water"></i></div>
                             <div class="card-content">
                                 <h4>5 Days Kerala Backwaters</h4>
@@ -242,7 +278,8 @@
                             </div>
                         </div>
 
-                        <div class="welcome-card" onclick="useSuggestedChip('What is the live weather and best time to visit Manali?')">
+                        <div class="welcome-card"
+                            onclick="useSuggestedChip('What is the live weather and best time to visit Manali?')">
                             <div class="card-icon"><i class="fas fa-cloud-sun"></i></div>
                             <div class="card-content">
                                 <h4>Manali Weather &amp; Season</h4>
@@ -250,7 +287,8 @@
                             </div>
                         </div>
 
-                        <div class="welcome-card" onclick="useSuggestedChip('How can I reach Kodaikanal from Madurai by bus or taxi?')">
+                        <div class="welcome-card"
+                            onclick="useSuggestedChip('How can I reach Kodaikanal from Madurai by bus or taxi?')">
                             <div class="card-icon"><i class="fas fa-route"></i></div>
                             <div class="card-content">
                                 <h4>Transit &amp; Directions</h4>
@@ -258,7 +296,8 @@
                             </div>
                         </div>
 
-                        <div class="welcome-card" onclick="useSuggestedChip('Suggest top romantic places in Paris on a modest budget')">
+                        <div class="welcome-card"
+                            onclick="useSuggestedChip('Suggest top romantic places in Paris on a modest budget')">
                             <div class="card-icon"><i class="fas fa-landmark"></i></div>
                             <div class="card-content">
                                 <h4>Paris on a Budget</h4>
@@ -266,7 +305,8 @@
                             </div>
                         </div>
 
-                        <div class="welcome-card" onclick="useSuggestedChip('Chennai la irundhu 3 days trip plan pannu under 10k budget')">
+                        <div class="welcome-card"
+                            onclick="useSuggestedChip('Chennai la irundhu 3 days trip plan pannu under 10k budget')">
                             <div class="card-icon"><i class="fas fa-language"></i></div>
                             <div class="card-content">
                                 <h4>Tamil &amp; Tanglish Planning</h4>
@@ -282,7 +322,8 @@
                 </div>
 
                 <!-- Floating Scroll to Bottom Button -->
-                <button type="button" class="scroll-to-bottom-btn" id="scrollToBottomBtn" onclick="scrollToBottomSmooth()" title="Jump to recent messages">
+                <button type="button" class="scroll-to-bottom-btn" id="scrollToBottomBtn"
+                    onclick="scrollToBottomSmooth()" title="Jump to recent messages">
                     <i class="fas fa-arrow-down"></i>
                 </button>
             </div>
@@ -296,25 +337,25 @@
 
                 <!-- Input Form -->
                 <form class="chat-input-row" id="chatForm" onsubmit="handleChatSubmit(event)">
-                    <textarea 
-                        id="chatMessageInput" 
-                        rows="1" 
-                        placeholder="Ask anything about travel, budgets, transit routes, or itineraries…" 
-                        data-i18n-placeholder="chat_input_placeholder"
-                        onkeydown="handleInputKeydown(event)"
+                    <textarea id="chatMessageInput" rows="1"
+                        placeholder="Ask anything about travel, budgets, transit routes, or itineraries…"
+                        data-i18n-placeholder="chat_input_placeholder" onkeydown="handleInputKeydown(event)"
                         required></textarea>
 
-                    <button type="button" class="chat-mic-btn" id="voiceMicBtn" title="Speak your question" onclick="Voice.toggleRecognition()">
+                    <button type="button" class="chat-mic-btn" id="voiceMicBtn" title="Speak your question"
+                        onclick="Voice.toggleRecognition()">
                         <i class="fas fa-microphone"></i>
                     </button>
 
-                    <button type="submit" class="chat-send-btn" id="sendBtn" title="Send Message" data-i18n-title="chat_send">
+                    <button type="submit" class="chat-send-btn" id="sendBtn" title="Send Message"
+                        data-i18n-title="chat_send">
                         <i class="fas fa-paper-plane" id="sendBtnIcon"></i>
                     </button>
                 </form>
 
                 <div class="chat-input-disclaimer">
-                    <i class="fas fa-circle-info"></i> <span>Verify real-time transit schedules, visa requirements, and venue timings before travel.</span>
+                    <i class="fas fa-circle-info"></i> <span>Verify real-time transit schedules, visa requirements, and
+                        venue timings before travel.</span>
                 </div>
             </div>
         </main>
@@ -328,7 +369,8 @@
             <p id="modalMessage">Are you sure you want to clear your conversation history? This cannot be undone.</p>
             <div class="chat-modal-actions">
                 <button type="button" class="btn btn-outline" onclick="closeConfirmModal()">Cancel</button>
-                <button type="button" class="btn btn-danger" id="modalConfirmBtn" onclick="executeModalAction()">Clear</button>
+                <button type="button" class="btn btn-danger" id="modalConfirmBtn"
+                    onclick="executeModalAction()">Clear</button>
             </div>
         </div>
     </div>
@@ -344,4 +386,5 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="js/chatbot.js"></script>
 </body>
+
 </html>

@@ -573,12 +573,15 @@
 }
 
 .msg-bubble table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     width: 100%;
     border-collapse: collapse;
     margin: 14px 0;
     font-size: 13.5px;
     border-radius: var(--radius-sm);
-    overflow: hidden;
 }
 
 .msg-bubble th, .msg-bubble td {
@@ -985,23 +988,33 @@
    RESPONSIVE DESIGN FOR CHAT
    ========================================================== */
 @media (max-width: 768px) {
+    .chat-layout {
+        height: calc(100dvh - 64px);
+        margin-top: 64px;
+        position: relative;
+    }
+
     .chat-sidebar {
         position: fixed;
-        top: 0;
+        top: 64px;
         bottom: 0;
         left: 0;
-        width: 280px;
+        width: min(300px, 85vw);
+        max-width: 100%;
         transform: translateX(-100%);
         z-index: 1000;
-        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex !important;
+        flex-direction: column;
     }
 
     .chat-sidebar.open {
-        transform: translateX(0);
+        transform: translateX(0) !important;
     }
 
     .mobile-sidebar-toggle {
-        display: flex;
+        display: inline-flex;
     }
 
     .hide-mobile {
@@ -1009,33 +1022,87 @@
     }
 
     .chat-stage-header {
-        padding: 10px 16px;
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    .header-left-group {
+        gap: 8px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .assistant-headline {
+        min-width: 0;
+    }
+
+    .assistant-headline h2 {
+        font-size: 14.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .assistant-headline p {
+        display: none;
+    }
+
+    .header-right-group {
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .chat-lang-btn {
+        height: 32px;
+        padding: 0 8px;
+        font-size: 12px;
+        gap: 4px;
+    }
+
+    .chat-lang-dropdown {
+        width: min(240px, calc(100vw - 20px));
+        right: 0;
     }
 
     .messages-scroll-box {
-        padding: 16px 14px 14px;
-        gap: 16px;
+        padding: 14px 12px 10px;
+        gap: 14px;
+    }
+
+    .welcome-screen {
+        padding: 18px 10px 10px;
     }
 
     .welcome-title {
-        font-size: 26px;
+        font-size: clamp(22px, 5.5vw, 28px);
     }
 
     .welcome-subtitle {
-        font-size: 13.5px;
-        margin-bottom: 20px;
+        font-size: 13px;
+        margin-bottom: 18px;
+        line-height: 1.5;
     }
 
     .welcome-prompts-grid {
         grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .welcome-card {
+        padding: 10px 12px;
     }
 
     .chat-footer-dock {
-        padding: 8px 14px 14px;
+        padding: 6px 12px 10px;
     }
 
     .msg-bubble-wrap {
-        max-width: 90%;
+        max-width: 92%;
+    }
+
+    .msg-bubble {
+        padding: 10px 14px;
+        font-size: 13.5px;
     }
 }
 
@@ -1158,6 +1225,76 @@
 .dest-tab-btn.active {
     color: var(--primary-light);
     border-bottom-color: var(--primary-light);
+}
+
+/* Destination Details Action Bar */
+.dest-action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.dest-meta-pills {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dest-action-btns {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+    .dest-action-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+    .dest-action-btns {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .dest-action-btns .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Directory Search & Filters Row */
+.dir-filters-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.dir-search-wrap {
+    flex: 2 1 240px;
+    min-width: 0;
+    position: relative;
+}
+
+.dir-filter-select {
+    flex: 1 1 160px;
+    min-width: 130px;
+    padding: 11px 14px;
+    font-size: 13.5px;
+}
+
+@media (max-width: 600px) {
+    .dir-search-wrap {
+        flex: 1 1 100%;
+    }
+    .dir-filter-select {
+        flex: 1 1 45%;
+    }
 }
 
 /* Attractions Grid */
@@ -2293,7 +2430,7 @@
 /* Favorites Grid */
 .favorites-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
     gap: 22px;
 }
 
@@ -2363,7 +2500,7 @@
 /* Profile & Settings Layout */
 .dash-profile-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
     gap: 28px;
 }
 
@@ -2545,55 +2682,109 @@
     font-family: var(--font-display);
 }
 
-/* RESPONSIVE BREAKPOINTS */
+/* ==========================================================
+   RESPONSIVE BREAKPOINTS (Planner, Dashboard, Destinations, Cards)
+   ========================================================== */
 @media (max-width: 1024px) {
+    .planner-page-container {
+        margin: 84px auto 40px;
+        padding: 0 18px;
+    }
     .planner-layout-split {
         grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    .planner-stepper {
+        padding: 16px 18px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .stepper-item {
+        padding-bottom: 0;
+        flex: 1;
+        min-width: 140px;
+        align-items: center;
+        gap: 10px;
+    }
+    .stepper-item:not(:last-child)::after {
+        display: none;
+    }
+    .stepper-text p {
+        display: none;
+    }
+    .stepper-text h4 {
+        font-size: 13.5px;
+    }
+    .stepper-circle {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
     }
     .interests-grid {
         grid-template-columns: repeat(3, 1fr);
     }
-    .hero-quick-cards {
-        grid-template-columns: repeat(2, 1fr);
-    }
 }
 
 @media (max-width: 768px) {
-    .chat-layout {
-        flex-direction: column;
-    }
-    .chat-sidebar {
-        width: 100%;
-        height: auto;
-        display: none;
-    }
-    .chat-sidebar.open {
-        display: flex;
-    }
     .dashboard-layout {
         grid-template-columns: 1fr;
+        margin-top: 64px;
+        min-height: calc(100vh - 64px);
     }
     .dashboard-sidebar {
         display: none;
     }
     .dash-mobile-tabs {
         display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 2px 2px 10px;
+        margin-bottom: 18px;
+    }
+    .dash-mobile-tab-btn {
+        padding: 7px 14px;
+        font-size: 12.5px;
+        flex-shrink: 0;
     }
     .dashboard-main {
-        padding: 24px 18px 40px;
+        padding: 18px 14px 36px;
     }
     .dash-welcome-card {
-        padding: 24px 20px;
+        padding: 18px 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+    .dash-welcome-texts h2 {
+        font-size: clamp(20px, 4.5vw, 26px);
     }
     .dash-stats-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    .dash-stat-card {
+        padding: 14px 12px;
+        gap: 10px;
+    }
+    .dash-stat-value {
+        font-size: 22px;
+    }
+    .dash-stat-label {
+        font-size: 11.5px;
     }
     .dash-profile-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
     }
     .trip-card-left {
         flex-direction: column;
         align-items: flex-start;
+        gap: 12px;
     }
     .trip-thumb-img {
         width: 100%;
@@ -2602,18 +2793,108 @@
     .trip-card-actions {
         width: 100%;
         justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 8px;
     }
-    .hero-travel h1 {
-        font-size: 38px;
+    .interests-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
     }
-    .hero-quick-cards {
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    .dest-hero-banner {
+        height: auto;
+        min-height: 280px;
+        margin-top: 64px;
+        padding: 24px 16px 20px;
+    }
+    .dest-hero-title h1 {
+        font-size: clamp(28px, 6vw, 40px);
+    }
+    .weather-badge-box {
+        padding: 10px 14px;
+        gap: 10px;
+    }
+    .weather-temp {
+        font-size: 22px;
+    }
+    .dest-tabs-nav {
+        padding: 0 14px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .dest-tab-btn {
+        padding: 12px 14px;
+        font-size: 13.5px;
+    }
+    .cost-pill-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    .cost-hero-total {
+        font-size: clamp(26px, 5vw, 34px);
+    }
+    .custom-budget-grid {
+        grid-template-columns: 100px 1fr;
+        gap: 10px;
+    }
+    .budget-toggle-group {
+        grid-column: 1 / -1;
+        width: 100%;
+        display: flex;
+    }
+    .budget-toggle-btn {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .planner-page-container {
+        margin: 72px auto 30px;
+        padding: 0 12px;
+    }
+    .planner-form-card {
+        padding: 18px 14px;
+    }
+    .stepper-item {
+        min-width: 110px;
+    }
+    .stepper-circle {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    .stepper-text h4 {
+        font-size: 12px;
+    }
+    .dash-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .cost-pill-grid {
+        grid-template-columns: 1fr;
+    }
+    .custom-budget-grid {
         grid-template-columns: 1fr;
     }
     .interests-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
     }
-    .form-grid-2 {
-        grid-template-columns: 1fr;
+    .interest-card {
+        padding: 10px 8px;
+    }
+    .interest-card span {
+        font-size: 12px;
+    }
+    .step-nav-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    .step-nav-footer button {
+        width: 100%;
     }
 }
 
@@ -2974,6 +3255,82 @@
 .voice-status-toast.info {
     border-color: var(--accent-gold);
     color: var(--text-main);
+}
+
+/* Trip Detail Modal Responsive Layout */
+.trip-detail-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.trip-detail-modal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    max-width: 760px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 32px 36px;
+    position: relative;
+    box-shadow: var(--shadow-lg);
+    box-sizing: border-box;
+}
+
+.trip-modal-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 22px;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.trip-modal-close-btn:hover {
+    color: var(--text-main);
+    background: var(--bg-surface);
+}
+
+@media (max-width: 600px) {
+    .trip-detail-modal-overlay {
+        padding: 12px;
+    }
+    .trip-detail-modal-card {
+        padding: 24px 16px 20px;
+        max-height: 92vh;
+        border-radius: var(--radius-md);
+    }
+    .trip-modal-close-btn {
+        top: 14px;
+        right: 14px;
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 380px) {
+    .dash-stats-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 

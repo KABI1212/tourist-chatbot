@@ -129,8 +129,8 @@
             </span>
         </div>
 
-        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px; box-shadow:var(--shadow-md);">
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:32px; align-items:start;">
+        <div class="budget-calc-wrapper">
+            <div class="budget-calc-grid">
                 
                 <!-- Controls Column -->
                 <div>
@@ -150,7 +150,7 @@
 
                     <div class="form-field" style="margin-bottom:18px;">
                         <label style="color:var(--text-muted); font-size:13px; font-weight:600; margin-bottom:8px; display:block;">Travelers Count</label>
-                        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;" id="travelerButtons">
+                        <div class="traveler-chips-grid" id="travelerButtons">
                             <button type="button" class="prompt-chip" onclick="setCalcTravelers(1, this)">Solo (1)</button>
                             <button type="button" class="prompt-chip active" onclick="setCalcTravelers(2, this)">Couple (2)</button>
                             <button type="button" class="prompt-chip" onclick="setCalcTravelers(4, this)">Family (4)</button>
@@ -168,7 +168,7 @@
 
                     <div class="form-field">
                         <label style="color:var(--text-muted); font-size:13px; font-weight:600; margin-bottom:8px; display:block;">Travel Comfort Tier</label>
-                        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+                        <div class="tier-chips-grid">
                             <button type="button" class="prompt-chip" onclick="setCalcTier('budget', this)">Budget</button>
                             <button type="button" class="prompt-chip active" onclick="setCalcTier('standard', this)">Standard</button>
                             <button type="button" class="prompt-chip" onclick="setCalcTier('luxury', this)">Luxury</button>
@@ -177,7 +177,7 @@
                 </div>
 
                 <!-- Live Cost Breakdown Column -->
-                <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px;">
+                <div class="budget-breakdown-card">
                     <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:14px;">
                         <div>
                             <span style="font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); font-weight:700;">Estimated Total Budget</span>
@@ -240,7 +240,7 @@
             </div>
         </div>
 
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:20px;">
+        <div class="transit-hub-grid">
             <div class="req-card" style="padding:22px;">
                 <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
                     <div class="logo-badge" style="background:rgba(56,189,248,0.15); color:var(--accent-cyan); font-size:16px;"><i class="fas fa-train"></i></div>

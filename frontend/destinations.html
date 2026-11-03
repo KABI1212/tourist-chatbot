@@ -41,12 +41,10 @@
             </a>
 
             <!-- Search inside header with Global Autocomplete -->
-            <div style="position:relative; width:320px;">
-                <div
-                    style="display:flex; align-items:center; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-full); padding:6px 16px; width:100%;">
-                    <i class="fas fa-search" style="color:var(--text-dim); margin-right:8px; font-size:13px;"></i>
-                    <input type="text" id="headerSearchInput" placeholder="Search any destination worldwide…"
-                        style="background:transparent; border:none; outline:none; color:var(--text-main); font-size:13px; width:100%;"
+            <div class="nav-search-bar" id="headerNavSearchWrap">
+                <div class="nav-search-inner">
+                    <i class="fas fa-search" style="color:var(--text-dim); margin-right:8px; font-size:13px; flex-shrink:0;"></i>
+                    <input type="text" id="headerSearchInput" class="nav-search-input" placeholder="Search destinations…"
                         autocomplete="off">
                 </div>
                 <div id="headerAutocompleteDropdown" class="global-autocomplete-dropdown"></div>
@@ -124,9 +122,8 @@
     <div class="section-wrapper" style="padding-top:40px; padding-bottom:60px;">
 
         <!-- Action bar -->
-        <div
-            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:16px;">
-            <div style="display:flex; align-items:center; gap:12px;">
+        <div class="dest-action-bar">
+            <div class="dest-meta-pills">
                 <span id="destRatingPill" class="badge-tag"
                     style="background:rgba(197,164,109,0.15); color:var(--accent-gold); font-size:14px; padding:6px 14px;">
                     <i class="fas fa-star"></i> 4.8 (3.4K reviews)
@@ -137,7 +134,7 @@
                 </span>
             </div>
 
-            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <div class="dest-action-btns">
                 <button class="btn btn-outline btn-sm" onclick="askAiAboutCurrentDest()" id="btnAskAiAboutPlace">
                     <i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> Ask AI About Place
                 </button>
@@ -338,8 +335,8 @@
             <div
                 style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:32px;">
                 <!-- Search & Dropdown Filters -->
-                <div style="display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:260px; position:relative;">
+                <div class="dir-filters-row">
+                    <div class="dir-search-wrap">
                         <i class="fas fa-search"
                             style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--text-dim); font-size:14px;"></i>
                         <input type="text" id="dirSearchInput"
@@ -349,16 +346,14 @@
                         <div id="dirAutocompleteDropdown" class="global-autocomplete-dropdown"></div>
                     </div>
                     <!-- Budget Tier Filter -->
-                    <select id="dirBudgetFilter" class="form-select"
-                        style="width:180px; padding:10px 14px; font-size:13.5px;" onchange="handleDiscoveryFilter()">
+                    <select id="dirBudgetFilter" class="form-select dir-filter-select" onchange="handleDiscoveryFilter()">
                         <option value="all">Budget: All</option>
                         <option value="budget">Budget (Economy)</option>
                         <option value="moderate">Moderate Comfort</option>
                         <option value="luxury">Luxury Premium</option>
                     </select>
                     <!-- Duration Filter -->
-                    <select id="dirDurationFilter" class="form-select"
-                        style="width:200px; padding:10px 14px; font-size:13.5px;" onchange="handleDiscoveryFilter()">
+                    <select id="dirDurationFilter" class="form-select dir-filter-select" onchange="handleDiscoveryFilter()">
                         <option value="all">Duration: All</option>
                         <option value="weekend">Weekend (1-2 Days)</option>
                         <option value="short">Short (3-4 Days)</option>

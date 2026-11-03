@@ -53,8 +53,8 @@
     </nav>
 
     <!-- AUTH CARD CONTAINER -->
-    <main style="flex:1; display:flex; align-items:center; justify-content:center; padding:110px 20px 50px;">
-        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px; max-width:520px; width:100%; box-shadow:var(--shadow-lg);">
+    <main class="auth-main-container">
+        <div class="auth-card-box">
             
             <div style="text-align:center; margin-bottom:28px;">
                 <img src="assets/brand/logo-dark.png" alt="TouristAI Logo" class="brand-logo-img large brand-logo-dark" style="margin:0 auto 14px; display:block;">
@@ -66,7 +66,7 @@
             <div id="authAlert" style="display:none; padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:18px;"></div>
 
             <form id="registerForm" onsubmit="handleRegisterSubmit(event)">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                <div class="form-grid-responsive-2">
                     <div class="form-field">
                         <label for="username"><i class="fas fa-user"></i> Username *</label>
                         <input type="text" id="username" class="form-input" placeholder="traveler12" required autofocus>
@@ -88,7 +88,7 @@
                     <input type="text" id="address" class="form-input" placeholder="Chennai, India">
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                <div class="form-grid-responsive-2">
                     <div class="form-field">
                         <label for="password"><i class="fas fa-lock"></i> Password *</label>
                         <input type="password" id="password" class="form-input" placeholder="••••••••" minlength="6" required>
