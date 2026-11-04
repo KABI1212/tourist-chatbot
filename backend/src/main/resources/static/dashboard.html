@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traveler Workspace &amp; Dashboard — TouristAI</title>
+    <meta name="description" content="Manage your saved travel itineraries, explore wishlisted destinations, customize travel preferences, and plan custom journeys.">
+    <!-- Google Fonts: Cormorant Garamond & DM Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chatbot.css">
+    <!-- Favicon & Web App Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-light-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-dark-16x16.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/brand/icon-192x192.png">
+    <meta name="theme-color" content="#11110F">
+    <!-- Theme Switcher -->
+    <script src="js/theme.js"></script>
+    <!-- Immediate Authentication Guard to prevent any flashing of protected content -->
+    <script>
+        (function() {
+            var token = localStorage.getItem('tourist_jwt_token');
+            if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+                var current = window.location.pathname.split('/').pop() || 'dashboard.html';
+                window.location.replace('login.html?redirect=' + encodeURIComponent(current + window.location.search));
+            }
+        })();
+    </script>
+</head>
+<body style="background:var(--bg-dark);" data-requires-auth="true">
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="dashNavbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <img src="assets/brand/logo-dark.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-dark">
+                <img src="assets/brand/logo-light.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-light">
+                <span>TouristAI</span>
+            </a>
+
+            <div class="nav-links" id="navAuthLinks">
+                <!-- Dynamically populated by Auth.updateNavbar() -->
+                <a href="index.html" class="nav-link" data-i18n="nav_home">Home</a>
+                <a href="destinations.html" class="nav-link" data-i18n="nav_destinations">Destinations</a>
+                <a href="planner.html" class="nav-link" data-i18n="nav_planner">Plan Trip</a>
+                <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Chat</span></a>
+                <a href="dashboard.html" class="nav-link active"><i class="fas fa-compass" style="color:var(--accent-gold);"></i> <span>Dashboard</span></a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN DASHBOARD APPLICATION CONTAINER -->
+    <div class="dashboard-layout" id="dashboardLayoutApp" style="display:none;">
+        
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="dashboard-sidebar">
+            <ul class="dash-menu-list">
+                <li class="dash-menu-item active" id="tabNavOverview" onclick="switchDashboardView('overview')">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Overview</span>
+                </li>
+                <li class="dash-menu-item" id="tabNavTrips" onclick="switchDashboardView('trips')">
+                    <i class="fas fa-suitcase-rolling"></i>
+                    <span>My Trips</span>
+                    <span class="badge-count" id="badgeTripsCount">0</span>
+                </li>
+                <li class="dash-menu-item" id="tabNavPlaces" onclick="switchDashboardView('places')">
+                    <i class="fas fa-heart"></i>
+                    <span>Saved Places</span>
+                    <span class="badge-count" id="badgePlacesCount">0</span>
+                </li>
+                <li class="dash-menu-item" id="tabNavExpenses" onclick="switchDashboardView('expenses')">
+                    <i class="fas fa-wallet"></i>
+                    <span>My Expenses</span>
+                </li>
+                <li class="dash-menu-item" id="tabNavProfile" onclick="switchDashboardView('profile')">
+                    <i class="fas fa-user-gear"></i>
+                    <span>Profile &amp; Settings</span>
+                </li>
+            </ul>
+
+            <!-- Sidebar User Card Widget -->
+            <div class="dash-user-profile-widget">
+                <div class="dash-user-avatar" id="dashUserAvatar"><i class="fas fa-user"></i></div>
+                <div style="flex:1; min-width:0;">
+                    <div class="dash-user-name" id="dashUserName">Traveler</div>
+                    <span class="dash-user-email" id="dashUserEmail">user@example.com</span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="Auth.logout()" title="Sign Out" style="padding:6px 10px; border-color:var(--border);">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN DASHBOARD CONTENT AREA -->
+        <main class="dashboard-main">
+            
+            <!-- Mobile Responsive Tab Bar (Visible on mobile/tablet screens <= 768px) -->
+            <div class="dash-mobile-tabs" id="dashMobileTabs">
+                <button type="button" class="dash-mobile-tab-btn active" id="mobTabOverview" onclick="switchDashboardView('overview')">
+                    <i class="fas fa-chart-pie"></i> Overview
+                </button>
+                <button type="button" class="dash-mobile-tab-btn" id="mobTabTrips" onclick="switchDashboardView('trips')">
+                    <i class="fas fa-suitcase-rolling"></i> Trips (<span id="mobBadgeTrips">0</span>)
+                </button>
+                <button type="button" class="dash-mobile-tab-btn" id="mobTabPlaces" onclick="switchDashboardView('places')">
+                    <i class="fas fa-heart"></i> Places (<span id="mobBadgePlaces">0</span>)
+                </button>
+                <button type="button" class="dash-mobile-tab-btn" id="mobTabExpenses" onclick="switchDashboardView('expenses')">
+                    <i class="fas fa-wallet"></i> Expenses
+                </button>
+                <button type="button" class="dash-mobile-tab-btn" id="mobTabProfile" onclick="switchDashboardView('profile')">
+                    <i class="fas fa-user-gear"></i> Settings
+                </button>
+            </div>
+
+            <!-- ========================================================
+                 VIEW 1: OVERVIEW DASHBOARD
+                 ======================================================== -->
+            <section id="viewOverview" class="dash-tab-section active">
+                
+                <!-- Welcome Banner Card -->
+                <div class="dash-welcome-card">
+                    <div class="dash-welcome-texts">
+                        <h2>Welcome back, <span id="dashGreetingName">Traveler</span>!</h2>
+                        <p>Your personalized AI travel hub. Plan new journeys, manage saved day-by-day itineraries, track your dream destinations, and consult your intelligent travel concierge.</p>
+                    </div>
+                    <div class="dash-welcome-actions">
+                        <a href="planner.html" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> Plan New Trip
+                        </a>
+                        <a href="chatbot.html" class="btn btn-outline btn-sm" style="color:var(--accent-gold); border-color:var(--accent-gold);">
+                            <i class="fas fa-sparkles"></i> AI Assistant
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Live Metrics Overview (Real Data Only, No Fabrication) -->
+                <div class="dash-stats-grid">
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon"><i class="fas fa-suitcase-rolling"></i></div>
+                        <div>
+                            <div class="dash-stat-value" id="statTotalTrips">0</div>
+                            <div class="dash-stat-label">Total Saved Trips</div>
+                        </div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon"><i class="fas fa-plane-departure"></i></div>
+                        <div>
+                            <div class="dash-stat-value" id="statUpcomingTrips">0</div>
+                            <div class="dash-stat-label">Upcoming Journeys</div>
+                        </div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon"><i class="fas fa-heart"></i></div>
+                        <div>
+                            <div class="dash-stat-value" id="statSavedPlaces">0</div>
+                            <div class="dash-stat-label">Saved Wishlist Places</div>
+                        </div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon"><i class="fas fa-calendar-days"></i></div>
+                        <div>
+                            <div class="dash-stat-value" id="statTotalDays">0</div>
+                            <div class="dash-stat-label">Planned Travel Days</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Grid -->
+                <div style="margin-bottom:18px;">
+                    <h3 style="font-size:19px; font-weight:700; color:var(--text-main); margin-bottom:4px;">Quick Actions</h3>
+                    <p style="font-size:13.5px; color:var(--text-muted); margin-bottom:16px;">Jump straight into planning, AI consultations, or destination discovery.</p>
+                </div>
+                
+                <div class="dash-quick-grid">
+                    <div class="dash-quick-card" onclick="window.location.href='planner.html'">
+                        <div>
+                            <div class="dash-quick-card-icon"><i class="fas fa-calendar-check"></i></div>
+                            <h4>Plan a New Trip</h4>
+                            <p>Generate bespoke day-wise itineraries with budgets, transportation, and daily activities.</p>
+                        </div>
+                        <div class="dash-quick-card-action">Launch Planner <i class="fas fa-arrow-right"></i></div>
+                    </div>
+
+                    <div class="dash-quick-card" onclick="window.location.href='chatbot.html'">
+                        <div>
+                            <div class="dash-quick-card-icon"><i class="fas fa-sparkles"></i></div>
+                            <h4>AI Travel Concierge</h4>
+                            <p>Get instant local tips, routes, dining recommendations, and custom packing advice for any journey.</p>
+                        </div>
+                        <div class="dash-quick-card-action">Open AI Chat <i class="fas fa-arrow-right"></i></div>
+                    </div>
+
+                    <div class="dash-quick-card" onclick="window.location.href='destinations.html'">
+                        <div>
+                            <div class="dash-quick-card-icon"><i class="fas fa-compass"></i></div>
+                            <h4>Explore Destinations</h4>
+                            <p>Browse worldwide attractions, interactive maps, weather guides, and seasonal highlights.</p>
+                        </div>
+                        <div class="dash-quick-card-action">Discover Places <i class="fas fa-arrow-right"></i></div>
+                    </div>
+
+                    <div class="dash-quick-card" onclick="switchDashboardView('places')">
+                        <div>
+                            <div class="dash-quick-card-icon"><i class="fas fa-bookmark"></i></div>
+                            <h4>View Saved Places</h4>
+                            <p>Access your curated list of bookmarked destinations and travel bucket list.</p>
+                        </div>
+                        <div class="dash-quick-card-action">View Wishlist <i class="fas fa-arrow-right"></i></div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Section -->
+                <div style="margin-top:40px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                        <div>
+                            <h3 style="font-size:19px; font-weight:700; color:var(--text-main);">Recent Travel Itineraries</h3>
+                            <p style="font-size:13.5px; color:var(--text-muted);">Your most recently planned or updated travel journeys.</p>
+                        </div>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="switchDashboardView('trips')">
+                            View All Trips <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <div id="overviewRecentTripsContainer" class="saved-trips-list">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <!-- Overview Empty State if 0 trips -->
+                    <div id="overviewNoTripsState" class="dash-empty-state" style="display:none;">
+                        <div class="dash-empty-icon"><i class="fas fa-suitcase-rolling"></i></div>
+                        <h3>No Saved Trips Yet</h3>
+                        <p>You haven't generated or saved any trip itineraries yet. Create your first custom journey with our AI Trip Planner in seconds!</p>
+                        <a href="planner.html" class="btn btn-primary btn-sm"><i class="fas fa-sparkles"></i> Plan Your First Trip</a>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 VIEW 2: MY TRIPS (SAVED ITINERARIES)
+                 ======================================================== -->
+            <section id="viewMyTrips" class="dash-tab-section">
+                
+                <div class="dash-page-header">
+                    <div>
+                        <h2>My Saved Itineraries</h2>
+                        <p>Manage, review, export, and explore all your custom AI-crafted travel plans.</p>
+                    </div>
+                    <a href="planner.html" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Plan New Trip
+                    </a>
+                </div>
+
+                <!-- Trip Filter Tabs -->
+                <div class="trip-filter-tabs">
+                    <button type="button" class="trip-tab-pill active" id="filterBtnAll" onclick="filterTripsByStatus('all', this)">
+                        All Trips (<span id="countFilterAll">0</span>)
+                    </button>
+                    <button type="button" class="trip-tab-pill" id="filterBtnUpcoming" onclick="filterTripsByStatus('upcoming', this)">
+                        Upcoming (<span id="countFilterUpcoming">0</span>)
+                    </button>
+                    <button type="button" class="trip-tab-pill" id="filterBtnPast" onclick="filterTripsByStatus('past', this)">
+                        Past / Completed (<span id="countFilterPast">0</span>)
+                    </button>
+                </div>
+
+                <!-- Trip Cards List Container -->
+                <div class="saved-trips-list" id="tripsCardsList">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Empty State for My Trips -->
+                <div id="tripsEmptyState" class="dash-empty-state" style="display:none;">
+                    <div class="dash-empty-icon"><i class="fas fa-map-location-dot"></i></div>
+                    <h3 id="tripsEmptyTitle">No Trips Found</h3>
+                    <p id="tripsEmptyText">Ready to create an unforgettable travel experience? Generate a customized day-by-day plan with transport, stays, and activities.</p>
+                    <a href="planner.html" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Plan Your First Trip</a>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 VIEW 3: SAVED PLACES (FAVORITES / WISHLIST)
+                 ======================================================== -->
+            <section id="viewSavedPlaces" class="dash-tab-section">
+                
+                <div class="dash-page-header">
+                    <div>
+                        <h2>Saved Places &amp; Wishlist</h2>
+                        <p>Worldwide destinations, cultural landmarks, and hidden gems bookmarked for your future travels.</p>
+                    </div>
+                    <a href="destinations.html" class="btn btn-outline btn-sm">
+                        <i class="fas fa-compass"></i> Explore More Destinations
+                    </a>
+                </div>
+
+                <!-- Favorites Grid Container -->
+                <div class="favorites-grid" id="favoritesCardsGrid">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Empty State for Saved Places -->
+                <div id="favoritesEmptyState" class="dash-empty-state" style="display:none;">
+                    <div class="dash-empty-icon"><i class="fas fa-heart"></i></div>
+                    <h3>No Saved Places Yet</h3>
+                    <p>Browse our worldwide destination guides and click the heart icon on any landmark to bookmark it here for easy reference.</p>
+                    <a href="destinations.html" class="btn btn-primary btn-sm"><i class="fas fa-compass"></i> Browse Destinations</a>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 VIEW 4: BUDGET & EXPENSE TRACKING
+                 ======================================================== -->
+            <section id="viewMyExpenses" class="dash-tab-section">
+                
+                <div class="dash-page-header">
+                    <div>
+                        <h2>Budget &amp; Expense Tracking</h2>
+                        <p>Track real trip expenditures, monitor category budgets, and calculate per-traveler balance.</p>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openLogExpenseModal()">
+                            <i class="fas fa-plus"></i> Log Expense
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Trip Selector Filter -->
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; background:var(--bg-card); padding:14px 18px; border-radius:var(--radius-md); border:1px solid var(--border);">
+                    <label for="expenseTripFilter" style="font-size:13.5px; font-weight:600; color:var(--text-main); margin:0;">
+                        <i class="fas fa-suitcase-rolling" style="color:var(--accent-gold);"></i> Select Trip:
+                    </label>
+                    <select id="expenseTripFilter" class="form-select" style="max-width:320px; font-size:13.5px; padding:6px 12px;" onchange="onExpenseTripChanged(this.value)">
+                        <option value="all">All Trips Combined</option>
+                    </select>
+                </div>
+
+                <!-- Live Expense Stats Summary -->
+                <div class="dash-stats-grid" style="margin-bottom:28px;">
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon"><i class="fas fa-coins" style="color:var(--accent-gold);"></i></div>
+                        <div>
+                            <div class="dash-stat-value" id="statExpenseBudget">₹0</div>
+                            <div class="dash-stat-label">Estimated Budget</div>
+                        </div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon"><i class="fas fa-receipt" style="color:var(--accent-cyan);"></i></div>
+                        <div>
+                            <div class="dash-stat-value" id="statExpenseSpent">₹0</div>
+                            <div class="dash-stat-label">Total Spent</div>
+                        </div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon"><i class="fas fa-scale-balanced" style="color:var(--accent-emerald);"></i></div>
+                        <div>
+                            <div class="dash-stat-value" id="statExpenseRemaining">₹0</div>
+                            <div class="dash-stat-label">Remaining Balance</div>
+                        </div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="dash-stat-icon"><i class="fas fa-user-group" style="color:var(--primary-light);"></i></div>
+                        <div>
+                            <div class="dash-stat-value" id="statExpensePerPerson">₹0</div>
+                            <div class="dash-stat-label">Per-Person Share</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Breakdown Grid -->
+                <div style="margin-bottom:28px;">
+                    <h3 style="font-size:17px; font-weight:700; color:var(--text-main); margin-bottom:12px;">Spending by Category</h3>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px;" id="expenseCategoryGrid">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Expense Transactions List -->
+                <div>
+                    <h3 style="font-size:17px; font-weight:700; color:var(--text-main); margin-bottom:12px;">Recorded Transactions</h3>
+                    <div id="expensesTableContainer" class="saved-trips-list">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <div id="expensesEmptyState" class="dash-empty-state" style="display:none;">
+                        <div class="dash-empty-icon"><i class="fas fa-receipt"></i></div>
+                        <h3>No Expenses Logged Yet</h3>
+                        <p>Keep your travel budget organized by logging stays, transit, meals, activities, and shopping.</p>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openLogExpenseModal()">
+                            <i class="fas fa-plus"></i> Log First Expense
+                        </button>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 VIEW 4: PROFILE & ACCOUNT SETTINGS
+                 ======================================================== -->
+            <section id="viewProfile" class="dash-tab-section">
+                
+                <div class="dash-page-header">
+                    <div>
+                        <h2>Profile &amp; Account Settings</h2>
+                        <p>Update your personal details, travel preferences, and password security.</p>
+                    </div>
+                </div>
+
+                <div class="dash-profile-grid">
+                    
+                    <!-- Edit Profile Card -->
+                    <div class="dash-form-card">
+                        <h3><i class="fas fa-user-circle" style="color:var(--accent-gold);"></i> Personal Information</h3>
+                        <p>Update your display name, contact information, and travel style bio.</p>
+
+                        <div id="profileAlert" style="display:none; padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:18px;"></div>
+
+                        <form id="profileForm" onsubmit="saveUserProfile(event)">
+                            <div class="form-field">
+                                <label for="profUsername"><i class="fas fa-at"></i> Username (Permanent)</label>
+                                <input type="text" id="profUsername" class="form-input" readonly>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="profFullName"><i class="fas fa-user"></i> Full Name</label>
+                                <input type="text" id="profFullName" class="form-input" placeholder="e.g. Alexandra Smith" required>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="profEmail"><i class="fas fa-envelope"></i> Email Address</label>
+                                <input type="email" id="profEmail" class="form-input" placeholder="user@example.com" readonly>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="profPhone"><i class="fas fa-phone"></i> Contact Phone</label>
+                                <input type="tel" id="profPhone" class="form-input" placeholder="+1 (555) 000-0000">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="profAddress"><i class="fas fa-location-dot"></i> City / Country</label>
+                                <input type="text" id="profAddress" class="form-input" placeholder="e.g. Chennai, India">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="profBio"><i class="fas fa-pen"></i> Bio &amp; Travel Preferences</label>
+                                <textarea id="profBio" class="form-input" rows="3" placeholder="Passionate explorer who loves mountain hikes, heritage architecture, and authentic local street food…"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-sm" id="btnSaveProfile">
+                                <i class="fas fa-check"></i> Save Profile Changes
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Travel Preferences Card -->
+                    <div class="dash-form-card" style="margin-top:24px;">
+                        <h3><i class="fas fa-sliders" style="color:var(--accent-gold);"></i> Travel Preferences</h3>
+                        <p>Configure your default travel habits, dietary choices, and preferred currency.</p>
+
+                        <div id="prefAlert" style="display:none; padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:18px;"></div>
+
+                        <form id="travelPreferencesForm" onsubmit="saveTravelPreferences(event)">
+                            <div class="form-field">
+                                <label for="prefTravelStyle"><i class="fas fa-person-walking-luggage"></i> Preferred Travel Style</label>
+                                <select id="prefTravelStyle" class="form-select">
+                                    <option value="Solo Explorer">Solo Explorer</option>
+                                    <option value="Romantic Couple" selected>Romantic Couple / Duo</option>
+                                    <option value="Family & Kids">Family &amp; Kids</option>
+                                    <option value="Adventure Group">Adventure &amp; Friends</option>
+                                    <option value="Luxury & Heritage">Luxury &amp; Heritage Connoisseur</option>
+                                    <option value="Budget Backpacker">Budget Backpacker</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="prefDietary"><i class="fas fa-utensils"></i> Dietary Preference</label>
+                                <select id="prefDietary" class="form-select">
+                                    <option value="No preference" selected>No specific restrictions</option>
+                                    <option value="Vegetarian">Strictly Vegetarian</option>
+                                    <option value="Vegan">Vegan (Plant-based)</option>
+                                    <option value="Halal">Halal certified</option>
+                                    <option value="Jain">Jain cuisine (no root veg)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="prefCurrency"><i class="fas fa-coins"></i> Default Currency</label>
+                                <select id="prefCurrency" class="form-select">
+                                    <option value="INR" selected>Indian Rupee (INR ₹)</option>
+                                    <option value="USD">US Dollar (USD $)</option>
+                                    <option value="EUR">Euro (EUR €)</option>
+                                    <option value="GBP">British Pound (GBP £)</option>
+                                    <option value="AUD">Australian Dollar (AUD A$)</option>
+                                    <option value="CAD">Canadian Dollar (CAD C$)</option>
+                                    <option value="AED">UAE Dirham (AED)</option>
+                                    <option value="SGD">Singapore Dollar (SGD S$)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="prefTransit"><i class="fas fa-train"></i> Preferred Transit</label>
+                                <select id="prefTransit" class="form-select">
+                                    <option value="Mixed" selected>Fastest / Mixed Transit</option>
+                                    <option value="Flight">Flight &amp; Airport Transfers</option>
+                                    <option value="Train">Scenic Railway / Trains</option>
+                                    <option value="Bus">Intercity Express Bus</option>
+                                    <option value="Car or taxi">Private Car / Road Trip</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-outline btn-sm" id="btnSavePreferences" style="border-color:var(--accent-gold); color:var(--accent-gold);">
+                                <i class="fas fa-check"></i> Save Travel Preferences
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Security & Password Change Card -->
+                    <div>
+                        <div class="dash-form-card" style="margin-bottom:24px;">
+                            <h3><i class="fas fa-lock" style="color:var(--accent-gold);"></i> Password &amp; Security</h3>
+                            <p>Update your password to keep your travel account secure.</p>
+
+                            <div id="passwordAlert" style="display:none; padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:18px;"></div>
+
+                            <form id="passwordForm" onsubmit="changeUserPassword(event)">
+                                <div class="form-field">
+                                    <label for="currPassword">Current Password</label>
+                                    <input type="password" id="currPassword" class="form-input" placeholder="••••••••" required>
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="newPassword">New Password (min. 6 characters)</label>
+                                    <input type="password" id="newPassword" class="form-input" placeholder="••••••••" required minlength="6">
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="confirmNewPassword">Confirm New Password</label>
+                                    <input type="password" id="confirmNewPassword" class="form-input" placeholder="••••••••" required minlength="6">
+                                </div>
+
+                                <button type="submit" class="btn btn-outline btn-sm" id="btnChangePassword" style="border-color:var(--accent-gold); color:var(--accent-gold);">
+                                    <i class="fas fa-key"></i> Update Password
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Account Summary Card -->
+                        <div class="dash-form-card">
+                            <h3><i class="fas fa-shield-halved" style="color:var(--accent-emerald);"></i> Account Status</h3>
+                            <div style="font-size:13.5px; color:var(--text-muted); line-height:1.8; margin-top:10px;">
+                                <div><strong style="color:var(--text-main);">Role:</strong> <span class="badge-tag badge-upcoming" style="margin-left:6px;" id="accountRoleBadge">Verified Traveler</span></div>
+                                <div style="margin-top:6px;"><strong style="color:var(--text-main);">Authentication:</strong> Spring Security JWT + Rotating Refresh Tokens</div>
+                                <div style="margin-top:6px;"><strong style="color:var(--text-main);">Account Created:</strong> <span id="accountCreatedDate">Active Account</span></div>
+                            </div>
+                            <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:13px; color:var(--text-dim);">Finished your session?</span>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="Auth.logout()" style="color:var(--accent-rose); border-color:rgba(244,63,94,0.3);">
+                                    <i class="fas fa-sign-out-alt"></i> Sign Out
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Active Logged-in Devices & Sessions (Section 4) -->
+                        <div class="dash-form-card" style="margin-top:24px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                                <h3 style="margin:0;"><i class="fas fa-laptop" style="color:var(--accent-gold);"></i> Active Devices</h3>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="logoutAllDevices()" style="color:var(--accent-rose); border-color:rgba(244,63,94,0.3); font-size:12px; padding:4px 8px;">
+                                    <i class="fas fa-power-off"></i> Revoke All Other Devices
+                                </button>
+                            </div>
+                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Manage logged-in sessions across your devices.</p>
+                            <div id="activeSessionsList" style="display:flex; flex-direction:column; gap:10px;">
+                                <div style="font-size:13px; color:var(--text-dim); text-align:center; padding:12px;"><i class="fas fa-spinner fa-spin"></i> Loading active devices…</div>
+                            </div>
+                        </div>
+
+                        <!-- Danger Zone: Account Deletion -->
+                        <div class="dash-form-card" style="margin-top:24px; border-color:rgba(244,63,94,0.3); background:rgba(244,63,94,0.03);">
+                            <h3 style="color:var(--accent-rose);"><i class="fas fa-triangle-exclamation"></i> Danger Zone</h3>
+                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Permanently delete your account, along with all saved trips, wishlist places, and chat history. This action cannot be reversed.</p>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="openDeleteAccountModal()" style="color:var(--accent-rose); border-color:var(--accent-rose);">
+                                <i class="fas fa-trash-can"></i> Delete My Account
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+    </div>
+
+    <!-- TRIP DETAIL MODAL -->
+    <div id="tripDetailModal" class="trip-detail-modal-overlay">
+        <div class="trip-detail-modal-card">
+            <button type="button" class="trip-modal-close-btn" onclick="closeTripModal()" title="Close details" aria-label="Close details">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="modalTripContent">
+                <!-- Dynamically filled by openTripModal(id) -->
+            </div>
+        </div>
+    </div>
+
+    <!-- LOG EXPENSE MODAL -->
+    <div id="logExpenseModal" class="trip-detail-modal-overlay" style="display:none;">
+        <div class="trip-detail-modal-card" style="max-width:500px;">
+            <button type="button" class="trip-modal-close-btn" onclick="closeLogExpenseModal()" title="Close" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+            <div style="padding:10px 4px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                    <div style="width:40px; height:40px; border-radius:50%; background:rgba(197,164,109,0.15); display:flex; align-items:center; justify-content:center; color:var(--accent-gold); font-size:18px;">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-family:var(--font-display); font-size:22px; color:var(--text-main);">Log Trip Expense</h3>
+                        <p style="margin:2px 0 0; font-size:13px; color:var(--text-muted);">Record actual spending against your trip budget.</p>
+                    </div>
+                </div>
+
+                <div id="expenseModalAlert" style="display:none; padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:14px;"></div>
+
+                <form id="logExpenseForm" onsubmit="submitLogExpense(event)">
+                    <div class="form-field">
+                        <label for="expModalTripSelect"><i class="fas fa-suitcase-rolling"></i> Associated Trip *</label>
+                        <select id="expModalTripSelect" class="form-select" required>
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="expModalTitle"><i class="fas fa-tag"></i> Expense Description *</label>
+                        <input type="text" id="expModalTitle" class="form-input" placeholder="e.g. Traditional Dinner at Cafe, Train Ticket, Museum Pass" required>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-field">
+                            <label for="expModalAmount"><i class="fas fa-coins"></i> Amount *</label>
+                            <input type="number" id="expModalAmount" class="form-input" min="1" step="any" placeholder="e.g. 1500" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="expModalCategory"><i class="fas fa-layer-group"></i> Category *</label>
+                            <select id="expModalCategory" class="form-select" required>
+                                <option value="food" selected>Food &amp; Dining</option>
+                                <option value="transport">Transit &amp; Travel</option>
+                                <option value="accommodation">Lodging &amp; Stays</option>
+                                <option value="attractions">Sightseeing &amp; Activities</option>
+                                <option value="shopping">Shopping &amp; Souvenirs</option>
+                                <option value="other">Miscellaneous &amp; Emergency</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-field">
+                            <label for="expModalDate"><i class="fas fa-calendar-day"></i> Date</label>
+                            <input type="date" id="expModalDate" class="form-input">
+                        </div>
+                        <div class="form-field">
+                            <label for="expModalPaidBy"><i class="fas fa-user"></i> Paid By</label>
+                            <input type="text" id="expModalPaidBy" class="form-input" placeholder="e.g. Me, Partner, Shared" value="Me">
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="closeLogExpenseModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm" id="btnSubmitExpense">
+                            <i class="fas fa-check"></i> Save Expense
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHARE TRIP DASHBOARD MODAL -->
+    <div id="dashShareModal" class="trip-detail-modal-overlay" style="display:none;">
+        <div class="trip-detail-modal-card" style="max-width:500px;">
+            <button type="button" class="trip-modal-close-btn" onclick="closeDashShareModal()" title="Close" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+            <div style="padding:10px 4px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                    <div style="width:40px; height:40px; border-radius:50%; background:rgba(197,164,109,0.15); display:flex; align-items:center; justify-content:center; color:var(--accent-gold); font-size:18px;">
+                        <i class="fas fa-share-nodes"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-family:var(--font-display); font-size:22px; color:var(--text-main);">Share Itinerary</h3>
+                        <p style="margin:2px 0 0; font-size:13px; color:var(--text-muted);">Public link for friends, family, or co-travelers.</p>
+                    </div>
+                </div>
+
+                <div style="margin:16px 0; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; padding:14px;">
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="dashShareUrlInput" class="form-input" readonly style="font-size:12.5px; background:var(--bg-card); font-family:monospace;">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="copyDashShareLink()">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <div id="dashShareCopyFeedback" style="display:none; font-size:12px; color:var(--accent-emerald); margin-top:8px;">
+                        <i class="fas fa-check-circle"></i> Link copied to clipboard!
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="closeDashShareModal()">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRM DELETE ACCOUNT MODAL -->
+    <div id="deleteAccountModal" class="trip-detail-modal-overlay" style="display:none;">
+        <div class="trip-detail-modal-card" style="max-width:460px;">
+            <button type="button" class="trip-modal-close-btn" onclick="closeDeleteAccountModal()" title="Close" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+            <div style="padding:10px 4px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                    <div style="width:42px; height:42px; border-radius:50%; background:rgba(244,63,94,0.15); display:flex; align-items:center; justify-content:center; color:var(--accent-rose); font-size:18px;">
+                        <i class="fas fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-family:var(--font-display); font-size:22px; color:var(--accent-rose);">Delete Account</h3>
+                        <p style="margin:2px 0 0; font-size:13px; color:var(--text-muted);">This action is permanent and cannot be undone.</p>
+                    </div>
+                </div>
+
+                <div id="deleteAccountAlert" style="display:none; padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:14px;"></div>
+
+                <p style="font-size:13.5px; color:var(--text-main); line-height:1.6; margin-bottom:14px;">
+                    Please enter your password to confirm account deletion. All your saved itineraries, expenses, favorites, and chat sessions will be immediately erased.
+                </p>
+
+                <form onsubmit="submitDeleteAccount(event)">
+                    <div class="form-field">
+                        <label for="deleteConfirmPassword">Your Password</label>
+                        <input type="password" id="deleteConfirmPassword" class="form-input" placeholder="••••••••" required>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="closeDeleteAccountModal()">Cancel</button>
+                        <button type="submit" class="btn btn-sm" id="btnConfirmDeleteAccount" style="background:var(--accent-rose); color:#fff; border:none; padding:8px 16px;">
+                            <i class="fas fa-trash-can"></i> Permanently Delete
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

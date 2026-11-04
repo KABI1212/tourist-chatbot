@@ -74,17 +74,25 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/index.html",
+                                "/chatbot",
                                 "/chatbot.html",
+                                "/planner",
                                 "/planner.html",
+                                "/dashboard",
                                 "/dashboard.html",
+                                "/login",
                                 "/login.html",
+                                "/register",
                                 "/register.html",
+                                "/reset-password",
                                 "/reset-password.html",
+                                "/destinations",
                                 "/destinations.html",
                                 "/css/**",
                                 "/js/**",
                                 "/assets/**",
                                 "/favicon.ico",
+                                "/manifest.json",
                                 "/error"
                         ).permitAll()
                         // Public AI trip generation & public chat message sending & public shared itineraries

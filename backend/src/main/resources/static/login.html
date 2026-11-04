@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In — TouristAI</title>
+    <!-- Google Fonts: Cormorant Garamond & DM Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chatbot.css">
+    <!-- Favicon & Web App Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-light-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-dark-16x16.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/brand/icon-192x192.png">
+    <meta name="theme-color" content="#11110F">
+    <!-- Theme Switcher -->
+    <script src="js/theme.js"></script>
+</head>
+<body style="background:var(--bg-dark); display:flex; flex-direction:column; min-height:100vh;">
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <img src="assets/brand/logo-dark.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-dark">
+                <img src="assets/brand/logo-light.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-light">
+                <span>TouristAI</span>
+            </a>
+            <div class="nav-links" id="navAuthLinks">
+                <a href="index.html" class="nav-link" data-i18n="nav_home">Home</a>
+                <a href="destinations.html" class="nav-link" data-i18n="nav_destinations">Destinations</a>
+                <a href="planner.html" class="nav-link" data-i18n="nav_planner">Plan Trip</a>
+
+                <!-- Language Selector -->
+                <button type="button" class="lang-selector-trigger" id="langSelectorBtn" title="Change Language">
+                    <span class="lang-selector-flag" id="currentLangFlag">🌐</span>
+                    <span id="currentLangLabel">Language</span>
+                    <i class="fas fa-chevron-down" style="font-size:10px; opacity:0.7;"></i>
+                </button>
+                
+                <!-- Theme Toggle Button -->
+                <button type="button" class="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- AUTH CARD CONTAINER -->
+    <main class="auth-main-container">
+        <div class="auth-card-box">
+            
+            <div style="text-align:center; margin-bottom:28px;">
+                <img src="assets/brand/logo-dark.png" alt="TouristAI Logo" class="brand-logo-img large brand-logo-dark" style="margin:0 auto 14px; display:block;">
+                <img src="assets/brand/logo-light.png" alt="TouristAI Logo" class="brand-logo-img large brand-logo-light" style="margin:0 auto 14px; display:block;">
+                <h2 style="font-family:var(--font-display); font-size:28px; color:var(--text-main); font-weight:700; margin-bottom:6px;">Welcome Back</h2>
+                <p style="color:var(--text-muted); font-size:14px;">Sign in to access saved journeys, personalized itineraries, and travel history.</p>
+            </div>
+
+            <div id="authAlert" style="display:none; padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:18px;"></div>
+
+            <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+                <div class="form-field">
+                    <label for="username"><i class="fas fa-user"></i> Username or Email</label>
+                    <input type="text" id="username" class="form-input" placeholder="e.g. alexandra or user@example.com" required autofocus>
+                </div>
+
+                <div class="form-field">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:7px;">
+                        <label for="password" style="margin-bottom:0;"><i class="fas fa-lock"></i> Password</label>
+                        <a href="reset-password.html" style="font-size:12.5px; color:var(--accent-gold); font-weight:600; text-decoration:none; transition:var(--transition);" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Forgot Password?</a>
+                    </div>
+                    <div style="position:relative;">
+                        <input type="password" id="password" class="form-input" placeholder="••••••••" required style="padding-right:44px;">
+                        <button type="button" class="btn-pwd-toggle" onclick="togglePasswordVisibility('password', this)" title="Show or hide password" aria-label="Toggle password visibility" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:4px 6px;">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="loginSubmitBtn" style="width:100%; margin-top:10px;">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </form>
+
+            <div style="text-align:center; margin-top:24px; font-size:13.5px; color:var(--text-muted);">
+                Don't have an account? <a href="register.html" style="color:var(--accent-gold); font-weight:600;">Create Account</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Pre-warm backend service asynchronously (mitigates Render cold start delays while user is on form)
+            try {
+                const apiBase = (typeof Api !== 'undefined' && Api.getBaseUrl) ? Api.getBaseUrl() : '/api';
+                fetch(apiBase + '/health', { method: 'GET', cache: 'no-store' }).catch(() => {});
+            } catch (e) {}
+
+            // If already logged in, redirect directly to Home Page
+            if (Auth.isAuthenticated()) {
+                window.location.replace('index.html');
+                return;
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            const alertBox = document.getElementById('authAlert');
+            if (params.get('reset') === 'true') {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(16,185,129,0.15)';
+                alertBox.style.color = '#34D399';
+                alertBox.innerHTML = '<i class="fas fa-check-circle"></i> Password reset successfully! Please sign in with your new password.';
+            } else if (params.get('registered') === 'true') {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(16,185,129,0.15)';
+                alertBox.style.color = '#34D399';
+                alertBox.innerHTML = '<i class="fas fa-check-circle"></i> Account registered successfully! Please log in.';
+            } else if (params.get('logout') === 'true') {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(197,164,109,0.15)';
+                alertBox.style.color = '#C5A46D';
+                alertBox.innerHTML = '<i class="fas fa-info-circle"></i> You have been securely signed out.';
+            } else if (params.get('expired') === 'true') {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(244,63,94,0.15)';
+                alertBox.style.color = '#F43F5E';
+                alertBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> Your session expired. Please sign in again.';
+            }
+        });
+
+        let isSubmitting = false;
+
+        async function handleLoginSubmit(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            if (isSubmitting) return;
+
+            const alertBox = document.getElementById('authAlert');
+            alertBox.style.display = 'none';
+
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value;
+            const btn = document.getElementById('loginSubmitBtn');
+
+            if (!u || !p) {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(244,63,94,0.15)';
+                alertBox.style.color = '#F43F5E';
+                alertBox.textContent = 'Please enter both username and password.';
+                return;
+            }
+
+            isSubmitting = true;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
+
+            // Progressive status feedback for cold start mitigation
+            let secondsElapsed = 0;
+            const statusInterval = setInterval(() => {
+                secondsElapsed++;
+                if (secondsElapsed >= 10) {
+                    btn.innerHTML = '<i class="fas fa-cloud-arrow-up fa-spin"></i> Waking cloud server (Render)…';
+                } else if (secondsElapsed >= 4) {
+                    btn.innerHTML = '<i class="fas fa-shield-halved fa-spin"></i> Authenticating with server…';
+                }
+            }, 1000);
+
+            try {
+                await Auth.login(u, p);
+                clearInterval(statusInterval);
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(16,185,129,0.15)';
+                alertBox.style.color = '#34D399';
+                alertBox.innerHTML = '<i class="fas fa-check-circle"></i> Welcome back! Redirecting to Home…';
+
+                const params = new URLSearchParams(window.location.search);
+                let redirect = params.get('redirect');
+
+                // Requirement 1: Login Page -> Successful Login -> Home Page.
+                // Do not make the Dashboard the mandatory landing page after login.
+                if (!redirect || redirect === 'dashboard.html' || redirect.includes('login') || redirect.includes('register')) {
+                    redirect = 'index.html';
+                }
+
+                setTimeout(() => {
+                    window.location.replace(redirect);
+                }, 350);
+            } catch (err) {
+                clearInterval(statusInterval);
+                isSubmitting = false;
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(244,63,94,0.15)';
+                alertBox.style.color = '#F43F5E';
+                alertBox.textContent = err.message || 'Invalid username or password.';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+            }
+        }
+    </script>
+</body>
+</html>

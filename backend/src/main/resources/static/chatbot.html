@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Travel Assistant — TouristAI</title>
+    <!-- Google Fonts: Cormorant Garamond & DM Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chatbot.css">
+    <!-- Favicon & Web App Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-light-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-dark-16x16.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="assets/brand/icon-192x192.png">
+    <meta name="theme-color" content="#11110F">
+    <!-- Theme Switcher -->
+    <script src="js/theme.js"></script>
+</head>
+
+<body class="chat-page-body">
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="chatNavbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <img src="assets/brand/logo-dark.png" alt="Tourist Chatbot Logo" class="brand-logo-img brand-logo-dark">
+                <img src="assets/brand/logo-light.png" alt="Tourist Chatbot Logo"
+                    class="brand-logo-img brand-logo-light">
+                <span>TouristAI</span>
+            </a>
+
+            <div class="nav-links" id="navAuthLinks">
+                <a href="index.html" class="nav-link" data-i18n="nav_home">Home</a>
+                <a href="destinations.html" class="nav-link" data-i18n="nav_destinations">Destinations</a>
+                <a href="planner.html" class="nav-link" data-i18n="nav_planner">Plan Trip</a>
+                <a href="chatbot.html" class="nav-link active"><i class="fas fa-sparkles"
+                        style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Chat</span></a>
+
+                <!-- Language Selector -->
+                <button type="button" class="lang-selector-trigger" id="langSelectorBtn" title="Change Language">
+                    <span class="lang-selector-flag" id="currentLangFlag">🌐</span>
+                    <span id="currentLangLabel">Language</span>
+                    <i class="fas fa-chevron-down" style="font-size:10px; opacity:0.7;"></i>
+                </button>
+
+                <!-- Theme Toggle Button -->
+                <button type="button" class="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CHAT LAYOUT -->
+    <div class="chat-layout">
+
+        <!-- MOBILE SIDEBAR BACKDROP -->
+        <div class="chat-sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
+
+        <!-- LEFT SIDEBAR -->
+        <aside class="chat-sidebar" id="chatSidebar">
+            <div class="sidebar-top">
+                <button class="new-chat-btn" id="newChatBtn" onclick="startNewChat()">
+                    <i class="fas fa-plus"></i> <span data-i18n="chat_new_journey">New Journey</span>
+                </button>
+            </div>
+
+            <div class="sidebar-scroll-area">
+                <div class="sidebar-group-title">
+                    <span data-i18n="chat_recent_conversations">Recent Conversations</span>
+                    <button type="button" class="sidebar-icon-btn" onclick="startNewChat()"
+                        title="Start New Conversation">
+                        <i class="fas fa-pen-to-square"></i>
+                    </button>
+                </div>
+                <div id="recentChatsList" class="recent-chats-list">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <div class="sidebar-bottom">
+                <button type="button" class="clear-history-btn" onclick="confirmClearHistory()"
+                    title="Clear all conversation history">
+                    <i class="fas fa-trash-can"></i> <span data-i18n="chat_clear_history">Clear History</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CHAT AREA -->
+        <main class="chat-main-stage">
+            <!-- Header -->
+            <div class="chat-stage-header">
+                <div class="header-left-group">
+                    <button type="button" class="mobile-sidebar-toggle" id="sidebarToggleBtn"
+                        onclick="toggleSidebar(true)" title="Toggle Conversations Menu"
+                        aria-label="Toggle Conversations">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="assistant-headline">
+                        <h2>Your AI Travel Concierge</h2>
+                        <p>Intelligent destination discovery, custom itineraries, transit directions &amp; live weather
+                        </p>
+                    </div>
+                </div>
+
+                <div class="header-right-group">
+                    <!-- Chat Response Language Selector -->
+                    <div class="chat-lang-selector-wrap" id="chatLangSelectorWrap">
+                        <button type="button" class="chat-lang-btn" id="chatLangBtn"
+                            onclick="toggleChatLangDropdown(event)" title="Choose AI Response Language"
+                            aria-expanded="false" aria-haspopup="true">
+                            <span class="chat-lang-flag" id="chatLangCurrentFlag">⚡</span>
+                            <span class="chat-lang-label" id="chatLangCurrentLabel">Auto-detect</span>
+                            <i class="fas fa-chevron-down chat-lang-chevron"></i>
+                        </button>
+                        <div class="chat-lang-dropdown" id="chatLangDropdown">
+                            <div class="chat-lang-dropdown-header">
+                                <span>AI Response Language</span>
+                            </div>
+                            <div class="chat-lang-options-list">
+                                <button type="button" class="chat-lang-opt" data-lang="auto"
+                                    onclick="selectChatLanguage('auto')">
+                                    <span class="opt-flag">⚡</span>
+                                    <span class="opt-name">Auto-detect</span>
+                                    <span class="opt-hint">Replies in your language</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="en"
+                                    onclick="selectChatLanguage('en')">
+                                    <span class="opt-flag">🌐</span>
+                                    <span class="opt-name">English</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="ta"
+                                    onclick="selectChatLanguage('ta')">
+                                    <span class="opt-flag">🇮🇳</span>
+                                    <span class="opt-name">Tamil (தமிழ்)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="hi"
+                                    onclick="selectChatLanguage('hi')">
+                                    <span class="opt-flag">🇮🇳</span>
+                                    <span class="opt-name">Hindi (हिन्दी)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="te"
+                                    onclick="selectChatLanguage('te')">
+                                    <span class="opt-flag">🇮🇳</span>
+                                    <span class="opt-name">Telugu (తెలుగు)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="ml"
+                                    onclick="selectChatLanguage('ml')">
+                                    <span class="opt-flag">🇮🇳</span>
+                                    <span class="opt-name">Malayalam (മലയാളം)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="kn"
+                                    onclick="selectChatLanguage('kn')">
+                                    <span class="opt-flag">🇮🇳</span>
+                                    <span class="opt-name">Kannada (ಕನ್ನಡ)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="bn"
+                                    onclick="selectChatLanguage('bn')">
+                                    <span class="opt-flag">🇮🇳</span>
+                                    <span class="opt-name">Bengali (বাংলা)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="mr"
+                                    onclick="selectChatLanguage('mr')">
+                                    <span class="opt-flag">🇮🇳</span>
+                                    <span class="opt-name">Marathi (मराठी)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="gu"
+                                    onclick="selectChatLanguage('gu')">
+                                    <span class="opt-flag">🇮🇳</span>
+                                    <span class="opt-name">Gujarati (ગુજરાતી)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="pa"
+                                    onclick="selectChatLanguage('pa')">
+                                    <span class="opt-flag">🇮🇳</span>
+                                    <span class="opt-name">Punjabi (ਪੰਜਾਬੀ)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="ur"
+                                    onclick="selectChatLanguage('ur')">
+                                    <span class="opt-flag">🇮🇳</span>
+                                    <span class="opt-name">Urdu (اردو)</span>
+                                </button>
+                                <div class="chat-lang-divider"></div>
+                                <button type="button" class="chat-lang-opt" data-lang="fr"
+                                    onclick="selectChatLanguage('fr')">
+                                    <span class="opt-flag">🇫🇷</span>
+                                    <span class="opt-name">French (Français)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="es"
+                                    onclick="selectChatLanguage('es')">
+                                    <span class="opt-flag">🇪🇸</span>
+                                    <span class="opt-name">Spanish (Español)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="de"
+                                    onclick="selectChatLanguage('de')">
+                                    <span class="opt-flag">🇩🇪</span>
+                                    <span class="opt-name">German (Deutsch)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="ar"
+                                    onclick="selectChatLanguage('ar')">
+                                    <span class="opt-flag">🇸🇦</span>
+                                    <span class="opt-name">Arabic (العربية)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="zh"
+                                    onclick="selectChatLanguage('zh')">
+                                    <span class="opt-flag">🇨🇳</span>
+                                    <span class="opt-name">Chinese (中文)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="ja"
+                                    onclick="selectChatLanguage('ja')">
+                                    <span class="opt-flag">🇯🇵</span>
+                                    <span class="opt-name">Japanese (日本語)</span>
+                                </button>
+                                <button type="button" class="chat-lang-opt" data-lang="ko"
+                                    onclick="selectChatLanguage('ko')">
+                                    <span class="opt-flag">🇰🇷</span>
+                                    <span class="opt-name">Korean (한국어)</span>
+                                </button>
+                                <button type="button" class="chat-lang-more" onclick="openFullLangModal()">
+                                    <i class="fas fa-globe"></i> More Languages (26+)...
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-outline btn-sm" onclick="startNewChat()" title="New Chat">
+                        <i class="fas fa-plus"></i> <span class="hide-mobile">New Chat</span>
+                    </button>
+                    <div class="chat-export-wrap" style="position:relative;">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="toggleExportDropdown(event)"
+                            id="btnExportTrigger" title="Export conversation">
+                            <i class="fas fa-download"></i> <span class="hide-mobile">Export</span> <i class="fas fa-chevron-down" style="font-size:10px; margin-left:4px; opacity:0.7;"></i>
+                        </button>
+                        <div class="chat-export-dropdown" id="exportDropdown" style="display:none; position:absolute; right:0; top:calc(100% + 6px); background:var(--bg-card); border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.35); z-index:100; min-width:180px; padding:6px 0;">
+                            <button type="button" class="export-opt-btn" onclick="exportChat('md')">
+                                <i class="fas fa-file-lines" style="color:var(--accent-gold); width:16px;"></i> Markdown (.md)
+                            </button>
+                            <button type="button" class="export-opt-btn" onclick="exportChat('txt')">
+                                <i class="fas fa-file-lines" style="color:var(--accent-cyan); width:16px;"></i> Plain Text (.txt)
+                            </button>
+                            <button type="button" class="export-opt-btn" onclick="exportChat('json')">
+                                <i class="fas fa-code" style="color:var(--accent-emerald); width:16px;"></i> JSON Data (.json)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Viewport & Scroll Container -->
+            <div class="messages-viewport" id="messagesViewport">
+
+                <!-- WELCOME SCREEN (Shown when conversation is fresh) -->
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-badge">
+                        <div class="welcome-icon-glow">
+                            <i class="fas fa-compass"></i>
+                        </div>
+                        <span class="welcome-tag">TouristAI Concierge</span>
+                    </div>
+
+                    <h1 class="welcome-title">Where would you like to explore?</h1>
+                    <p class="welcome-subtitle">
+                        Ask about any destination worldwide, request tailor-made itineraries, transit routes, budget
+                        estimates, or local weather in English, Tamil, or Tanglish.
+                    </p>
+
+                    <!-- Starter Prompt Cards Grid -->
+                    <div class="welcome-prompts-grid">
+                        <div class="welcome-card"
+                            onclick="useSuggestedChip('Plan a 3-day trip from Chennai to Ooty for 2 people under ₹8,000')">
+                            <div class="card-icon"><i class="fas fa-mountain"></i></div>
+                            <div class="card-content">
+                                <h4>3-Day Ooty Budget Trip</h4>
+                                <p>From Chennai under ₹8,000 for 2 with trains, tea gardens &amp; stays</p>
+                            </div>
+                        </div>
+
+                        <div class="welcome-card"
+                            onclick="useSuggestedChip('5 days Kerala backwaters itinerary with houseboat and budget breakdown')">
+                            <div class="card-icon"><i class="fas fa-water"></i></div>
+                            <div class="card-content">
+                                <h4>5 Days Kerala Backwaters</h4>
+                                <p>Munnar tea hills, Alleppey houseboat, and local spice plantations</p>
+                            </div>
+                        </div>
+
+                        <div class="welcome-card"
+                            onclick="useSuggestedChip('What is the live weather and best time to visit Manali?')">
+                            <div class="card-icon"><i class="fas fa-cloud-sun"></i></div>
+                            <div class="card-content">
+                                <h4>Manali Weather &amp; Season</h4>
+                                <p>Current weather, snowfall season, and ideal adventure months</p>
+                            </div>
+                        </div>
+
+                        <div class="welcome-card"
+                            onclick="useSuggestedChip('How can I reach Kodaikanal from Madurai by bus or taxi?')">
+                            <div class="card-icon"><i class="fas fa-route"></i></div>
+                            <div class="card-content">
+                                <h4>Transit &amp; Directions</h4>
+                                <p>Step-by-step route options, travel durations, and transit advice</p>
+                            </div>
+                        </div>
+
+                        <div class="welcome-card"
+                            onclick="useSuggestedChip('Suggest top romantic places in Paris on a modest budget')">
+                            <div class="card-icon"><i class="fas fa-landmark"></i></div>
+                            <div class="card-content">
+                                <h4>Paris on a Budget</h4>
+                                <p>Walkable neighborhoods, viewpoints, cozy cafes, and metro tips</p>
+                            </div>
+                        </div>
+
+                        <div class="welcome-card"
+                            onclick="useSuggestedChip('Chennai la irundhu 3 days trip plan pannu under 10k budget')">
+                            <div class="card-icon"><i class="fas fa-language"></i></div>
+                            <div class="card-content">
+                                <h4>Tamil &amp; Tanglish Planning</h4>
+                                <p>Ask naturally in Tamil or Tanglish: "Budget konjam kammi pannu"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages Container -->
+                <div class="messages-scroll-box" id="messagesBox">
+                    <!-- Dynamic chat messages inserted here -->
+                </div>
+
+                <!-- Floating Scroll to Bottom Button -->
+                <button type="button" class="scroll-to-bottom-btn" id="scrollToBottomBtn"
+                    onclick="scrollToBottomSmooth()" title="Jump to recent messages">
+                    <i class="fas fa-arrow-down"></i>
+                </button>
+            </div>
+
+            <!-- Bottom Floating Prompt Chips & Input Dock -->
+            <div class="chat-footer-dock">
+                <!-- Suggested Chips Tray -->
+                <div class="prompt-chips-tray" id="chipsTray">
+                    <!-- Populated dynamically via JS -->
+                </div>
+
+                <!-- Input Form -->
+                <form class="chat-input-row" id="chatForm" onsubmit="handleChatSubmit(event)">
+                    <textarea id="chatMessageInput" rows="1"
+                        placeholder="Ask anything about travel, budgets, transit routes, or itineraries…"
+                        data-i18n-placeholder="chat_input_placeholder" onkeydown="handleInputKeydown(event)"
+                        required></textarea>
+
+                    <button type="button" class="chat-mic-btn" id="voiceMicBtn" title="Speak your question"
+                        onclick="Voice.toggleRecognition()">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+
+                    <button type="submit" class="chat-send-btn" id="sendBtn" title="Send Message"
+                        data-i18n-title="chat_send">
+                        <i class="fas fa-paper-plane" id="sendBtnIcon"></i>
+                    </button>
+                </form>
+
+                <div class="chat-input-disclaimer">
+                    <i class="fas fa-circle-info"></i> <span>Verify real-time transit schedules, visa requirements, and
+                        venue timings before travel.</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- CONFIRMATION MODAL -->
+    <div class="chat-modal-overlay" id="confirmModal">
+        <div class="chat-modal-box">
+            <div class="chat-modal-icon"><i class="fas fa-triangle-exclamation"></i></div>
+            <h3 id="modalTitle">Clear Conversation History</h3>
+            <p id="modalMessage">Are you sure you want to clear your conversation history? This cannot be undone.</p>
+            <div class="chat-modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeConfirmModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" id="modalConfirmBtn"
+                    onclick="executeModalAction()">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/voice.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <!-- Markdown Parser & HTML Sanitizer -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <script src="js/chatbot.js"></script>
+</body>
+
+</html>

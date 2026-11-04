@@ -1,0 +1,1291 @@
+// @ts-nocheck
+/**
+ * TouristAI — User Dashboard & Saved Trips Controller
+ * Production-ready travel-management workspace.
+ */
+
+let allTrips = [];
+let allFavorites = [];
+let currentTripFilter = 'all';
+let currentUserProfile = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Guard against unauthenticated access
+    if (typeof Auth === 'undefined' || !Auth.isAuthenticated()) {
+        const current = window.location.pathname.split('/').pop() || 'dashboard.html';
+        window.location.replace(`login.html?redirect=${encodeURIComponent(current + window.location.search)}`);
+        return;
+    }
+
+    // 2. Reveal Dashboard Layout
+    const layout = document.getElementById('dashboardLayoutApp');
+    if (layout) layout.style.display = 'grid';
+
+    // 3. Determine initial tab from URL param (default 'overview')
+    const params = new URLSearchParams(window.location.search);
+    const initialTab = params.get('tab') || 'overview';
+    switchDashboardView(initialTab);
+
+    // 4. Load real data from backend
+    await Promise.all([
+        loadUserProfile(),
+        loadUserTrips(),
+        loadUserFavorites(),
+        loadActiveSessions()
+    ]);
+});
+
+/**
+ * Switch dashboard view tabs (overview, trips, places, expenses, profile)
+ */
+function switchDashboardView(viewName) {
+    const validTabs = ['overview', 'trips', 'places', 'expenses', 'profile'];
+    const activeTab = validTabs.includes(viewName) ? viewName : 'overview';
+
+    // Tab sections
+    const tabSectionMap = {
+        'overview': 'viewOverview',
+        'trips': 'viewMyTrips',
+        'places': 'viewSavedPlaces',
+        'expenses': 'viewMyExpenses',
+        'profile': 'viewProfile'
+    };
+
+    // Sidebar nav items
+    const sideNavMap = {
+        'overview': 'tabNavOverview',
+        'trips': 'tabNavTrips',
+        'places': 'tabNavPlaces',
+        'expenses': 'tabNavExpenses',
+        'profile': 'tabNavProfile'
+    };
+
+    // Mobile tabs
+    const mobTabMap = {
+        'overview': 'mobTabOverview',
+        'trips': 'mobTabTrips',
+        'places': 'mobTabPlaces',
+        'expenses': 'mobTabExpenses',
+        'profile': 'mobTabProfile'
+    };
+
+    // Hide all sections, show active
+    Object.values(tabSectionMap).forEach(secId => {
+        const el = document.getElementById(secId);
+        if (el) el.classList.remove('active');
+    });
+
+    const activeSec = document.getElementById(tabSectionMap[activeTab]);
+    if (activeSec) activeSec.classList.add('active');
+
+    // Update sidebar menu pills
+    Object.values(sideNavMap).forEach(navId => {
+        const el = document.getElementById(navId);
+        if (el) el.classList.remove('active');
+    });
+
+    const activeSide = document.getElementById(sideNavMap[activeTab]);
+    if (activeSide) activeSide.classList.add('active');
+
+    // Update mobile tab bar pills
+    Object.values(mobTabMap).forEach(mobId => {
+        const el = document.getElementById(mobId);
+        if (el) el.classList.remove('active');
+    });
+
+    const activeMob = document.getElementById(mobTabMap[activeTab]);
+    if (activeMob) activeMob.classList.add('active');
+
+    // Update URL param without refreshing
+    try {
+        const url = new URL(window.location);
+        url.searchParams.set('tab', activeTab);
+        window.history.replaceState({}, '', url);
+    } catch (e) {}
+
+    // If switching to places, ensure refreshed
+    if (activeTab === 'places' && allFavorites.length === 0) {
+        loadUserFavorites();
+    }
+
+    // If switching to expenses, render expenses
+    if (activeTab === 'expenses') {
+        loadUserExpenses();
+    }
+}
+
+/**
+ * Load authenticated user profile details from server
+ */
+async function loadUserProfile() {
+    try {
+        const profile = await Auth.fetchProfile();
+        currentUserProfile = profile;
+        populateProfileFields(profile);
+    } catch (e) {
+        console.warn('Could not load user profile:', e);
+        const cached = Auth.getUser();
+        if (cached) populateProfileFields(cached);
+    }
+}
+
+function populateProfileFields(user) {
+    if (!user) return;
+    const displayName = user.fullName || user.username || 'Traveler';
+    const email = user.email || `${user.username}@touristguide.com`;
+    const initial = displayName.charAt(0).toUpperCase();
+
+    // Top greeting
+    const greetEl = document.getElementById('dashGreetingName');
+    if (greetEl) greetEl.textContent = displayName;
+
+    // Sidebar widget
+    const nameEl = document.getElementById('dashUserName');
+    if (nameEl) nameEl.textContent = displayName;
+
+    const emailEl = document.getElementById('dashUserEmail');
+    if (emailEl) emailEl.textContent = email;
+
+    const avatarEl = document.getElementById('dashUserAvatar');
+    if (avatarEl) avatarEl.textContent = initial;
+
+    // Profile form fields
+    const fUsername = document.getElementById('profUsername');
+    if (fUsername) fUsername.value = user.username || '';
+
+    const fFullName = document.getElementById('profFullName');
+    if (fFullName) fFullName.value = user.fullName || '';
+
+    const fEmail = document.getElementById('profEmail');
+    if (fEmail) fEmail.value = user.email || '';
+
+    const fPhone = document.getElementById('profPhone');
+    if (fPhone) fPhone.value = user.phone || '';
+
+    const fAddress = document.getElementById('profAddress');
+    if (fAddress) fAddress.value = user.address || '';
+
+    const fBio = document.getElementById('profBio');
+    if (fBio) fBio.value = user.bio || '';
+
+    // Travel preferences fields
+    if (user.travelPreferences && typeof user.travelPreferences === 'object') {
+        const pStyle = document.getElementById('prefTravelStyle');
+        if (pStyle && user.travelPreferences.travelStyle) pStyle.value = user.travelPreferences.travelStyle;
+
+        const pDiet = document.getElementById('prefDietary');
+        if (pDiet && user.travelPreferences.dietary) pDiet.value = user.travelPreferences.dietary;
+
+        const pCurr = document.getElementById('prefCurrency');
+        if (pCurr && user.travelPreferences.currency) pCurr.value = user.travelPreferences.currency;
+
+        const pTransit = document.getElementById('prefTransit');
+        if (pTransit && user.travelPreferences.transit) pTransit.value = user.travelPreferences.transit;
+    }
+
+    // Account metadata
+    const createdEl = document.getElementById('accountCreatedDate');
+    if (createdEl && user.createdAt) {
+        try {
+            const d = new Date(user.createdAt);
+            createdEl.textContent = d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        } catch (e) {
+            createdEl.textContent = 'Active Member';
+        }
+    }
+}
+
+/**
+ * Load user's saved trips from server
+ */
+async function loadUserTrips() {
+    try {
+        const res = await Api.get('/trips');
+        const trips = Array.isArray(res) ? res : (res?.data || []);
+        allTrips = Array.isArray(trips) ? trips : [];
+    } catch (e) {
+        console.warn('Could not load user trips from server:', e);
+        allTrips = [];
+    }
+
+    updateDashboardMetrics();
+    renderTripsList();
+    renderOverviewRecentTrips();
+}
+
+/**
+ * Load user's saved favorite destinations from server
+ */
+async function loadUserFavorites() {
+    try {
+        const res = await Api.get('/favorites');
+        const favs = Array.isArray(res) ? res : (res?.data || []);
+        allFavorites = Array.isArray(favs) ? favs : [];
+    } catch (e) {
+        console.warn('Could not load user favorites from server:', e);
+        allFavorites = [];
+    }
+
+    updateDashboardMetrics();
+    renderFavoritesList();
+}
+
+/**
+ * Update stats and counters using actual data
+ */
+function updateDashboardMetrics() {
+    const totalTrips = allTrips.length;
+    const upcomingTrips = allTrips.filter(t => (t.status || 'upcoming').toLowerCase() !== 'past' && (t.status || '').toLowerCase() !== 'completed').length;
+    const savedPlaces = allFavorites.length;
+
+    // Calculate total days planned
+    const totalDays = allTrips.reduce((acc, t) => acc + (parseInt(t.days, 10) || 3), 0);
+
+    // Update Overview Stat Cards
+    const statTotalTripsEl = document.getElementById('statTotalTrips');
+    if (statTotalTripsEl) statTotalTripsEl.textContent = totalTrips;
+
+    const statUpcomingTripsEl = document.getElementById('statUpcomingTrips');
+    if (statUpcomingTripsEl) statUpcomingTripsEl.textContent = upcomingTrips;
+
+    const statSavedPlacesEl = document.getElementById('statSavedPlaces');
+    if (statSavedPlacesEl) statSavedPlacesEl.textContent = savedPlaces;
+
+    const statTotalDaysEl = document.getElementById('statTotalDays');
+    if (statTotalDaysEl) statTotalDaysEl.textContent = totalDays;
+
+    // Sidebar & Mobile Badges
+    const badgeTrips = document.getElementById('badgeTripsCount');
+    if (badgeTrips) badgeTrips.textContent = totalTrips;
+
+    const mobBadgeTrips = document.getElementById('mobBadgeTrips');
+    if (mobBadgeTrips) mobBadgeTrips.textContent = totalTrips;
+
+    const badgePlaces = document.getElementById('badgePlacesCount');
+    if (badgePlaces) badgePlaces.textContent = savedPlaces;
+
+    const mobBadgePlaces = document.getElementById('mobBadgePlaces');
+    if (mobBadgePlaces) mobBadgePlaces.textContent = savedPlaces;
+
+    // Filter tab counts
+    const countAll = document.getElementById('countFilterAll');
+    if (countAll) countAll.textContent = totalTrips;
+
+    const countUpcoming = document.getElementById('countFilterUpcoming');
+    if (countUpcoming) countUpcoming.textContent = upcomingTrips;
+
+    const countPast = document.getElementById('countFilterPast');
+    if (countPast) countPast.textContent = totalTrips - upcomingTrips;
+}
+
+/**
+ * Filter trips by status (all, upcoming, past)
+ */
+function filterTripsByStatus(status, btnElement) {
+    currentTripFilter = status || 'all';
+
+    document.querySelectorAll('.trip-tab-pill').forEach(b => b.classList.remove('active'));
+    if (btnElement) {
+        btnElement.classList.add('active');
+    } else {
+        const idMap = { all: 'filterBtnAll', upcoming: 'filterBtnUpcoming', past: 'filterBtnPast' };
+        const el = document.getElementById(idMap[currentTripFilter]);
+        if (el) el.classList.add('active');
+    }
+
+    renderTripsList();
+}
+
+/**
+ * Render trips list based on active filter
+ */
+function renderTripsList() {
+    const container = document.getElementById('tripsCardsList');
+    const emptyState = document.getElementById('tripsEmptyState');
+    if (!container || !emptyState) return;
+
+    let filtered = allTrips;
+    if (currentTripFilter === 'upcoming') {
+        filtered = allTrips.filter(t => (t.status || 'upcoming').toLowerCase() !== 'past' && (t.status || '').toLowerCase() !== 'completed');
+    } else if (currentTripFilter === 'past') {
+        filtered = allTrips.filter(t => (t.status || '').toLowerCase() === 'past' || (t.status || '').toLowerCase() === 'completed');
+    }
+
+    if (filtered.length === 0) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+
+        const titleEl = document.getElementById('tripsEmptyTitle');
+        const textEl = document.getElementById('tripsEmptyText');
+        if (currentTripFilter === 'past') {
+            if (titleEl) titleEl.textContent = 'No Past Trips Yet';
+            if (textEl) textEl.textContent = 'Trips you complete will appear here for you to look back on your adventures.';
+        } else if (currentTripFilter === 'upcoming') {
+            if (titleEl) titleEl.textContent = 'No Upcoming Trips Planned';
+            if (textEl) textEl.textContent = 'Ready to embark on a new journey? Use our AI Planner to generate and customize your day-by-day plan.';
+        } else {
+            if (titleEl) titleEl.textContent = 'No Saved Trips Yet';
+            if (textEl) textEl.textContent = 'Generate custom day-wise itineraries with transportation, hotels, and activities, and bookmark them here.';
+        }
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    container.style.display = 'flex';
+    container.innerHTML = filtered.map(t => renderTripRowHtml(t)).join('');
+}
+
+/**
+ * Render recent trips in the Overview tab
+ */
+function renderOverviewRecentTrips() {
+    const container = document.getElementById('overviewRecentTripsContainer');
+    const emptyState = document.getElementById('overviewNoTripsState');
+    if (!container || !emptyState) return;
+
+    if (allTrips.length === 0) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    container.style.display = 'flex';
+
+    // Show up to 2 most recent trips
+    const recent = allTrips.slice(0, 2);
+    container.innerHTML = recent.map(t => renderTripRowHtml(t)).join('');
+}
+
+/**
+ * Generate HTML string for a single trip card
+ */
+function renderTripRowHtml(t) {
+    const destName = t.destination || t.title || 'Worldwide Destination';
+    const img = t.imageUrl || (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(destName) : 'assets/dash.jpg');
+    const isPast = (t.status || '').toLowerCase() === 'past' || (t.status || '').toLowerCase() === 'completed';
+    const badgeClass = isPast ? 'badge-past' : 'badge-upcoming';
+    const badgeText = isPast ? 'Past Trip' : 'Upcoming';
+
+    const dateRange = (t.startDate && t.endDate)
+        ? `${t.startDate} - ${t.endDate}`
+        : `${t.days || 3} Days Trip`;
+
+    const travelersText = `${t.people || 2} Traveler${(t.people || 2) > 1 ? 's' : ''}`;
+    const budgetText = t.estimatedBudget ? `• Est. ₹${Number(t.estimatedBudget).toLocaleString('en-IN')}` : '';
+
+    return `
+        <div class="saved-trip-row-card" id="tripRow-${escapeAttr(t.id)}">
+            <div class="trip-card-left">
+                <img class="trip-thumb-img" src="${img}" alt="${escapeAttr(t.title || destName)}" onerror="window.handleImageError(this, '${escapeAttr(destName)}');" loading="lazy">
+                <div class="trip-info-texts">
+                    <h3>${escapeHtml(t.title || ('Trip to ' + destName))}</h3>
+                    <div class="trip-info-meta">
+                        <span><i class="far fa-calendar-alt" style="color:var(--accent-gold);"></i> ${escapeHtml(dateRange)}</span>
+                        <span><i class="fas fa-users" style="color:var(--accent-cyan);"></i> ${escapeHtml(travelersText)}</span>
+                        ${budgetText ? `<span style="color:var(--accent-emerald); font-weight:600;">${escapeHtml(budgetText)}</span>` : ''}
+                        <span class="badge-tag ${badgeClass}">${badgeText}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="trip-card-actions">
+                <button type="button" class="btn btn-outline btn-sm" onclick="openTripModal('${escapeAttr(t.id)}')">
+                    <i class="fas fa-eye"></i> View Itinerary
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="viewTripExpenses('${escapeAttr(t.id)}')" title="View &amp; Log Expenses">
+                    <i class="fas fa-wallet" style="color:var(--accent-gold);"></i> Expenses
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="duplicateTrip('${escapeAttr(t.id)}')" title="Clone this trip">
+                    <i class="fas fa-copy"></i> Duplicate
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="shareTripFromDashboard('${escapeAttr(t.id)}')" title="Share public link">
+                    <i class="fas fa-share-nodes"></i> Share
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" style="color:var(--accent-rose); border-color:rgba(244,63,94,0.3);" onclick="deleteTrip('${escapeAttr(t.id)}')" title="Delete Trip Plan">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Render saved places / favorites grid
+ */
+function renderFavoritesList() {
+    const grid = document.getElementById('favoritesCardsGrid');
+    const emptyState = document.getElementById('favoritesEmptyState');
+    if (!grid || !emptyState) return;
+
+    if (allFavorites.length === 0) {
+        grid.style.display = 'none';
+        grid.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    grid.style.display = 'grid';
+
+    grid.innerHTML = allFavorites.map(f => {
+        const destName = f.destinationName || 'Landmark';
+        const img = typeof window.getDestinationImage === 'function' ? window.getDestinationImage(destName) : 'assets/dash.jpg';
+        const country = f.country || 'Worldwide';
+        const notes = f.notes || 'Saved to your personal travel wishlist.';
+
+        return `
+            <div class="favorite-card" id="favoriteCard-${escapeAttr(f.id)}">
+                <div class="favorite-card-img-wrap">
+                    <img class="favorite-card-img" src="${img}" alt="${escapeAttr(destName)}" onerror="window.handleImageError(this, '${escapeAttr(destName)}');" loading="lazy">
+                </div>
+                <div class="favorite-card-body">
+                    <h4 class="favorite-card-title">${escapeHtml(destName)}</h4>
+                    <div class="favorite-card-sub"><i class="fas fa-location-dot" style="color:var(--accent-gold);"></i> ${escapeHtml(country)}</div>
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px; line-height:1.5;">${escapeHtml(notes)}</p>
+                    <div class="favorite-card-actions">
+                        <a href="destinations.html?view=${encodeURIComponent(destName)}" class="btn btn-outline btn-sm" style="flex:1; justify-content:center;">
+                            <i class="fas fa-compass"></i> Explore
+                        </a>
+                        <button type="button" class="btn btn-outline btn-sm" style="color:var(--accent-rose); border-color:rgba(244,63,94,0.3);" onclick="removeFavorite('${escapeAttr(f.id)}')" title="Remove from Wishlist">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Open Trip Detail Modal
+ */
+function openTripModal(tripId) {
+    const trip = allTrips.find(t => String(t.id) === String(tripId));
+    if (!trip) return;
+
+    const modal = document.getElementById('tripDetailModal');
+    const content = document.getElementById('modalTripContent');
+    if (!modal || !content) return;
+
+    const days = trip.daysPlan || [];
+    const destName = trip.destination || trip.title || 'Travel Journey';
+    const dateRange = (trip.startDate && trip.endDate) ? `${trip.startDate} to ${trip.endDate}` : `${trip.days || 3} Days Trip`;
+
+    let daysHtml = '';
+    if (Array.isArray(days) && days.length > 0) {
+        daysHtml = days.map(d => {
+            const activities = Array.isArray(d.activities) ? d.activities : [];
+            return `
+                <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <strong style="color:var(--accent-gold); font-size:14px;">Day ${d.dayNumber || ''}</strong>
+                        <span style="font-size:12.5px; color:var(--text-dim);"><i class="fas fa-location-dot"></i> ${escapeHtml(d.location || destName)}</span>
+                    </div>
+                    <h4 style="color:var(--text-main); font-size:16px; font-weight:700; margin-bottom:8px;">${escapeHtml(d.title || ('Day ' + d.dayNumber + ' Schedule'))}</h4>
+                    <ul style="list-style:disc; margin-left:20px; font-size:13.5px; color:var(--text-muted); line-height:1.7;">
+                        ${activities.map(a => `<li>${escapeHtml(a)}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }).join('');
+    } else if (trip.itinerary) {
+        daysHtml = `
+            <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:12px; padding:20px; font-size:14px; color:var(--text-main); line-height:1.7; white-space:pre-wrap;">
+                ${escapeHtml(trip.itinerary)}
+            </div>
+        `;
+    } else {
+        daysHtml = `<p style="color:var(--text-muted); font-size:14px;">Day-by-day activities saved with this itinerary.</p>`;
+    }
+
+    let budgetBreakdownHtml = '';
+    if (trip.budgetBreakdown && typeof trip.budgetBreakdown === 'object') {
+        const items = Object.entries(trip.budgetBreakdown).map(([k, v]) => `
+            <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:10px 14px;">
+                <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim);">${escapeHtml(k)}</span>
+                <div style="font-size:16px; font-weight:700; color:var(--text-main); margin-top:2px;">₹${Number(v).toLocaleString('en-IN')}</div>
+            </div>
+        `).join('');
+
+        budgetBreakdownHtml = `
+            <div style="margin-top:22px;">
+                <h4 style="font-size:15px; font-weight:700; color:var(--text-main); margin-bottom:10px;"><i class="fas fa-coins" style="color:var(--accent-gold);"></i> Estimated Budget Breakdown</h4>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">
+                    ${items}
+                </div>
+            </div>
+        `;
+    }
+
+    let tipsHtml = '';
+    if (trip.travelTips && Array.isArray(trip.travelTips) && trip.travelTips.length > 0) {
+        tipsHtml = `
+            <div style="margin-top:22px;">
+                <h4 style="font-size:15px; font-weight:700; color:var(--text-main); margin-bottom:8px;"><i class="fas fa-lightbulb" style="color:var(--accent-gold);"></i> Recommended Travel Tips</h4>
+                <ul style="list-style:disc; margin-left:20px; font-size:13.5px; color:var(--text-muted); line-height:1.6;">
+                    ${trip.travelTips.map(tip => `<li>${escapeHtml(tip)}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
+    content.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; padding-right:30px;">
+            <div>
+                <span class="badge-tag badge-upcoming" style="margin-bottom:8px;">${escapeHtml(trip.status || 'Upcoming')}</span>
+                <h2 style="font-family:var(--font-display); font-size:28px; color:var(--text-main); font-weight:700;">${escapeHtml(trip.title || ('Trip to ' + destName))}</h2>
+                <p style="color:var(--text-muted); font-size:14px; margin-top:4px;">
+                    <i class="fas fa-map-pin" style="color:var(--accent-gold);"></i> ${escapeHtml(destName)} • 
+                    <i class="far fa-calendar-alt"></i> ${escapeHtml(dateRange)} • 
+                    <i class="fas fa-users"></i> ${trip.people || 2} Travelers
+                </p>
+            </div>
+        </div>
+
+        <div style="margin-top:24px;">
+            <h3 style="font-size:17px; font-weight:700; color:var(--text-main); margin-bottom:14px;"><i class="fas fa-timeline" style="color:var(--accent-gold);"></i> Itinerary Timeline</h3>
+            ${daysHtml}
+        </div>
+
+        ${budgetBreakdownHtml}
+        ${tipsHtml}
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:28px; padding-top:20px; border-top:1px solid var(--border);">
+            <button type="button" class="btn btn-outline btn-sm" onclick="closeTripModal()">
+                Close
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+                <i class="fas fa-print"></i> Print / Export PDF
+            </button>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+function closeTripModal() {
+    const modal = document.getElementById('tripDetailModal');
+    if (modal) modal.style.display = 'none';
+}
+
+/**
+ * Delete a trip from server and update state
+ */
+async function deleteTrip(tripId) {
+    if (!confirm('Are you sure you want to delete this trip itinerary? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        await Api.delete(`/trips/${tripId}`);
+        allTrips = allTrips.filter(t => String(t.id) !== String(tripId));
+        updateDashboardMetrics();
+        renderTripsList();
+        renderOverviewRecentTrips();
+    } catch (e) {
+        console.error('Delete trip error:', e);
+        alert('Failed to delete trip. Please try again.');
+    }
+}
+
+/**
+ * Remove favorite from server and update state
+ */
+async function removeFavorite(favId) {
+    if (!confirm('Remove this place from your saved wishlist?')) {
+        return;
+    }
+
+    try {
+        await Api.delete(`/favorites/${favId}`);
+        allFavorites = allFavorites.filter(f => String(f.id) !== String(favId));
+        updateDashboardMetrics();
+        renderFavoritesList();
+    } catch (e) {
+        console.error('Remove favorite error:', e);
+        alert('Failed to remove favorite. Please try again.');
+    }
+}
+
+/**
+ * Save user profile updates to server
+ */
+async function saveUserProfile(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const btn = document.getElementById('btnSaveProfile');
+    const alertBox = document.getElementById('profileAlert');
+    if (alertBox) alertBox.style.display = 'none';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+    }
+
+    try {
+        const payload = {
+            fullName: document.getElementById('profFullName')?.value.trim() || '',
+            phone: document.getElementById('profPhone')?.value.trim() || '',
+            address: document.getElementById('profAddress')?.value.trim() || '',
+            bio: document.getElementById('profBio')?.value.trim() || ''
+        };
+
+        const res = await Api.put('/users/profile', payload);
+        const updated = res.data || res;
+        Auth.setUser(updated);
+        Auth.updateNavbar();
+        populateProfileFields(updated);
+
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(16,185,129,0.15)';
+            alertBox.style.color = '#34D399';
+            alertBox.innerHTML = '<i class="fas fa-check-circle"></i> Profile updated successfully!';
+            setTimeout(() => { alertBox.style.display = 'none'; }, 4000);
+        }
+    } catch (err) {
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(244,63,94,0.15)';
+            alertBox.style.color = '#F43F5E';
+            alertBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> Failed to update profile: ' + (err.message || 'Server error');
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Save Profile Changes';
+        }
+    }
+}
+
+/**
+ * Change password
+ */
+async function changeUserPassword(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const btn = document.getElementById('btnChangePassword');
+    const alertBox = document.getElementById('passwordAlert');
+    if (alertBox) alertBox.style.display = 'none';
+
+    const curr = document.getElementById('currPassword').value;
+    const next = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmNewPassword').value;
+
+    if (next !== confirm) {
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(244,63,94,0.15)';
+            alertBox.style.color = '#F43F5E';
+            alertBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> New passwords do not match.';
+        }
+        return;
+    }
+
+    if (next.length < 6) {
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(244,63,94,0.15)';
+            alertBox.style.color = '#F43F5E';
+            alertBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> Password must be at least 6 characters.';
+        }
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating…';
+    }
+
+    try {
+        await Api.post('/users/change-password', {
+            currentPassword: curr,
+            newPassword: next
+        });
+
+        document.getElementById('passwordForm').reset();
+
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(16,185,129,0.15)';
+            alertBox.style.color = '#34D399';
+            alertBox.innerHTML = '<i class="fas fa-check-circle"></i> Password changed successfully!';
+            setTimeout(() => { alertBox.style.display = 'none'; }, 4000);
+        }
+    } catch (err) {
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(244,63,94,0.15)';
+            alertBox.style.color = '#F43F5E';
+            alertBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + (err.message || 'Incorrect current password.');
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-key"></i> Update Password';
+        }
+    }
+}
+
+// Helpers
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function escapeAttr(str) {
+    if (!str) return '';
+    return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ── Active Sessions & Devices Management (Master Prompt Section 4) ──
+
+async function loadActiveSessions() {
+    const listEl = document.getElementById('activeSessionsList');
+    if (!listEl) return;
+
+    try {
+        const res = await Api.get('/auth/sessions');
+        const sessions = Array.isArray(res) ? res : (res.data || []);
+
+        if (sessions.length === 0) {
+            listEl.innerHTML = '<div style="font-size:13px; color:var(--text-dim); text-align:center; padding:12px;"><i class="fas fa-check-circle" style="color:var(--accent-emerald);"></i> 1 Active Session (Current Device)</div>';
+            return;
+        }
+
+        listEl.innerHTML = sessions.map(s => {
+            const isCurrent = s.isCurrent;
+            const deviceName = parseDeviceUserAgent(s.deviceInfo);
+            const deviceIcon = getDeviceIcon(s.deviceInfo);
+            const timeAgo = formatTimeAgo(s.lastUsedAt || s.createdAt);
+
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--card-surface); border:1px solid var(--border); border-radius:8px;">
+                    <div>
+                        <div style="font-size:13.5px; font-weight:600; color:var(--text-main); display:flex; align-items:center; gap:8px;">
+                            <i class="${deviceIcon}" style="color:var(--accent-gold);"></i>
+                            ${escapeHtml(deviceName)}
+                            ${isCurrent ? '<span class="badge-tag badge-upcoming" style="font-size:10px; padding:2px 6px;">Current</span>' : ''}
+                        </div>
+                        <div style="font-size:12px; color:var(--text-dim); margin-top:4px;">
+                            IP: ${escapeHtml(s.ipAddress || 'Unknown')} • Active ${timeAgo}
+                        </div>
+                    </div>
+                    ${!isCurrent ? `
+                        <button type="button" class="btn btn-outline btn-sm" onclick="revokeUserSession('${s.id}')" style="color:var(--accent-rose); border-color:rgba(244,63,94,0.3); font-size:11.5px; padding:4px 8px;">
+                            <i class="fas fa-trash"></i> Revoke
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+    } catch (e) {
+        listEl.innerHTML = '<div style="font-size:13px; color:var(--text-dim); text-align:center; padding:12px;">Active session protected.</div>';
+    }
+}
+
+async function revokeUserSession(sessionId) {
+    if (!confirm('Are you sure you want to terminate this device session?')) return;
+    try {
+        await Api.delete(`/auth/sessions/${sessionId}`);
+        await loadActiveSessions();
+    } catch (e) {
+        alert(e.message || 'Could not revoke session');
+    }
+}
+
+async function logoutAllDevices() {
+    if (!confirm('Are you sure you want to revoke all active sessions across all devices? You will be logged out of this device as well.')) return;
+    try {
+        await Api.post('/auth/logout-all');
+        Auth.logout();
+    } catch (e) {
+        alert(e.message || 'Could not revoke sessions');
+    }
+}
+
+function parseDeviceUserAgent(ua) {
+    if (!ua || ua === 'Unknown Device') return 'Web Browser';
+    if (ua.includes('iPhone')) return 'iPhone (Mobile Safari)';
+    if (ua.includes('iPad')) return 'iPad (Safari)';
+    if (ua.includes('Android')) return 'Android Device (Chrome)';
+    if (ua.includes('Windows')) return 'Windows PC';
+    if (ua.includes('Macintosh')) return 'MacBook / Mac OS';
+    if (ua.includes('Linux')) return 'Linux Desktop';
+    return 'Web Browser';
+}
+
+function getDeviceIcon(ua) {
+    if (!ua) return 'fas fa-globe';
+    if (ua.includes('iPhone') || ua.includes('Android')) return 'fas fa-mobile-screen-button';
+    if (ua.includes('iPad')) return 'fas fa-tablet-screen-button';
+    return 'fas fa-laptop';
+}
+
+function formatTimeAgo(dateStr) {
+    if (!dateStr) return 'recently';
+    try {
+        const d = new Date(dateStr);
+        const now = new Date();
+        const diffMs = now.getTime() - d.getTime();
+        const diffSecs = Math.floor(diffMs / 1000);
+        if (diffSecs < 60) return 'just now';
+        const diffMins = Math.floor(diffSecs / 60);
+        if (diffMins < 60) return `${diffMins}m ago`;
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours}h ago`;
+        const diffDays = Math.floor(diffHours / 24);
+        return `${diffDays}d ago`;
+    } catch {
+        return 'recently';
+    }
+}
+
+// ── Budget & Expense Tracking Engine (Master Prompt Phase 2) ──
+
+let currentExpenseTripId = 'all';
+
+function onExpenseTripChanged(val) {
+    currentExpenseTripId = val;
+    renderExpensesView();
+}
+
+function viewTripExpenses(tripId) {
+    currentExpenseTripId = tripId;
+    switchDashboardView('expenses');
+    const filterSelect = document.getElementById('expenseTripFilter');
+    if (filterSelect) filterSelect.value = tripId;
+    renderExpensesView();
+}
+
+function loadUserExpenses() {
+    const filterSelect = document.getElementById('expenseTripFilter');
+    if (filterSelect) {
+        let opts = '<option value="all">All Trips Combined</option>';
+        allTrips.forEach(t => {
+            opts += `<option value="${escapeAttr(t.id)}">${escapeHtml(t.title || ('Trip to ' + (t.destination || 'Destination')))}</option>`;
+        });
+        filterSelect.innerHTML = opts;
+        filterSelect.value = currentExpenseTripId;
+    }
+    renderExpensesView();
+}
+
+function renderExpensesView() {
+    let relevantTrips = allTrips;
+    if (currentExpenseTripId !== 'all') {
+        relevantTrips = allTrips.filter(t => String(t.id) === String(currentExpenseTripId));
+    }
+
+    let allExpenses = [];
+    let totalEstimatedBudget = 0;
+    let totalTravelers = 0;
+
+    relevantTrips.forEach(t => {
+        const est = Number(t.estimatedBudget) || 0;
+        totalEstimatedBudget += est;
+        totalTravelers += (parseInt(t.people) || 2);
+        if (Array.isArray(t.expenses)) {
+            t.expenses.forEach(e => {
+                allExpenses.push({
+                    ...e,
+                    tripId: t.id,
+                    tripTitle: t.title || t.destination || 'Trip'
+                });
+            });
+        }
+    });
+
+    const totalSpent = allExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const remaining = totalEstimatedBudget > 0 ? (totalEstimatedBudget - totalSpent) : 0;
+    const travelersCount = totalTravelers > 0 ? (currentExpenseTripId === 'all' ? (allTrips[0]?.people || 2) : totalTravelers) : 2;
+    const perPerson = travelersCount > 0 ? Math.round(totalSpent / travelersCount) : totalSpent;
+
+    const bEl = document.getElementById('statExpenseBudget');
+    if (bEl) bEl.textContent = `₹${totalEstimatedBudget.toLocaleString('en-IN')}`;
+
+    const sEl = document.getElementById('statExpenseSpent');
+    if (sEl) sEl.textContent = `₹${totalSpent.toLocaleString('en-IN')}`;
+
+    const rEl = document.getElementById('statExpenseRemaining');
+    if (rEl) {
+        rEl.textContent = `₹${remaining.toLocaleString('en-IN')}`;
+        rEl.style.color = remaining < 0 ? 'var(--accent-rose)' : 'var(--accent-emerald)';
+    }
+
+    const pEl = document.getElementById('statExpensePerPerson');
+    if (pEl) pEl.textContent = `₹${perPerson.toLocaleString('en-IN')}`;
+
+    // Category Breakdown
+    const catTotals = {
+        food: 0,
+        transport: 0,
+        accommodation: 0,
+        attractions: 0,
+        shopping: 0,
+        other: 0
+    };
+
+    allExpenses.forEach(e => {
+        const cat = (e.category || 'other').toLowerCase();
+        if (catTotals[cat] !== undefined) {
+            catTotals[cat] += Number(e.amount) || 0;
+        } else {
+            catTotals.other += Number(e.amount) || 0;
+        }
+    });
+
+    const catGrid = document.getElementById('expenseCategoryGrid');
+    if (catGrid) {
+        const catIcons = {
+            food: { icon: 'fas fa-utensils', color: '#F59E0B', label: 'Food & Dining' },
+            transport: { icon: 'fas fa-plane-departure', color: 'var(--accent-cyan)', label: 'Transit & Travel' },
+            accommodation: { icon: 'fas fa-hotel', color: 'var(--accent-gold)', label: 'Lodging & Stays' },
+            attractions: { icon: 'fas fa-ticket-alt', color: 'var(--accent-emerald)', label: 'Attractions' },
+            shopping: { icon: 'fas fa-bag-shopping', color: '#EC4899', label: 'Shopping' },
+            other: { icon: 'fas fa-shield-halved', color: 'var(--accent-rose)', label: 'Miscellaneous' }
+        };
+
+        catGrid.innerHTML = Object.entries(catTotals).map(([catKey, sum]) => {
+            const meta = catIcons[catKey] || catIcons.other;
+            return `
+                <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:14px;">
+                    <div style="font-size:12px; color:var(--text-dim); display:flex; align-items:center; gap:6px;">
+                        <i class="${meta.icon}" style="color:${meta.color};"></i> ${meta.label}
+                    </div>
+                    <div style="font-size:18px; font-weight:700; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">
+                        ₹${sum.toLocaleString('en-IN')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Expense Transactions List
+    const tableContainer = document.getElementById('expensesTableContainer');
+    const emptyState = document.getElementById('expensesEmptyState');
+
+    if (!tableContainer || !emptyState) return;
+
+    if (allExpenses.length === 0) {
+        tableContainer.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    tableContainer.style.display = 'flex';
+
+    allExpenses.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+
+    tableContainer.innerHTML = allExpenses.map(e => {
+        const cat = (e.category || 'other').toLowerCase();
+        const dateStr = e.date ? new Date(e.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent';
+        return `
+            <div class="saved-trip-row-card" style="align-items:center; padding:14px 18px;">
+                <div style="flex:1; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <h4 style="margin:0; font-size:15px; font-weight:700; color:var(--text-main);">${escapeHtml(e.title || 'Expense')}</h4>
+                        <span class="badge-tag" style="background:rgba(197,164,109,0.15); color:var(--accent-gold); font-size:11px; text-transform:uppercase;">${escapeHtml(cat)}</span>
+                        ${currentExpenseTripId === 'all' ? `<span style="font-size:12px; color:var(--text-dim);">• ${escapeHtml(e.tripTitle)}</span>` : ''}
+                    </div>
+                    <div style="font-size:12.5px; color:var(--text-muted); margin-top:4px;">
+                        <i class="far fa-calendar-alt"></i> ${dateStr} • Paid by: <strong style="color:var(--text-main);">${escapeHtml(e.paidBy || 'Me')}</strong>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <div style="font-size:18px; font-weight:700; color:var(--text-main); font-family:var(--font-display);">
+                        ₹${Number(e.amount).toLocaleString('en-IN')}
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="deleteExpenseFromTrip('${escapeAttr(e.tripId)}', '${escapeAttr(e.id)}')" title="Delete Expense" style="color:var(--accent-rose); border-color:rgba(244,63,94,0.3); padding:4px 8px;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openLogExpenseModal(preselectedTripId = null) {
+    if (allTrips.length === 0) {
+        alert('Please create or save a trip first before logging expenses.');
+        return;
+    }
+
+    const select = document.getElementById('expModalTripSelect');
+    if (select) {
+        select.innerHTML = allTrips.map(t => `
+            <option value="${escapeAttr(t.id)}">${escapeHtml(t.title || ('Trip to ' + (t.destination || 'Destination')))}</option>
+        `).join('');
+
+        if (preselectedTripId) {
+            select.value = preselectedTripId;
+        } else if (currentExpenseTripId !== 'all') {
+            select.value = currentExpenseTripId;
+        }
+    }
+
+    const dateInput = document.getElementById('expModalDate');
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+
+    const modal = document.getElementById('logExpenseModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeLogExpenseModal() {
+    const modal = document.getElementById('logExpenseModal');
+    if (modal) modal.style.display = 'none';
+    const form = document.getElementById('logExpenseForm');
+    if (form) form.reset();
+}
+
+async function submitLogExpense(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const tripId = document.getElementById('expModalTripSelect')?.value;
+    const title = document.getElementById('expModalTitle')?.value.trim();
+    const amount = parseFloat(document.getElementById('expModalAmount')?.value);
+    const category = document.getElementById('expModalCategory')?.value;
+    const date = document.getElementById('expModalDate')?.value;
+    const paidBy = document.getElementById('expModalPaidBy')?.value.trim() || 'Me';
+
+    if (!tripId || !title || isNaN(amount) || amount <= 0) {
+        alert('Please enter a valid trip, description, and expense amount.');
+        return;
+    }
+
+    const btn = document.getElementById('btnSubmitExpense');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+    }
+
+    try {
+        const payload = { title, amount, category, date, paidBy };
+        const res = await Api.post(`/trips/${tripId}/expenses`, payload);
+        const newExpense = res.data || res;
+
+        const targetTrip = allTrips.find(t => String(t.id) === String(tripId));
+        if (targetTrip) {
+            if (!Array.isArray(targetTrip.expenses)) targetTrip.expenses = [];
+            targetTrip.expenses.push(newExpense);
+            targetTrip.actualExpensesTotal = (targetTrip.actualExpensesTotal || 0) + amount;
+        }
+
+        closeLogExpenseModal();
+        renderExpensesView();
+    } catch (err) {
+        alert('Failed to log expense: ' + (err.message || 'Server error'));
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Save Expense';
+        }
+    }
+}
+
+async function deleteExpenseFromTrip(tripId, expenseId) {
+    if (!confirm('Are you sure you want to delete this recorded expense?')) return;
+
+    try {
+        await Api.delete(`/trips/${tripId}/expenses/${expenseId}`);
+
+        const targetTrip = allTrips.find(t => String(t.id) === String(tripId));
+        if (targetTrip && Array.isArray(targetTrip.expenses)) {
+            targetTrip.expenses = targetTrip.expenses.filter(e => String(e.id) !== String(expenseId));
+        }
+
+        renderExpensesView();
+    } catch (err) {
+        alert('Failed to delete expense: ' + (err.message || 'Server error'));
+    }
+}
+
+// ── Trip Duplication & Sharing ──
+
+async function duplicateTrip(tripId) {
+    try {
+        const res = await Api.post(`/trips/${tripId}/duplicate`);
+        const dupTrip = res.data || res;
+        allTrips.unshift(dupTrip);
+        updateDashboardMetrics();
+        renderTripsList();
+        renderOverviewRecentTrips();
+        alert(`Trip "${dupTrip.title}" duplicated successfully!`);
+    } catch (e) {
+        console.error('Duplicate trip failed:', e);
+        alert(e.message || 'Failed to duplicate trip.');
+    }
+}
+
+async function shareTripFromDashboard(tripId) {
+    try {
+        const res = await Api.post(`/trips/${tripId}/share`);
+        const shareData = res.data || res;
+        const shareId = shareData.shareId;
+        const shareUrl = window.location.origin + `/planner.html?share=${encodeURIComponent(shareId)}`;
+
+        const input = document.getElementById('dashShareUrlInput');
+        if (input) input.value = shareUrl;
+
+        const modal = document.getElementById('dashShareModal');
+        if (modal) modal.style.display = 'flex';
+    } catch (e) {
+        alert(e.message || 'Could not generate share link.');
+    }
+}
+
+function copyDashShareLink() {
+    const input = document.getElementById('dashShareUrlInput');
+    if (!input || !input.value) return;
+
+    navigator.clipboard.writeText(input.value).then(() => {
+        const fb = document.getElementById('dashShareCopyFeedback');
+        if (fb) fb.style.display = 'block';
+        setTimeout(() => { if (fb) fb.style.display = 'none'; }, 2000);
+    }).catch(() => {
+        alert('Share link copied!');
+    });
+}
+
+function closeDashShareModal() {
+    const modal = document.getElementById('dashShareModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// ── Travel Preferences & Account Deletion ──
+
+async function saveTravelPreferences(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const btn = document.getElementById('btnSavePreferences');
+    const alertBox = document.getElementById('prefAlert');
+    if (alertBox) alertBox.style.display = 'none';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+    }
+
+    const travelPreferences = {
+        travelStyle: document.getElementById('prefTravelStyle')?.value || 'Romantic Couple',
+        dietary: document.getElementById('prefDietary')?.value || 'No preference',
+        currency: document.getElementById('prefCurrency')?.value || 'INR',
+        transit: document.getElementById('prefTransit')?.value || 'Mixed'
+    };
+
+    try {
+        const res = await Api.put('/users/profile', { travelPreferences });
+        const updated = res.data || res;
+        Auth.setUser(updated);
+
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(16,185,129,0.15)';
+            alertBox.style.color = '#34D399';
+            alertBox.innerHTML = '<i class="fas fa-check-circle"></i> Travel preferences saved!';
+            setTimeout(() => { alertBox.style.display = 'none'; }, 4000);
+        }
+    } catch (err) {
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(244,63,94,0.15)';
+            alertBox.style.color = '#F43F5E';
+            alertBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> Failed to save preferences: ' + (err.message || 'Server error');
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Save Travel Preferences';
+        }
+    }
+}
+
+function openDeleteAccountModal() {
+    const modal = document.getElementById('deleteAccountModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeDeleteAccountModal() {
+    const modal = document.getElementById('deleteAccountModal');
+    if (modal) modal.style.display = 'none';
+    const pwd = document.getElementById('deleteConfirmPassword');
+    if (pwd) pwd.value = '';
+    const alertBox = document.getElementById('deleteAccountAlert');
+    if (alertBox) alertBox.style.display = 'none';
+}
+
+async function submitDeleteAccount(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const pwdInput = document.getElementById('deleteConfirmPassword');
+    const password = pwdInput ? pwdInput.value : '';
+    const alertBox = document.getElementById('deleteAccountAlert');
+    const btn = document.getElementById('btnConfirmDeleteAccount');
+
+    if (!password) {
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(244,63,94,0.15)';
+            alertBox.style.color = '#F43F5E';
+            alertBox.innerHTML = 'Please enter your password to confirm.';
+        }
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting…';
+    }
+
+    try {
+        await Api.delete('/users/account', { password });
+        alert('Your account and all associated data have been permanently deleted.');
+        Auth.logout();
+        window.location.replace('index.html');
+    } catch (err) {
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(244,63,94,0.15)';
+            alertBox.style.color = '#F43F5E';
+            alertBox.innerHTML = err.message || 'Incorrect password or server error.';
+        }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash-can"></i> Permanently Delete';
+        }
+    }
+}
+
+// Global window bindings
+window.switchDashboardView = switchDashboardView;
+window.filterTripsByStatus = filterTripsByStatus;
+window.openTripModal = openTripModal;
+window.closeTripModal = closeTripModal;
+window.deleteTrip = deleteTrip;
+window.removeFavorite = removeFavorite;
+window.saveUserProfile = saveUserProfile;
+window.changeUserPassword = changeUserPassword;
+window.loadActiveSessions = loadActiveSessions;
+window.revokeUserSession = revokeUserSession;
+window.logoutAllDevices = logoutAllDevices;
+
+window.onExpenseTripChanged = onExpenseTripChanged;
+window.viewTripExpenses = viewTripExpenses;
+window.loadUserExpenses = loadUserExpenses;
+window.openLogExpenseModal = openLogExpenseModal;
+window.closeLogExpenseModal = closeLogExpenseModal;
+window.submitLogExpense = submitLogExpense;
+window.deleteExpenseFromTrip = deleteExpenseFromTrip;
+
+window.duplicateTrip = duplicateTrip;
+window.shareTripFromDashboard = shareTripFromDashboard;
+window.copyDashShareLink = copyDashShareLink;
+window.closeDashShareModal = closeDashShareModal;
+
+window.saveTravelPreferences = saveTravelPreferences;
+window.openDeleteAccountModal = openDeleteAccountModal;
+window.closeDeleteAccountModal = closeDeleteAccountModal;
+window.submitDeleteAccount = submitDeleteAccount;

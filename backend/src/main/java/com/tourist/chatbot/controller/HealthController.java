@@ -23,7 +23,7 @@ public class HealthController {
         )));
     }
 
-    @GetMapping("/")
+    @GetMapping("/api")
     public ResponseEntity<ApiResponse<Map<String, Object>>> rootStatus() {
         return ResponseEntity.ok(ApiResponse.success("Tourist Chatbot Backend API is running", Map.of(
                 "status", "UP",
