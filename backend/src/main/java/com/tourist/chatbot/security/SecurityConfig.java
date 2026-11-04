@@ -65,8 +65,11 @@ public class SecurityConfig {
                         // Public auth & health endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/health").permitAll()
-                        // Public destination browsing
+                        // Public destination browsing & currency rates
                         .requestMatchers(HttpMethod.GET, "/api/destinations/**").permitAll()
+                        .requestMatchers("/api/currency/**").permitAll()
+                        // Swagger & OpenAPI documentation
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // Static frontend resources & pages
                         .requestMatchers(
                                 "/",

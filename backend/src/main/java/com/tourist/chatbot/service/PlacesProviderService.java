@@ -18,6 +18,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Global Places, Geocoding, Photos, Weather & Dynamic Attractions Provider.
@@ -37,7 +38,11 @@ public class PlacesProviderService {
     private static final String PHOTON_API_URL = "https://photon.komoot.io/api/?q=%s&limit=%d";
     private static final String WIKI_SUMMARY_URL = "https://en.wikipedia.org/api/rest_v1/page/summary/%s";
     private static final String WIKI_GEOSEARCH_URL = "https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=%s%%7C%s&gsradius=%d&gslimit=%d&format=json";
-    private static final String OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&current_weather=true";
+    private static final String OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto";
+
+    private final Map<String, CachedWeather> weatherCache = new ConcurrentHashMap<>();
+
+    private record CachedWeather(Map<String, Object> data, long timestamp) {}
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
@@ -369,18 +374,31 @@ public class PlacesProviderService {
      * Real-time live weather lookup via Open-Meteo.
      */
     public Map<String, Object> getLiveWeather(Double lat, Double lon) {
+        if (lat == null || lon == null) {
+            Map<String, Object> fallback = new LinkedHashMap<>();
+            fallback.put("temperature", "22°C");
+            fallback.put("condition", "Pleasant");
+            fallback.put("windSpeed", "12 km/h");
+            return fallback;
+        }
+
+        String cacheKey = String.format(Locale.US, "%.2f,%.2f", lat, lon);
+        CachedWeather cached = weatherCache.get(cacheKey);
+        long now = System.currentTimeMillis();
+        if (cached != null && (now - cached.timestamp() < 15 * 60 * 1000)) {
+            return cached.data();
+        }
+
         Map<String, Object> weather = new LinkedHashMap<>();
         weather.put("temperature", "22°C");
         weather.put("condition", "Pleasant");
         weather.put("windSpeed", "12 km/h");
 
-        if (lat == null || lon == null) return weather;
-
         try {
             String url = String.format(Locale.US, OPEN_METEO_URL, lat, lon);
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
-                    .timeout(Duration.ofSeconds(5))
+                    .timeout(Duration.ofSeconds(6))
                     .GET()
                     .build();
 
@@ -399,6 +417,32 @@ public class PlacesProviderService {
                     weather.put("condition", translateWmoWeatherCode(code));
                     weather.put("windSpeed", String.format(Locale.US, "%.1f km/h", wind));
                 }
+
+                // 7-day daily forecast
+                JsonNode daily = root.path("daily");
+                if (!daily.isMissingNode() && daily.has("time")) {
+                    JsonNode times = daily.path("time");
+                    JsonNode maxTemps = daily.path("temperature_2m_max");
+                    JsonNode minTemps = daily.path("temperature_2m_min");
+                    JsonNode rainProbs = daily.path("precipitation_probability_max");
+                    JsonNode codes = daily.path("weathercode");
+
+                    List<Map<String, Object>> forecastList = new ArrayList<>();
+                    int daysCount = Math.min(times.size(), 7);
+                    for (int i = 0; i < daysCount; i++) {
+                        Map<String, Object> dayMap = new LinkedHashMap<>();
+                        dayMap.put("date", times.path(i).asText());
+                        dayMap.put("maxTemp", String.format(Locale.US, "%.0f°C", maxTemps.path(i).asDouble()));
+                        dayMap.put("minTemp", String.format(Locale.US, "%.0f°C", minTemps.path(i).asDouble()));
+                        dayMap.put("rainProbability", rainProbs.path(i).asInt(0) + "%");
+                        dayMap.put("condition", translateWmoWeatherCode(codes.path(i).asInt(0)));
+                        forecastList.add(dayMap);
+                    }
+                    weather.put("dailyForecast", forecastList);
+                }
+
+                weather.put("source", "Verified Open-Meteo Weather API");
+                weatherCache.put(cacheKey, new CachedWeather(weather, now));
             }
         } catch (Exception e) {
             log.debug("Live weather fetch skipped for [{}, {}]: {}", lat, lon, e.getMessage());

@@ -46,7 +46,34 @@ const App = {
         if (sidebar) {
             sidebar.classList.toggle('open');
         }
+    },
+
+    initPWA() {
+        if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((reg) => {
+                        console.log('[PWA] Service Worker registered successfully with scope:', reg.scope);
+                    })
+                    .catch((err) => {
+                        console.warn('[PWA] Service Worker registration failed:', err);
+                    });
+            });
+        }
+
+        window.addEventListener('online', () => {
+            this.toast('You are back online. Synchronizing latest travel updates…', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            this.toast('You are currently offline. Accessing cached travel plans.', 'info');
+        });
     }
 };
 
 window.App = App;
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        App.initPWA();
+    });
+}

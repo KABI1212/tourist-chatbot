@@ -254,6 +254,24 @@ var Api = window.Api || {
 
     delete(endpoint, options = {}) {
         return this.request(endpoint, { ...options, method: 'DELETE' });
+    },
+
+    async getCurrencyRates(base = 'USD') {
+        try {
+            return await this.get(`/currency/rates?base=${encodeURIComponent(base)}`);
+        } catch (e) {
+            console.warn('Currency rates fetch error:', e);
+            return { base, rates: { USD: 1.0, INR: 83.5, EUR: 0.92, GBP: 0.79 } };
+        }
+    },
+
+    async convertCurrency(from, to, amount) {
+        try {
+            return await this.get(`/currency/convert?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&amount=${encodeURIComponent(amount)}`);
+        } catch (e) {
+            console.warn('Currency conversion error:', e);
+            return { from, to, amount, convertedAmount: amount, rate: 1.0 };
+        }
     }
 };
 

@@ -594,6 +594,57 @@
                 </h3>
                 <ul class="req-list" id="outTipsList"></ul>
             </div>
+
+            <!-- Intelligent Packing Checklist & Travel Documents (Phase 22) -->
+            <div
+                style="margin-top:24px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px;"
+                id="plannerPackingChecklistCard">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+                    <div>
+                        <h3
+                            style="font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--text-main); margin:0; display:flex; align-items:center; gap:8px;">
+                            <i class="fas fa-suitcase-rolling" style="color:var(--accent-gold);"></i> Smart Packing Checklist &amp; Documents
+                        </h3>
+                        <p style="font-size:13px; color:var(--text-muted); margin:4px 0 0;">Intelligent gear, attire, and document recommendations tailored for your destination &amp; duration.</p>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="exportOrPrintPackingChecklist()" title="Print packing list">
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="savePackingChecklistToServer()" id="btnSavePacking" title="Save packing status to trip">
+                            <i class="fas fa-cloud-arrow-up"></i> Save Checklist
+                        </button>
+                    </div>
+                </div>
+
+                <div id="packingProgressWrap" style="margin-bottom:18px;">
+                    <div style="display:flex; justify-content:space-between; font-size:12.5px; color:var(--text-muted); margin-bottom:6px;">
+                        <span id="packingProgressText">0 of 0 packed (0%)</span>
+                        <span id="packingDestinationTag" class="badge-tag" style="background:rgba(197,164,109,0.15); color:var(--accent-gold); font-size:11px;">Customized for Trip</span>
+                    </div>
+                    <div style="height:6px; background:var(--bg-surface); border-radius:3px; overflow:hidden; border:1px solid var(--border);">
+                        <div id="packingProgressBar" style="height:100%; width:0%; background:var(--accent-gold); transition:width 0.3s ease;"></div>
+                    </div>
+                </div>
+
+                <div id="packingItemsContainer" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+                    <!-- Filled dynamically -->
+                </div>
+
+                <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <input type="text" id="newPackingItemInput" class="form-input" placeholder="Add custom item (e.g. GoPro, trekking poles, warm socks)..." style="flex:1; min-width:200px;">
+                    <select id="newPackingItemCategory" class="form-select" style="width:auto; min-width:160px;">
+                        <option value="Clothing &amp; Footwear">Clothing &amp; Footwear</option>
+                        <option value="Toiletries &amp; Care">Toiletries &amp; Care</option>
+                        <option value="Electronics &amp; Gadgets">Electronics &amp; Gadgets</option>
+                        <option value="Documents &amp; Cash">Documents &amp; Cash</option>
+                        <option value="Health &amp; Medicine">Health &amp; Medicine</option>
+                    </select>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="addCustomPackingItem()">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                </div>
+            </div>
         </section>
 
     </div>

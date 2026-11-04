@@ -751,6 +751,9 @@ function renderItineraryOutput(itinerary) {
             <li><i class="fas fa-check-circle" style="color:var(--accent-emerald);"></i> ${escapeHtml(t)}</li>
         `).join('');
     }
+
+    // Intelligent Packing Checklist (Phase 22)
+    initOrRenderPackingChecklist(itinerary);
 }
 
 function renderTimelineNodesOnly() {
@@ -1408,7 +1411,265 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+let currentPackingList = [];
+
+/**
+ * Phase 22: Intelligent Packing Checklist Engine
+ */
+function generateDefaultPackingChecklist(destName, days = 3) {
+    const d = (destName || '').toLowerCase();
+    const isCold = d.includes('ooty') || d.includes('manali') || d.includes('shimla') || d.includes('munnar') || d.includes('ladakh') || d.includes('leh') || d.includes('kashmir') || d.includes('darjeeling') || d.includes('gulmarg') || d.includes('kodaikanal');
+    const isBeach = d.includes('goa') || d.includes('beach') || d.includes('bali') || d.includes('pondicherry') || d.includes('andaman') || d.includes('maldives') || d.includes('phuket');
+
+    const list = [
+        // Documents & Cash
+        { id: 'doc-1', category: 'Documents & Cash', item: 'Government Photo ID / Passport', checked: true },
+        { id: 'doc-2', category: 'Documents & Cash', item: 'Flight / Train / Bus Tickets (Digital & Printed)', checked: true },
+        { id: 'doc-3', category: 'Documents & Cash', item: 'Hotel & Stay Booking Confirmation Vouchers', checked: false },
+        { id: 'doc-4', category: 'Documents & Cash', item: 'Emergency Cash in local currency', checked: false },
+        { id: 'doc-5', category: 'Documents & Cash', item: 'Primary Debit/Credit Card + Backup Card', checked: true },
+
+        // Electronics & Gadgets
+        { id: 'elec-1', category: 'Electronics & Gadgets', item: 'Smartphone & Heavy-duty Charging Cables', checked: true },
+        { id: 'elec-2', category: 'Electronics & Gadgets', item: '10,000mAh+ Power Bank (Flight compliant)', checked: false },
+        { id: 'elec-3', category: 'Electronics & Gadgets', item: 'Earphones / Noise Cancelling Headphones', checked: false },
+        { id: 'elec-4', category: 'Electronics & Gadgets', item: 'Universal Travel Adapter', checked: false },
+
+        // Toiletries & Care
+        { id: 'toil-1', category: 'Toiletries & Care', item: 'High SPF Sunscreen (SPF 50+)', checked: false },
+        { id: 'toil-2', category: 'Toiletries & Care', item: 'Moisturizer & Lip Balm', checked: false },
+        { id: 'toil-3', category: 'Toiletries & Care', item: 'Toothbrush, Paste & Travel Toiletries kit', checked: false },
+        { id: 'toil-4', category: 'Toiletries & Care', item: 'Wet Wipes & Pocket Hand Sanitizer', checked: false },
+
+        // Health & Medicine
+        { id: 'med-1', category: 'Health & Medicine', item: 'Personal Daily Prescriptions', checked: true },
+        { id: 'med-2', category: 'Health & Medicine', item: 'Motion Sickness / Altitude Acclimatization Pills', checked: false },
+        { id: 'med-3', category: 'Health & Medicine', item: 'Paracetamol & Pain Relief Tablets', checked: false },
+        { id: 'med-4', category: 'Health & Medicine', item: 'Band-aids & Antiseptic Ointment', checked: false },
+        { id: 'med-5', category: 'Health & Medicine', item: 'Electrolyte ORS Packets', checked: false }
+    ];
+
+    if (isCold) {
+        list.push(
+            { id: 'cloth-1', category: 'Clothing & Footwear', item: 'Thermal Inners / Base Layer Sets', checked: false },
+            { id: 'cloth-2', category: 'Clothing & Footwear', item: 'Heavy Fleece Jacket / Windcheater', checked: false },
+            { id: 'cloth-3', category: 'Clothing & Footwear', item: 'Woollen Beanie, Scarf & Thermal Gloves', checked: false },
+            { id: 'cloth-4', category: 'Clothing & Footwear', item: 'Sturdy Trekking / Hiking Boots with Grip', checked: false },
+            { id: 'cloth-5', category: 'Clothing & Footwear', item: 'Thick Woollen Socks (3-4 pairs)', checked: false }
+        );
+    } else if (isBeach) {
+        list.push(
+            { id: 'cloth-1', category: 'Clothing & Footwear', item: 'Breathable Cotton / Linen Outfits', checked: false },
+            { id: 'cloth-2', category: 'Clothing & Footwear', item: 'UV Swimwear & Quick-Dry Boardshorts', checked: false },
+            { id: 'cloth-3', category: 'Clothing & Footwear', item: 'Polarized UV Sunglasses & Sun Hat', checked: false },
+            { id: 'cloth-4', category: 'Clothing & Footwear', item: 'Comfortable Flip-Flops & Beach Towel', checked: false },
+            { id: 'toil-5', category: 'Toiletries & Care', item: 'Waterproof Phone Dry Pouch & Aloe Gel', checked: false }
+        );
+    } else {
+        list.push(
+            { id: 'cloth-1', category: 'Clothing & Footwear', item: 'Lightweight Breathable Walking Outfits', checked: false },
+            { id: 'cloth-2', category: 'Clothing & Footwear', item: 'Comfortable Cushioned Walking Sneakers', checked: false },
+            { id: 'cloth-3', category: 'Clothing & Footwear', item: 'Modest temple/monument attire (covers knees/shoulders)', checked: false },
+            { id: 'cloth-4', category: 'Clothing & Footwear', item: 'Light Layer / Jacket for evenings', checked: false }
+        );
+    }
+
+    return list;
+}
+
+function initOrRenderPackingChecklist(itinerary) {
+    if (itinerary && Array.isArray(itinerary.packingChecklist) && itinerary.packingChecklist.length > 0) {
+        currentPackingList = itinerary.packingChecklist;
+    } else {
+        currentPackingList = generateDefaultPackingChecklist(itinerary ? itinerary.destination : plannerState.destination, itinerary ? itinerary.days : plannerState.days);
+    }
+    renderPackingChecklistUI();
+}
+
+function renderPackingChecklistUI() {
+    const container = document.getElementById('packingItemsContainer');
+    if (!container) return;
+
+    // Group items by category
+    const categories = ['Documents & Cash', 'Clothing & Footwear', 'Toiletries & Care', 'Electronics & Gadgets', 'Health & Medicine'];
+    const groups = {};
+    categories.forEach(c => groups[c] = []);
+
+    currentPackingList.forEach((item, idx) => {
+        const cat = item.category || 'Clothing & Footwear';
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push({ ...item, globalIndex: idx });
+    });
+
+    const categoryIcons = {
+        'Documents & Cash': 'fa-id-card',
+        'Clothing & Footwear': 'fa-shirt',
+        'Toiletries & Care': 'fa-pump-soap',
+        'Electronics & Gadgets': 'fa-plug',
+        'Health & Medicine': 'fa-briefcase-medical'
+    };
+
+    container.innerHTML = Object.entries(groups)
+        .filter(([_, items]) => items.length > 0)
+        .map(([cat, items]) => `
+            <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px;">
+                <div style="font-size:13px; font-weight:700; color:var(--accent-gold); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <i class="fas ${categoryIcons[cat] || 'fa-tag'}"></i> ${escapeHtml(cat)}
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    ${items.map(it => `
+                        <label style="display:flex; align-items:flex-start; gap:10px; font-size:13px; color:${it.checked ? 'var(--text-dim)' : 'var(--text-main)'}; cursor:pointer; text-decoration:${it.checked ? 'line-through' : 'none'}; user-select:none;">
+                            <input type="checkbox" ${it.checked ? 'checked' : ''} onchange="togglePackingItem(${it.globalIndex})" style="margin-top:2px; accent-color:var(--accent-gold); width:16px; height:16px; cursor:pointer;">
+                            <span>${escapeHtml(it.item)}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+
+    updatePackingProgress();
+}
+
+function togglePackingItem(idx) {
+    if (currentPackingList[idx]) {
+        currentPackingList[idx].checked = !currentPackingList[idx].checked;
+        renderPackingChecklistUI();
+    }
+}
+
+function addCustomPackingItem() {
+    const input = document.getElementById('newPackingItemInput');
+    const catSelect = document.getElementById('newPackingItemCategory');
+    if (!input || !input.value.trim()) return;
+
+    const val = input.value.trim();
+    const cat = catSelect ? catSelect.value : 'Clothing & Footwear';
+
+    currentPackingList.push({
+        id: 'custom-' + Date.now(),
+        category: cat,
+        item: val,
+        checked: false
+    });
+
+    input.value = '';
+    renderPackingChecklistUI();
+}
+
+function updatePackingProgress() {
+    const total = currentPackingList.length;
+    const packed = currentPackingList.filter(it => it.checked).length;
+    const percent = total > 0 ? Math.round((packed / total) * 100) : 0;
+
+    const bar = document.getElementById('packingProgressBar');
+    const text = document.getElementById('packingProgressText');
+
+    if (bar) bar.style.width = percent + '%';
+    if (text) text.textContent = `${packed} of ${total} packed (${percent}%)`;
+}
+
+async function savePackingChecklistToServer() {
+    if (!currentSavedTripId) {
+        if (!Auth.isAuthenticated()) {
+            if (confirm('Please log in to save your trip and packing checklist. Proceed to login?')) {
+                window.location.href = 'login.html?redirect=planner.html';
+            }
+            return;
+        }
+        try {
+            await saveTripToProfile(true);
+        } catch (e) {
+            alert('Please save the trip first.');
+            return;
+        }
+    }
+
+    if (!currentSavedTripId) return;
+
+    const btn = document.getElementById('btnSavePacking');
+    const origText = btn ? btn.innerHTML : 'Save Checklist';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+    }
+
+    try {
+        await Api.put(`/trips/${currentSavedTripId}/packing`, currentPackingList);
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-check"></i> Checklist Saved!';
+            btn.style.background = 'var(--accent-emerald)';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = origText;
+                btn.style.background = '';
+            }, 2000);
+        }
+    } catch (e) {
+        console.error('Failed to save packing checklist:', e);
+        alert(e.message || 'Could not save packing checklist.');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
+    }
+}
+
+function exportOrPrintPackingChecklist() {
+    const dest = (currentGeneratedItinerary ? currentGeneratedItinerary.destination : plannerState.destination) || 'Travel';
+    const total = currentPackingList.length;
+    const packed = currentPackingList.filter(it => it.checked).length;
+
+    let printHtml = `
+        <html>
+        <head>
+            <title>Packing Checklist - ${dest}</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 30px; color: #111; line-height: 1.5; }
+                h1 { margin: 0 0 6px 0; font-size: 24px; }
+                p { margin: 0 0 20px 0; color: #555; font-size: 14px; }
+                .category { margin-top: 20px; font-weight: bold; font-size: 16px; border-bottom: 2px solid #ccc; padding-bottom: 4px; }
+                ul { list-style: none; padding-left: 0; margin-top: 8px; }
+                li { padding: 6px 0; border-bottom: 1px dashed #eee; font-size: 13.5px; }
+                .box { display: inline-block; width: 14px; height: 14px; border: 1.5px solid #444; border-radius: 3px; margin-right: 10px; vertical-align: middle; }
+                .checked { background: #444; }
+            </style>
+        </head>
+        <body>
+            <h1>🎒 Packing Checklist: ${dest}</h1>
+            <p>Generated by TouristAI • Status: ${packed} of ${total} packed</p>
+    `;
+
+    const categories = ['Documents & Cash', 'Clothing & Footwear', 'Toiletries & Care', 'Electronics & Gadgets', 'Health & Medicine'];
+    categories.forEach(cat => {
+        const items = currentPackingList.filter(it => (it.category || 'Clothing & Footwear') === cat);
+        if (items.length > 0) {
+            printHtml += `<div class="category">${cat}</div><ul>`;
+            items.forEach(it => {
+                printHtml += `<li><span class="box ${it.checked ? 'checked' : ''}"></span> ${it.item}</li>`;
+            });
+            printHtml += `</ul>`;
+        }
+    });
+
+    printHtml += `</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (win) {
+        win.document.write(printHtml);
+        win.document.close();
+        win.focus();
+        setTimeout(() => {
+            win.print();
+        }, 300);
+    }
+}
+
 // Global Window Bindings
+window.initOrRenderPackingChecklist = initOrRenderPackingChecklist;
+window.togglePackingItem = togglePackingItem;
+window.addCustomPackingItem = addCustomPackingItem;
+window.savePackingChecklistToServer = savePackingChecklistToServer;
+window.exportOrPrintPackingChecklist = exportOrPrintPackingChecklist;
 window.goToStep = goToStep;
 window.clearField = clearField;
 window.setBudgetType = setBudgetType;
