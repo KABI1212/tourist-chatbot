@@ -36,3 +36,4 @@ public class CurrencyController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 }
+

@@ -40,3 +40,4 @@ class CurrencyServiceTest {
         assertTrue(converted > 5000.0);
     }
 }
+
