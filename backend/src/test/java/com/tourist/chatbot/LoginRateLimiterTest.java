@@ -51,3 +51,4 @@ public class LoginRateLimiterTest {
         assertDoesNotThrow(() -> rateLimiter.checkAllowed(user, ip));
     }
 }
+

@@ -18,3 +18,4 @@ public interface RefreshTokenRepository extends MongoRepository<RefreshToken, St
 
     void deleteByToken(String token);
 }
+

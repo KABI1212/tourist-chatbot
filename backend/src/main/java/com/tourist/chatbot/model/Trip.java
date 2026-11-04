@@ -60,6 +60,18 @@ public class Trip {
 
     private List<String> travelTips;
 
+    private List<Map<String, Object>> expenses;
+
+    private Double actualExpensesTotal;
+
+    @Indexed(unique = true, sparse = true)
+    private String shareId;
+
+    @Builder.Default
+    private Boolean isShared = false;
+
+    private List<Map<String, Object>> packingChecklist;
+
     @CreatedDate
     private Instant createdAt;
 }

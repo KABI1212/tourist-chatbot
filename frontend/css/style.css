@@ -1384,11 +1384,62 @@ footer {
     to { transform: translateX(0); opacity: 1; }
 }
 
-/* Print Friendly Styles for Itinerary PDF */
+/* Print Friendly Styles for Luxury Itinerary PDF */
 @media print {
-    body { background: #fff !important; color: #000 !important; }
-    .navbar, .sidebar, footer, .btn-action, #toast-container { display: none !important; }
-    .itinerary-output-box { border: none !important; box-shadow: none !important; color: #000 !important; }
+    *, *::before, *::after {
+        background: transparent !important;
+        color: #111 !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    body {
+        background: #fff !important;
+        color: #111 !important;
+        font-family: var(--font-body, 'DM Sans', sans-serif) !important;
+        font-size: 11pt !important;
+        line-height: 1.5 !important;
+    }
+    .navbar, .planner-stepper, .planner-form-card, .sidebar, footer,
+    .itinerary-actions, .btn-action, .btn, .btn-remove-day, .day-act-remove,
+    .day-add-activity-row, .leaflet-control-container, #toast-container,
+    .theme-toggle-btn, .lang-selector-trigger, .stale-param-alert,
+    #sharedTripBanner, .trip-detail-modal-overlay {
+        display: none !important;
+    }
+    .planner-page-container {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+    .itinerary-output-box {
+        display: block !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+    .timeline-day-node {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        margin-bottom: 16pt !important;
+        border: 1px solid #ddd !important;
+        border-radius: 6pt !important;
+        padding: 12pt !important;
+    }
+    .trip-cost-summary-card {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        border: 1px solid #ddd !important;
+        padding: 12pt !important;
+        margin-bottom: 16pt !important;
+    }
+    h1, h2, h3, h4 {
+        font-family: var(--font-display, 'Cormorant Garamond', serif) !important;
+        color: #000 !important;
+    }
+    a[href]::after {
+        content: "" !important;
+    }
 }
 
 /* ==========================================================

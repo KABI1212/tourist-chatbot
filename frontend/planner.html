@@ -65,6 +65,29 @@
     <!-- PLANNER MAIN WRAPPER (Screen 4 & 5 Mockup) -->
     <div class="planner-page-container">
 
+        <!-- Shared Trip Notice Banner (visible when viewing public share link) -->
+        <div id="sharedTripBanner" class="shared-trip-banner" style="display:none; margin-bottom:24px; padding:16px 20px; background:var(--bg-card); border:1px solid var(--accent-gold); border-radius:var(--radius-md); box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:42px; height:42px; border-radius:50%; background:rgba(197,164,109,0.15); display:flex; align-items:center; justify-content:center; color:var(--accent-gold); font-size:18px;">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <div>
+                        <strong style="color:var(--text-main); font-size:15px; display:block;">Public Shared Itinerary</strong>
+                        <span style="font-size:13px; color:var(--text-muted);" id="sharedTripNotice">Viewing an itinerary shared by a fellow traveler.</span>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button type="button" class="btn btn-primary btn-sm" id="btnCloneSharedTrip" onclick="cloneSharedTripToAccount()">
+                        <i class="fas fa-bookmark"></i> Save to My Trips
+                    </button>
+                    <a href="planner.html" class="btn btn-outline btn-sm">
+                        <i class="fas fa-sparkles"></i> Plan New Trip
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <div class="planner-layout-split">
             <!-- Left Stepper (Screen 4 & 5 Mockup) -->
             <aside class="planner-stepper" id="plannerStepper">
@@ -453,6 +476,10 @@
                         title="Print or export as PDF">
                         <i class="fas fa-file-pdf"></i> Export PDF
                     </button>
+                    <button type="button" class="btn btn-outline btn-sm btn-action" onclick="shareCurrentTrip()"
+                        id="btnShareTrip" title="Share public link to this itinerary">
+                        <i class="fas fa-share-nodes"></i> Share
+                    </button>
                     <button type="button" class="btn btn-primary btn-sm btn-action" onclick="saveTripToProfile()"
                         id="btnSaveTrip">
                         <i class="fas fa-bookmark"></i> Save Trip
@@ -525,9 +552,16 @@
                         <i class="fas fa-map-location-dot" style="color:var(--accent-gold);"></i> Itinerary Route &amp;
                         Stopovers Map
                     </h3>
-                    <span style="font-size:12.5px; color:var(--text-dim);"><i class="fas fa-layer-group"
-                            style="color:var(--accent-gold);"></i> Layer Switcher: Standard OSM &amp; Satellite
-                        View</span>
+                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <label for="mapDayFilter" style="font-size:12px; color:var(--text-dim); margin:0;">Filter Day:</label>
+                            <select id="mapDayFilter" class="form-select form-select-sm" style="padding:4px 10px; font-size:12px; border-radius:6px; background:var(--bg-card); color:var(--text-main); border:1px solid var(--border);" onchange="filterMapByDay(this.value)">
+                                <option value="-1">All Days &amp; Stops</option>
+                            </select>
+                        </div>
+                        <span style="font-size:12.5px; color:var(--text-dim);"><i class="fas fa-layer-group"
+                                style="color:var(--accent-gold);"></i> Layer Switcher: OSM &amp; Satellite</span>
+                    </div>
                 </div>
                 <div id="itineraryRouteMap"
                     style="height:380px; width:100%; border-radius:var(--radius-md); border:1px solid var(--border); overflow:hidden; z-index:10;">
@@ -562,6 +596,44 @@
             </div>
         </section>
 
+    </div>
+
+    <!-- SHARE TRIP MODAL -->
+    <div id="shareTripModal" class="trip-detail-modal-overlay" style="display:none;">
+        <div class="trip-detail-modal-card" style="max-width:520px;">
+            <button type="button" class="trip-modal-close-btn" onclick="closeShareModal()" title="Close" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+            <div style="padding:10px 4px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                    <div style="width:42px; height:42px; border-radius:50%; background:rgba(197,164,109,0.15); display:flex; align-items:center; justify-content:center; color:var(--accent-gold); font-size:18px;">
+                        <i class="fas fa-share-nodes"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-family:var(--font-display); font-size:22px; color:var(--text-main);">Share Itinerary</h3>
+                        <p style="margin:2px 0 0; font-size:13px; color:var(--text-muted);">Anyone with this link can view this curated itinerary in read-only mode.</p>
+                    </div>
+                </div>
+
+                <div style="margin:18px 0; background:var(--bg-surface); border:1px solid var(--border); border-radius:10px; padding:16px;">
+                    <label style="font-size:11.5px; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:8px;">Public Itinerary Link</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="shareTripUrlInput" class="form-input" readonly style="font-size:13px; background:var(--bg-card); cursor:text; font-family:monospace;">
+                        <button type="button" class="btn btn-primary btn-sm" id="btnCopyShareUrl" onclick="copyShareLink()" style="white-space:nowrap; padding:8px 16px;">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <div id="shareCopyFeedback" style="display:none; font-size:12px; color:var(--accent-emerald); margin-top:10px;">
+                        <i class="fas fa-check-circle"></i> Link copied to clipboard! Share it with friends or family.
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; padding-top:14px; border-top:1px solid var(--border);">
+                    <span style="font-size:12.5px; color:var(--text-dim);"><i class="fas fa-shield-halved" style="color:var(--accent-emerald);"></i> Safe &amp; verified link</span>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="closeShareModal()">Done</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Leaflet JS for Map -->

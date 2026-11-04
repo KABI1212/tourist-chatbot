@@ -217,6 +217,7 @@ async function handleChatSubmit(e) {
 
         renderConversation();
         persistCurrentSession();
+        updatePromptChips(destination ? destination.name : null);
 
         if (!userHasScrolledUp) {
             scrollToBottomSmooth();
@@ -539,6 +540,7 @@ function startNewChat() {
 
     renderConversation();
     updateWelcomeScreenVisibility();
+    updatePromptChips(null);
 
     // Deselect active chat in sidebar
     document.querySelectorAll('.recent-chat-item').forEach(el => el.classList.remove('active'));
@@ -827,26 +829,62 @@ function openPlannerFor(dest, days = 5, travelers = 2) {
     window.location.href = `planner.html?destination=${encodeURIComponent(dest)}&days=${days}&travelers=${travelers}`;
 }
 
-function exportChat() {
+function toggleExportDropdown(e) {
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById('exportDropdown');
+    if (dropdown) {
+        const isShown = dropdown.style.display === 'block';
+        dropdown.style.display = isShown ? 'none' : 'block';
+    }
+}
+
+function exportChat(format = 'txt') {
+    const dropdown = document.getElementById('exportDropdown');
+    if (dropdown) dropdown.style.display = 'none';
+
     if (!currentConversationHistory.length) {
         alert('There is no conversation to export yet.');
         return;
     }
 
-    let text = "TouristAI Travel Conversation Export\n";
-    text += "Exported on: " + new Date().toLocaleString() + "\n";
-    text += "========================================================\n\n";
+    let mime = 'text/plain;charset=utf-8';
+    let ext = 'txt';
+    let output = '';
 
-    currentConversationHistory.forEach(m => {
-        const sender = m.role === 'user' ? 'YOU' : 'TOURISTAI CONCIERGE';
-        text += `[${sender}]\n${m.content}\n\n--------------------------------------------------------\n\n`;
-    });
+    if (format === 'json') {
+        mime = 'application/json;charset=utf-8';
+        ext = 'json';
+        output = JSON.stringify({
+            app: "TouristAI",
+            exportedAt: new Date().toISOString(),
+            chatId: currentChatId,
+            conversation: currentConversationHistory
+        }, null, 2);
+    } else if (format === 'md') {
+        mime = 'text/markdown;charset=utf-8';
+        ext = 'md';
+        output = `# TouristAI Travel Conversation Export\n\n`;
+        output += `*Exported on: ${new Date().toLocaleString()}*\n\n---\n\n`;
+        currentConversationHistory.forEach(m => {
+            const sender = m.role === 'user' ? '### 👤 Traveler' : '### 🧭 TouristAI Concierge';
+            output += `${sender}\n\n${m.content}\n\n---\n\n`;
+        });
+    } else {
+        output = "TouristAI Travel Conversation Export\n";
+        output += "Exported on: " + new Date().toLocaleString() + "\n";
+        output += "========================================================\n\n";
 
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        currentConversationHistory.forEach(m => {
+            const sender = m.role === 'user' ? 'YOU' : 'TOURISTAI CONCIERGE';
+            output += `[${sender}]\n${m.content}\n\n--------------------------------------------------------\n\n`;
+        });
+    }
+
+    const blob = new Blob([output], { type: mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `TouristAI_Journey_${Date.now()}.txt`;
+    a.download = `TouristAI_Journey_${Date.now()}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
 }
@@ -900,19 +938,41 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-function updatePromptChips() {
+function updatePromptChips(contextDestination = null) {
     const tray = document.getElementById('chipsTray');
     if (!tray) return;
 
-    const prompts = [
-        '🏔️ Chennai → Ooty under ₹8K',
-        '🌴 5 Days Kerala Backwaters',
-        '☀️ Manali Weather & Season',
-        '🚂 Transit from Madurai to Kodaikanal',
-        '🍛 Chennai la irundhu Ooty ku 3 days trip',
-        '✨ ஊட்டியைப் பற்றி சொல்லு',
-        '✨ मुझे ऊटी के बारे में बताओ'
-    ];
+    let prompts = [];
+
+    if (contextDestination) {
+        prompts = [
+            `☀️ Weather in ${contextDestination}`,
+            `🚆 How to reach ${contextDestination}?`,
+            `💰 3-day budget for ${contextDestination}`,
+            `🍲 Famous foods in ${contextDestination}`,
+            `🏨 Best areas to stay in ${contextDestination}`,
+            `🎒 Packing checklist for ${contextDestination}`
+        ];
+    } else if (currentConversationHistory.length > 0) {
+        prompts = [
+            '💰 Can you make this more budget-friendly?',
+            '📅 Suggest a 3-day day-by-day plan',
+            '🚆 What are the best transit routes?',
+            '🍲 Suggest authentic local dining',
+            '🎒 Essential travel tips & packing list',
+            '🗺️ Nearby day excursions'
+        ];
+    } else {
+        prompts = [
+            '🏔️ Chennai → Ooty under ₹8K',
+            '🌴 5 Days Kerala Backwaters',
+            '☀️ Manali Weather & Season',
+            '🚂 Transit from Madurai to Kodaikanal',
+            '🍛 Chennai la irundhu Ooty ku 3 days trip',
+            '✨ ஊட்டியைப் பற்றி சொல்லு',
+            '✨ मुझे ऊटी के बारे में बताओ'
+        ];
+    }
 
     tray.innerHTML = '';
     prompts.forEach(p => {
@@ -921,7 +981,6 @@ function updatePromptChips() {
         btn.className = 'prompt-chip';
         btn.textContent = p;
         btn.addEventListener('click', () => {
-            // Strip leading emoji
             const clean = p.replace(/^[\p{Emoji}\s]+/u, '').trim();
             useSuggestedChip(clean);
         });
@@ -946,6 +1005,12 @@ function initChatLanguageSelector() {
             dropdown.classList.remove('show');
             const btn = document.getElementById('chatLangBtn');
             if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+
+        const expDropdown = document.getElementById('exportDropdown');
+        const expWrap = document.querySelector('.chat-export-wrap');
+        if (expDropdown && expWrap && !expWrap.contains(e.target)) {
+            expDropdown.style.display = 'none';
         }
     });
 }
@@ -1028,6 +1093,7 @@ window.closeConfirmModal = closeConfirmModal;
 window.executeModalAction = executeModalAction;
 window.toggleSidebar = toggleSidebar;
 window.exportChat = exportChat;
+window.toggleExportDropdown = toggleExportDropdown;
 window.scrollToBottomSmooth = scrollToBottomSmooth;
 window.openPlannerFor = openPlannerFor;
 window.toggleChatLangDropdown = toggleChatLangDropdown;

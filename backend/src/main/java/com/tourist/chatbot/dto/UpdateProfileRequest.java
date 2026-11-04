@@ -16,4 +16,5 @@ public class UpdateProfileRequest {
     private String address;
     private String bio;
     private String avatar;
+    private java.util.Map<String, Object> travelPreferences;
 }

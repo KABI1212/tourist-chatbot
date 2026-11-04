@@ -14,7 +14,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -89,5 +91,80 @@ public class TripServiceTest {
         assertNotNull(resp);
         assertTrue(resp.isSuccess());
         verify(geminiService).generateStructuredItinerary(req);
+    }
+
+    @Test
+    void testAddAndDeleteExpense() {
+        Trip trip = Trip.builder()
+                .id("trip-1")
+                .userId("u1")
+                .estimatedBudget(10000.0)
+                .people(2)
+                .expenses(new ArrayList<>())
+                .actualExpensesTotal(0.0)
+                .build();
+
+        when(tripRepository.findById("trip-1")).thenReturn(Optional.of(trip));
+        when(tripRepository.save(any(Trip.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Map<String, Object> summary = tripService.addExpense("trip-1", "u1", Map.of(
+                "title", "Train tickets",
+                "category", "transportation",
+                "amount", 2400.0
+        ));
+
+        assertNotNull(summary);
+        assertEquals(2400.0, summary.get("actualTotal"));
+        assertEquals(7600.0, summary.get("remainingBalance"));
+
+        List<Map<String, Object>> expenses = (List<Map<String, Object>>) summary.get("expenses");
+        assertEquals(1, expenses.size());
+        String expenseId = (String) expenses.get(0).get("id");
+
+        Map<String, Object> afterDelete = tripService.deleteExpense("trip-1", "u1", expenseId);
+        assertEquals(0.0, afterDelete.get("actualTotal"));
+        assertEquals(10000.0, afterDelete.get("remainingBalance"));
+    }
+
+    @Test
+    void testDuplicateTrip() {
+        Trip trip = Trip.builder()
+                .id("trip-1")
+                .userId("u1")
+                .title("Trip to Goa")
+                .destination("Goa")
+                .days(3)
+                .people(2)
+                .estimatedBudget(15000.0)
+                .build();
+
+        when(tripRepository.findById("trip-1")).thenReturn(Optional.of(trip));
+        when(tripRepository.save(any(Trip.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Trip duplicate = tripService.duplicateTrip("trip-1", "u1");
+
+        assertNotNull(duplicate);
+        assertEquals("Copy of Trip to Goa", duplicate.getTitle());
+        assertEquals("Goa", duplicate.getDestination());
+        assertEquals("planning", duplicate.getStatus());
+    }
+
+    @Test
+    void testToggleShare() {
+        Trip trip = Trip.builder()
+                .id("trip-1")
+                .userId("u1")
+                .isShared(false)
+                .build();
+
+        when(tripRepository.findById("trip-1")).thenReturn(Optional.of(trip));
+        when(tripRepository.save(any(Trip.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Map<String, Object> shareResult = tripService.toggleShare("trip-1", "u1", true);
+
+        assertNotNull(shareResult);
+        assertEquals(true, shareResult.get("isShared"));
+        assertNotNull(shareResult.get("shareUrl"));
+        assertTrue(shareResult.get("shareUrl").toString().contains("/planner.html?share="));
     }
 }

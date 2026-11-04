@@ -47,3 +47,4 @@ public class RefreshToken {
     @CreatedDate
     private Instant createdAt;
 }
+

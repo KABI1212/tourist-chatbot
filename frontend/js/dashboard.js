@@ -36,10 +36,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /**
- * Switch dashboard view tabs (overview, trips, places, profile)
+ * Switch dashboard view tabs (overview, trips, places, expenses, profile)
  */
 function switchDashboardView(viewName) {
-    const validTabs = ['overview', 'trips', 'places', 'profile'];
+    const validTabs = ['overview', 'trips', 'places', 'expenses', 'profile'];
     const activeTab = validTabs.includes(viewName) ? viewName : 'overview';
 
     // Tab sections
@@ -47,6 +47,7 @@ function switchDashboardView(viewName) {
         'overview': 'viewOverview',
         'trips': 'viewMyTrips',
         'places': 'viewSavedPlaces',
+        'expenses': 'viewMyExpenses',
         'profile': 'viewProfile'
     };
 
@@ -55,6 +56,7 @@ function switchDashboardView(viewName) {
         'overview': 'tabNavOverview',
         'trips': 'tabNavTrips',
         'places': 'tabNavPlaces',
+        'expenses': 'tabNavExpenses',
         'profile': 'tabNavProfile'
     };
 
@@ -63,6 +65,7 @@ function switchDashboardView(viewName) {
         'overview': 'mobTabOverview',
         'trips': 'mobTabTrips',
         'places': 'mobTabPlaces',
+        'expenses': 'mobTabExpenses',
         'profile': 'mobTabProfile'
     };
 
@@ -103,6 +106,11 @@ function switchDashboardView(viewName) {
     // If switching to places, ensure refreshed
     if (activeTab === 'places' && allFavorites.length === 0) {
         loadUserFavorites();
+    }
+
+    // If switching to expenses, render expenses
+    if (activeTab === 'expenses') {
+        loadUserExpenses();
     }
 }
 
@@ -159,6 +167,21 @@ function populateProfileFields(user) {
 
     const fBio = document.getElementById('profBio');
     if (fBio) fBio.value = user.bio || '';
+
+    // Travel preferences fields
+    if (user.travelPreferences && typeof user.travelPreferences === 'object') {
+        const pStyle = document.getElementById('prefTravelStyle');
+        if (pStyle && user.travelPreferences.travelStyle) pStyle.value = user.travelPreferences.travelStyle;
+
+        const pDiet = document.getElementById('prefDietary');
+        if (pDiet && user.travelPreferences.dietary) pDiet.value = user.travelPreferences.dietary;
+
+        const pCurr = document.getElementById('prefCurrency');
+        if (pCurr && user.travelPreferences.currency) pCurr.value = user.travelPreferences.currency;
+
+        const pTransit = document.getElementById('prefTransit');
+        if (pTransit && user.travelPreferences.transit) pTransit.value = user.travelPreferences.transit;
+    }
 
     // Account metadata
     const createdEl = document.getElementById('accountCreatedDate');
@@ -371,6 +394,15 @@ function renderTripRowHtml(t) {
             <div class="trip-card-actions">
                 <button type="button" class="btn btn-outline btn-sm" onclick="openTripModal('${escapeAttr(t.id)}')">
                     <i class="fas fa-eye"></i> View Itinerary
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="viewTripExpenses('${escapeAttr(t.id)}')" title="View &amp; Log Expenses">
+                    <i class="fas fa-wallet" style="color:var(--accent-gold);"></i> Expenses
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="duplicateTrip('${escapeAttr(t.id)}')" title="Clone this trip">
+                    <i class="fas fa-copy"></i> Duplicate
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="shareTripFromDashboard('${escapeAttr(t.id)}')" title="Share public link">
+                    <i class="fas fa-share-nodes"></i> Share
                 </button>
                 <button type="button" class="btn btn-outline btn-sm" style="color:var(--accent-rose); border-color:rgba(244,63,94,0.3);" onclick="deleteTrip('${escapeAttr(t.id)}')" title="Delete Trip Plan">
                     <i class="fas fa-trash"></i>
@@ -811,3 +843,449 @@ function formatTimeAgo(dateStr) {
         return 'recently';
     }
 }
+
+// ── Budget & Expense Tracking Engine (Master Prompt Phase 2) ──
+
+let currentExpenseTripId = 'all';
+
+function onExpenseTripChanged(val) {
+    currentExpenseTripId = val;
+    renderExpensesView();
+}
+
+function viewTripExpenses(tripId) {
+    currentExpenseTripId = tripId;
+    switchDashboardView('expenses');
+    const filterSelect = document.getElementById('expenseTripFilter');
+    if (filterSelect) filterSelect.value = tripId;
+    renderExpensesView();
+}
+
+function loadUserExpenses() {
+    const filterSelect = document.getElementById('expenseTripFilter');
+    if (filterSelect) {
+        let opts = '<option value="all">All Trips Combined</option>';
+        allTrips.forEach(t => {
+            opts += `<option value="${escapeAttr(t.id)}">${escapeHtml(t.title || ('Trip to ' + (t.destination || 'Destination')))}</option>`;
+        });
+        filterSelect.innerHTML = opts;
+        filterSelect.value = currentExpenseTripId;
+    }
+    renderExpensesView();
+}
+
+function renderExpensesView() {
+    let relevantTrips = allTrips;
+    if (currentExpenseTripId !== 'all') {
+        relevantTrips = allTrips.filter(t => String(t.id) === String(currentExpenseTripId));
+    }
+
+    let allExpenses = [];
+    let totalEstimatedBudget = 0;
+    let totalTravelers = 0;
+
+    relevantTrips.forEach(t => {
+        const est = Number(t.estimatedBudget) || 0;
+        totalEstimatedBudget += est;
+        totalTravelers += (parseInt(t.people) || 2);
+        if (Array.isArray(t.expenses)) {
+            t.expenses.forEach(e => {
+                allExpenses.push({
+                    ...e,
+                    tripId: t.id,
+                    tripTitle: t.title || t.destination || 'Trip'
+                });
+            });
+        }
+    });
+
+    const totalSpent = allExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const remaining = totalEstimatedBudget > 0 ? (totalEstimatedBudget - totalSpent) : 0;
+    const travelersCount = totalTravelers > 0 ? (currentExpenseTripId === 'all' ? (allTrips[0]?.people || 2) : totalTravelers) : 2;
+    const perPerson = travelersCount > 0 ? Math.round(totalSpent / travelersCount) : totalSpent;
+
+    const bEl = document.getElementById('statExpenseBudget');
+    if (bEl) bEl.textContent = `₹${totalEstimatedBudget.toLocaleString('en-IN')}`;
+
+    const sEl = document.getElementById('statExpenseSpent');
+    if (sEl) sEl.textContent = `₹${totalSpent.toLocaleString('en-IN')}`;
+
+    const rEl = document.getElementById('statExpenseRemaining');
+    if (rEl) {
+        rEl.textContent = `₹${remaining.toLocaleString('en-IN')}`;
+        rEl.style.color = remaining < 0 ? 'var(--accent-rose)' : 'var(--accent-emerald)';
+    }
+
+    const pEl = document.getElementById('statExpensePerPerson');
+    if (pEl) pEl.textContent = `₹${perPerson.toLocaleString('en-IN')}`;
+
+    // Category Breakdown
+    const catTotals = {
+        food: 0,
+        transport: 0,
+        accommodation: 0,
+        attractions: 0,
+        shopping: 0,
+        other: 0
+    };
+
+    allExpenses.forEach(e => {
+        const cat = (e.category || 'other').toLowerCase();
+        if (catTotals[cat] !== undefined) {
+            catTotals[cat] += Number(e.amount) || 0;
+        } else {
+            catTotals.other += Number(e.amount) || 0;
+        }
+    });
+
+    const catGrid = document.getElementById('expenseCategoryGrid');
+    if (catGrid) {
+        const catIcons = {
+            food: { icon: 'fas fa-utensils', color: '#F59E0B', label: 'Food & Dining' },
+            transport: { icon: 'fas fa-plane-departure', color: 'var(--accent-cyan)', label: 'Transit & Travel' },
+            accommodation: { icon: 'fas fa-hotel', color: 'var(--accent-gold)', label: 'Lodging & Stays' },
+            attractions: { icon: 'fas fa-ticket-alt', color: 'var(--accent-emerald)', label: 'Attractions' },
+            shopping: { icon: 'fas fa-bag-shopping', color: '#EC4899', label: 'Shopping' },
+            other: { icon: 'fas fa-shield-halved', color: 'var(--accent-rose)', label: 'Miscellaneous' }
+        };
+
+        catGrid.innerHTML = Object.entries(catTotals).map(([catKey, sum]) => {
+            const meta = catIcons[catKey] || catIcons.other;
+            return `
+                <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:14px;">
+                    <div style="font-size:12px; color:var(--text-dim); display:flex; align-items:center; gap:6px;">
+                        <i class="${meta.icon}" style="color:${meta.color};"></i> ${meta.label}
+                    </div>
+                    <div style="font-size:18px; font-weight:700; color:var(--text-main); margin-top:6px; font-family:var(--font-display);">
+                        ₹${sum.toLocaleString('en-IN')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Expense Transactions List
+    const tableContainer = document.getElementById('expensesTableContainer');
+    const emptyState = document.getElementById('expensesEmptyState');
+
+    if (!tableContainer || !emptyState) return;
+
+    if (allExpenses.length === 0) {
+        tableContainer.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    tableContainer.style.display = 'flex';
+
+    allExpenses.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+
+    tableContainer.innerHTML = allExpenses.map(e => {
+        const cat = (e.category || 'other').toLowerCase();
+        const dateStr = e.date ? new Date(e.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent';
+        return `
+            <div class="saved-trip-row-card" style="align-items:center; padding:14px 18px;">
+                <div style="flex:1; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <h4 style="margin:0; font-size:15px; font-weight:700; color:var(--text-main);">${escapeHtml(e.title || 'Expense')}</h4>
+                        <span class="badge-tag" style="background:rgba(197,164,109,0.15); color:var(--accent-gold); font-size:11px; text-transform:uppercase;">${escapeHtml(cat)}</span>
+                        ${currentExpenseTripId === 'all' ? `<span style="font-size:12px; color:var(--text-dim);">• ${escapeHtml(e.tripTitle)}</span>` : ''}
+                    </div>
+                    <div style="font-size:12.5px; color:var(--text-muted); margin-top:4px;">
+                        <i class="far fa-calendar-alt"></i> ${dateStr} • Paid by: <strong style="color:var(--text-main);">${escapeHtml(e.paidBy || 'Me')}</strong>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <div style="font-size:18px; font-weight:700; color:var(--text-main); font-family:var(--font-display);">
+                        ₹${Number(e.amount).toLocaleString('en-IN')}
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="deleteExpenseFromTrip('${escapeAttr(e.tripId)}', '${escapeAttr(e.id)}')" title="Delete Expense" style="color:var(--accent-rose); border-color:rgba(244,63,94,0.3); padding:4px 8px;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openLogExpenseModal(preselectedTripId = null) {
+    if (allTrips.length === 0) {
+        alert('Please create or save a trip first before logging expenses.');
+        return;
+    }
+
+    const select = document.getElementById('expModalTripSelect');
+    if (select) {
+        select.innerHTML = allTrips.map(t => `
+            <option value="${escapeAttr(t.id)}">${escapeHtml(t.title || ('Trip to ' + (t.destination || 'Destination')))}</option>
+        `).join('');
+
+        if (preselectedTripId) {
+            select.value = preselectedTripId;
+        } else if (currentExpenseTripId !== 'all') {
+            select.value = currentExpenseTripId;
+        }
+    }
+
+    const dateInput = document.getElementById('expModalDate');
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+
+    const modal = document.getElementById('logExpenseModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeLogExpenseModal() {
+    const modal = document.getElementById('logExpenseModal');
+    if (modal) modal.style.display = 'none';
+    const form = document.getElementById('logExpenseForm');
+    if (form) form.reset();
+}
+
+async function submitLogExpense(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const tripId = document.getElementById('expModalTripSelect')?.value;
+    const title = document.getElementById('expModalTitle')?.value.trim();
+    const amount = parseFloat(document.getElementById('expModalAmount')?.value);
+    const category = document.getElementById('expModalCategory')?.value;
+    const date = document.getElementById('expModalDate')?.value;
+    const paidBy = document.getElementById('expModalPaidBy')?.value.trim() || 'Me';
+
+    if (!tripId || !title || isNaN(amount) || amount <= 0) {
+        alert('Please enter a valid trip, description, and expense amount.');
+        return;
+    }
+
+    const btn = document.getElementById('btnSubmitExpense');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+    }
+
+    try {
+        const payload = { title, amount, category, date, paidBy };
+        const res = await Api.post(`/trips/${tripId}/expenses`, payload);
+        const newExpense = res.data || res;
+
+        const targetTrip = allTrips.find(t => String(t.id) === String(tripId));
+        if (targetTrip) {
+            if (!Array.isArray(targetTrip.expenses)) targetTrip.expenses = [];
+            targetTrip.expenses.push(newExpense);
+            targetTrip.actualExpensesTotal = (targetTrip.actualExpensesTotal || 0) + amount;
+        }
+
+        closeLogExpenseModal();
+        renderExpensesView();
+    } catch (err) {
+        alert('Failed to log expense: ' + (err.message || 'Server error'));
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Save Expense';
+        }
+    }
+}
+
+async function deleteExpenseFromTrip(tripId, expenseId) {
+    if (!confirm('Are you sure you want to delete this recorded expense?')) return;
+
+    try {
+        await Api.delete(`/trips/${tripId}/expenses/${expenseId}`);
+
+        const targetTrip = allTrips.find(t => String(t.id) === String(tripId));
+        if (targetTrip && Array.isArray(targetTrip.expenses)) {
+            targetTrip.expenses = targetTrip.expenses.filter(e => String(e.id) !== String(expenseId));
+        }
+
+        renderExpensesView();
+    } catch (err) {
+        alert('Failed to delete expense: ' + (err.message || 'Server error'));
+    }
+}
+
+// ── Trip Duplication & Sharing ──
+
+async function duplicateTrip(tripId) {
+    try {
+        const res = await Api.post(`/trips/${tripId}/duplicate`);
+        const dupTrip = res.data || res;
+        allTrips.unshift(dupTrip);
+        updateDashboardMetrics();
+        renderTripsList();
+        renderOverviewRecentTrips();
+        alert(`Trip "${dupTrip.title}" duplicated successfully!`);
+    } catch (e) {
+        console.error('Duplicate trip failed:', e);
+        alert(e.message || 'Failed to duplicate trip.');
+    }
+}
+
+async function shareTripFromDashboard(tripId) {
+    try {
+        const res = await Api.post(`/trips/${tripId}/share`);
+        const shareData = res.data || res;
+        const shareId = shareData.shareId;
+        const shareUrl = window.location.origin + `/planner.html?share=${encodeURIComponent(shareId)}`;
+
+        const input = document.getElementById('dashShareUrlInput');
+        if (input) input.value = shareUrl;
+
+        const modal = document.getElementById('dashShareModal');
+        if (modal) modal.style.display = 'flex';
+    } catch (e) {
+        alert(e.message || 'Could not generate share link.');
+    }
+}
+
+function copyDashShareLink() {
+    const input = document.getElementById('dashShareUrlInput');
+    if (!input || !input.value) return;
+
+    navigator.clipboard.writeText(input.value).then(() => {
+        const fb = document.getElementById('dashShareCopyFeedback');
+        if (fb) fb.style.display = 'block';
+        setTimeout(() => { if (fb) fb.style.display = 'none'; }, 2000);
+    }).catch(() => {
+        alert('Share link copied!');
+    });
+}
+
+function closeDashShareModal() {
+    const modal = document.getElementById('dashShareModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// ── Travel Preferences & Account Deletion ──
+
+async function saveTravelPreferences(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const btn = document.getElementById('btnSavePreferences');
+    const alertBox = document.getElementById('prefAlert');
+    if (alertBox) alertBox.style.display = 'none';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+    }
+
+    const travelPreferences = {
+        travelStyle: document.getElementById('prefTravelStyle')?.value || 'Romantic Couple',
+        dietary: document.getElementById('prefDietary')?.value || 'No preference',
+        currency: document.getElementById('prefCurrency')?.value || 'INR',
+        transit: document.getElementById('prefTransit')?.value || 'Mixed'
+    };
+
+    try {
+        const res = await Api.put('/users/profile', { travelPreferences });
+        const updated = res.data || res;
+        Auth.setUser(updated);
+
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(16,185,129,0.15)';
+            alertBox.style.color = '#34D399';
+            alertBox.innerHTML = '<i class="fas fa-check-circle"></i> Travel preferences saved!';
+            setTimeout(() => { alertBox.style.display = 'none'; }, 4000);
+        }
+    } catch (err) {
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(244,63,94,0.15)';
+            alertBox.style.color = '#F43F5E';
+            alertBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> Failed to save preferences: ' + (err.message || 'Server error');
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Save Travel Preferences';
+        }
+    }
+}
+
+function openDeleteAccountModal() {
+    const modal = document.getElementById('deleteAccountModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeDeleteAccountModal() {
+    const modal = document.getElementById('deleteAccountModal');
+    if (modal) modal.style.display = 'none';
+    const pwd = document.getElementById('deleteConfirmPassword');
+    if (pwd) pwd.value = '';
+    const alertBox = document.getElementById('deleteAccountAlert');
+    if (alertBox) alertBox.style.display = 'none';
+}
+
+async function submitDeleteAccount(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const pwdInput = document.getElementById('deleteConfirmPassword');
+    const password = pwdInput ? pwdInput.value : '';
+    const alertBox = document.getElementById('deleteAccountAlert');
+    const btn = document.getElementById('btnConfirmDeleteAccount');
+
+    if (!password) {
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(244,63,94,0.15)';
+            alertBox.style.color = '#F43F5E';
+            alertBox.innerHTML = 'Please enter your password to confirm.';
+        }
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting…';
+    }
+
+    try {
+        await Api.delete('/users/account', { password });
+        alert('Your account and all associated data have been permanently deleted.');
+        Auth.logout();
+        window.location.replace('index.html');
+    } catch (err) {
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(244,63,94,0.15)';
+            alertBox.style.color = '#F43F5E';
+            alertBox.innerHTML = err.message || 'Incorrect password or server error.';
+        }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash-can"></i> Permanently Delete';
+        }
+    }
+}
+
+// Global window bindings
+window.switchDashboardView = switchDashboardView;
+window.filterTripsByStatus = filterTripsByStatus;
+window.openTripModal = openTripModal;
+window.closeTripModal = closeTripModal;
+window.deleteTrip = deleteTrip;
+window.removeFavorite = removeFavorite;
+window.saveUserProfile = saveUserProfile;
+window.changeUserPassword = changeUserPassword;
+window.loadActiveSessions = loadActiveSessions;
+window.revokeUserSession = revokeUserSession;
+window.logoutAllDevices = logoutAllDevices;
+
+window.onExpenseTripChanged = onExpenseTripChanged;
+window.viewTripExpenses = viewTripExpenses;
+window.loadUserExpenses = loadUserExpenses;
+window.openLogExpenseModal = openLogExpenseModal;
+window.closeLogExpenseModal = closeLogExpenseModal;
+window.submitLogExpense = submitLogExpense;
+window.deleteExpenseFromTrip = deleteExpenseFromTrip;
+
+window.duplicateTrip = duplicateTrip;
+window.shareTripFromDashboard = shareTripFromDashboard;
+window.copyDashShareLink = copyDashShareLink;
+window.closeDashShareModal = closeDashShareModal;
+
+window.saveTravelPreferences = saveTravelPreferences;
+window.openDeleteAccountModal = openDeleteAccountModal;
+window.closeDeleteAccountModal = closeDeleteAccountModal;
+window.submitDeleteAccount = submitDeleteAccount;

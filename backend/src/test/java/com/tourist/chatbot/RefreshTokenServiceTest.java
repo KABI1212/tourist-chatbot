@@ -102,3 +102,4 @@ public class RefreshTokenServiceTest {
         verify(refreshTokenRepository).saveAll(any());
     }
 }
+

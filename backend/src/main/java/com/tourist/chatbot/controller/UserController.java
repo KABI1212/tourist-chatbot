@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -50,5 +51,18 @@ public class UserController {
     ) {
         userService.changePassword(userDetails.getUsername(), request);
         return ResponseEntity.ok(ApiResponse.success("Password changed successfully", Map.of("status", "changed")));
+    }
+
+    @DeleteMapping("/account")
+    public ResponseEntity<ApiResponse<Map<String, String>>> deleteAccount(
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        String password = body != null ? body.get("password") : null;
+        if (password == null || password.isBlank()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Password is required to confirm account deletion", 400));
+        }
+        userService.deleteAccount(userDetails.getUsername(), password);
+        return ResponseEntity.ok(ApiResponse.success("Account and all associated travel records deleted successfully", Map.of("status", "deleted")));
     }
 }

@@ -22,6 +22,7 @@ public class UserProfileResponse {
     private String address;
     private String bio;
     private String avatar;
+    private java.util.Map<String, Object> travelPreferences;
     private Set<String> roles;
     private Instant createdAt;
 }

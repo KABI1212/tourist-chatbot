@@ -84,8 +84,9 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/error"
                         ).permitAll()
-                        // Public AI trip generation & public chat message sending
+                        // Public AI trip generation & public chat message sending & public shared itineraries
                         .requestMatchers(HttpMethod.POST, "/api/trips/generate").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/trips/shared/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/chat").permitAll()
                         // Protected user & travel endpoints
                         .requestMatchers("/api/chat/**").authenticated()

@@ -42,6 +42,8 @@ public class User {
 
     private String avatar;
 
+    private java.util.Map<String, Object> travelPreferences;
+
     @Builder.Default
     private Set<String> roles = new HashSet<>();
 

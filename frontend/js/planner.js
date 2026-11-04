@@ -26,6 +26,8 @@ const plannerState = {
 };
 
 let currentGeneratedItinerary = null;
+let currentSavedTripId = null;
+let currentActiveMapDayFilter = -1;
 let plannerMap = null;
 let routeMarkers = [];
 
@@ -58,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     parseUrlParameters();
     updateDateRangeAndDuration();
     updateCustomBudgetPreview();
+    checkPublicSharedTrip();
 
     // Map resize on theme change
     window.addEventListener('themeChanged', () => {
@@ -764,7 +767,24 @@ function renderTimelineNodesOnly() {
 
         const locationName = day.location || currentGeneratedItinerary.destination || 'Scenic Destination';
         const dayImg = day.imageUrl || currentGeneratedItinerary.imageUrl || (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(locationName) : 'assets/dash.jpg');
-        const activitiesHtml = (day.activities || []).map(act => `<li>${escapeHtml(act)}</li>`).join('');
+        
+        const activitiesHtml = (day.activities || []).map((act, actIdx) => `
+            <li class="day-activity-item" data-day="${idx}" data-act="${actIdx}">
+                <span class="day-act-text"><i class="fas fa-check" style="color:var(--accent-gold); font-size:11px;"></i> ${escapeHtml(act)}</span>
+                <button type="button" class="day-act-remove" onclick="removeActivityFromDay(${idx}, ${actIdx})" title="Remove activity">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </li>
+        `).join('');
+
+        const addActivityBox = `
+            <div class="day-add-activity-row">
+                <input type="text" class="day-add-activity-input" id="addActInput-${idx}" placeholder="+ Add custom activity..." onkeydown="handleAddActKey(event, ${idx})">
+                <button type="button" class="day-add-activity-btn" onclick="addActivityToDay(${idx})">
+                    <i class="fas fa-plus"></i> Add
+                </button>
+            </div>
+        `;
 
         node.innerHTML = `
             <div class="timeline-dot"></div>
@@ -784,11 +804,59 @@ function renderTimelineNodesOnly() {
                     <ul class="day-activities-list">
                         ${activitiesHtml}
                     </ul>
+                    ${addActivityBox}
                 </div>
             </div>
         `;
         timeline.appendChild(node);
     });
+
+    updateDayFilterOptions(days);
+}
+
+function addActivityToDay(dayIdx) {
+    if (!currentGeneratedItinerary || !currentGeneratedItinerary.daysPlan) return;
+    const input = document.getElementById(`addActInput-${dayIdx}`);
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+
+    if (!Array.isArray(currentGeneratedItinerary.daysPlan[dayIdx].activities)) {
+        currentGeneratedItinerary.daysPlan[dayIdx].activities = [];
+    }
+    currentGeneratedItinerary.daysPlan[dayIdx].activities.push(text);
+    input.value = '';
+
+    renderTimelineNodesOnly();
+    syncItineraryToServer();
+}
+
+function removeActivityFromDay(dayIdx, actIdx) {
+    if (!currentGeneratedItinerary || !currentGeneratedItinerary.daysPlan) return;
+    const day = currentGeneratedItinerary.daysPlan[dayIdx];
+    if (!day || !Array.isArray(day.activities)) return;
+
+    day.activities.splice(actIdx, 1);
+    renderTimelineNodesOnly();
+    syncItineraryToServer();
+}
+
+function handleAddActKey(event, dayIdx) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addActivityToDay(dayIdx);
+    }
+}
+
+async function syncItineraryToServer() {
+    if (!currentSavedTripId || typeof Auth === 'undefined' || !Auth.isAuthenticated()) return;
+    try {
+        await Api.put(`/trips/${currentSavedTripId}/itinerary`, {
+            daysPlan: currentGeneratedItinerary.daysPlan
+        });
+    } catch (e) {
+        console.warn('Could not sync itinerary changes to server:', e);
+    }
 }
 
 /**
@@ -945,8 +1013,31 @@ function removeItineraryDay(dayIdx) {
 }
 
 /**
- * 19. Leaflet OpenStreetMap & Esri Satellite Layer Switcher
+ * 19. Leaflet OpenStreetMap & Esri Satellite Layer Switcher with Day-by-Day Route Filtering
  */
+function updateDayFilterOptions(days) {
+    const filterSelect = document.getElementById('mapDayFilter');
+    if (!filterSelect) return;
+    const currentVal = filterSelect.value || '-1';
+
+    let options = '<option value="-1">All Days &amp; Stops</option>';
+    (days || []).forEach((d, idx) => {
+        options += `<option value="${idx}">Day ${d.dayNumber || (idx + 1)}: ${escapeHtml(d.title || d.location || 'Stop')}</option>`;
+    });
+    filterSelect.innerHTML = options;
+    if (days && parseInt(currentVal) < days.length) {
+        filterSelect.value = currentVal;
+    }
+}
+
+function filterMapByDay(dayIdxStr) {
+    const dayIdx = parseInt(dayIdxStr, 10);
+    currentActiveMapDayFilter = isNaN(dayIdx) ? -1 : dayIdx;
+    if (currentGeneratedItinerary) {
+        updatePlannerRouteMap(currentGeneratedItinerary, currentActiveMapDayFilter);
+    }
+}
+
 function initPlannerRouteMap(itinerary) {
     const mapEl = document.getElementById('itineraryRouteMap');
     if (!mapEl) return;
@@ -996,10 +1087,11 @@ function initPlannerRouteMap(itinerary) {
         plannerMap.setView(center, 12);
     }
 
-    updatePlannerRouteMap(itinerary);
+    updateDayFilterOptions(itinerary.daysPlan);
+    updatePlannerRouteMap(itinerary, currentActiveMapDayFilter);
 }
 
-function updatePlannerRouteMap(itinerary) {
+function updatePlannerRouteMap(itinerary, filterDayIdx = -1) {
     if (!plannerMap) return;
 
     routeMarkers.forEach(m => plannerMap.removeLayer(m));
@@ -1030,35 +1122,46 @@ function updatePlannerRouteMap(itinerary) {
         const offsetLng = center[1] + (Math.cos(idx * 1.5) * 0.02);
         latlngs.push([offsetLat, offsetLng]);
 
-        const marker = L.marker([offsetLat, offsetLng])
-            .addTo(plannerMap)
-            .bindPopup(`<strong>Day ${idx + 1}: ${escapeHtml(day.title)}</strong><br>${escapeHtml(day.location || itinerary.destination)}`);
-        routeMarkers.push(marker);
+        if (filterDayIdx === -1 || filterDayIdx === idx) {
+            const marker = L.marker([offsetLat, offsetLng])
+                .addTo(plannerMap)
+                .bindPopup(`<strong>Day ${idx + 1}: ${escapeHtml(day.title)}</strong><br>${escapeHtml(day.location || itinerary.destination)}`);
+
+            if (filterDayIdx === idx) {
+                marker.openPopup();
+                plannerMap.setView([offsetLat, offsetLng], 14);
+            }
+            routeMarkers.push(marker);
+        }
     });
 
-    if (latlngs.length > 1) {
-        const polyline = L.polyline(latlngs, { color: '#C5A46D', weight: 4, dashArray: '6, 8' }).addTo(plannerMap);
-        routeMarkers.push(polyline);
-        plannerMap.fitBounds(polyline.getBounds(), { padding: [30, 30] });
-    } else if (latlngs.length === 1) {
-        plannerMap.setView(latlngs[0], 13);
+    if (filterDayIdx === -1) {
+        if (latlngs.length > 1) {
+            const polyline = L.polyline(latlngs, { color: '#C5A46D', weight: 4, dashArray: '6, 8' }).addTo(plannerMap);
+            routeMarkers.push(polyline);
+            plannerMap.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+        } else if (latlngs.length === 1) {
+            plannerMap.setView(latlngs[0], 13);
+        }
     }
 }
 
 /**
  * 20. Save Trip Plan to User Profile
  */
-async function saveTripToProfile() {
+async function saveTripToProfile(isSilent = false) {
     if (!Auth.isAuthenticated()) {
-        alert('Please login to bookmark and save this trip to your account.');
-        window.location.href = 'login.html?redirect=planner.html';
-        return;
+        if (!isSilent) {
+            alert('Please login to bookmark and save this trip to your account.');
+            window.location.href = 'login.html?redirect=planner.html';
+        }
+        return null;
     }
 
-    if (!currentGeneratedItinerary) return;
+    if (!currentGeneratedItinerary) return null;
 
     const btn = document.getElementById('btnSaveTrip');
-    if (btn) {
+    if (btn && !isSilent) {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
     }
@@ -1082,30 +1185,193 @@ async function saveTripToProfile() {
             travelTips: currentGeneratedItinerary.travelTips
         };
 
-        await Api.post('/trips', payload);
+        const res = await Api.post('/trips', payload);
+        const saved = res.data || res;
+        if (saved && saved.id) {
+            currentSavedTripId = saved.id;
+        }
 
-        if (btn) {
+        if (btn && !isSilent) {
             btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
             btn.style.background = 'var(--accent-emerald)';
         }
 
-        setTimeout(() => {
-            if (confirm('Trip saved successfully! Would you like to view your Saved Trips in the Dashboard?')) {
-                window.location.href = 'dashboard.html?tab=trips';
-            }
-        }, 300);
+        if (!isSilent) {
+            setTimeout(() => {
+                if (confirm('Trip saved successfully! Would you like to view your Saved Trips in the Dashboard?')) {
+                    window.location.href = 'dashboard.html?tab=trips';
+                }
+            }, 300);
+        }
+        return saved;
     } catch (e) {
         console.error('Save trip failed:', e);
-        alert('Could not save trip. Please try again.');
+        if (!isSilent) {
+            alert('Could not save trip. Please try again.');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-bookmark"></i> Save Trip';
+            }
+        }
+        throw e;
+    }
+}
+
+/**
+ * 21. Public Itinerary Sharing Engine (Master Prompt Phase 2)
+ */
+async function checkPublicSharedTrip() {
+    const params = new URLSearchParams(window.location.search);
+    const shareId = params.get('share');
+    if (!shareId) return;
+
+    try {
+        const res = await Api.get(`/trips/shared/${encodeURIComponent(shareId)}`);
+        const trip = res.data || res;
+        if (!trip || !trip.destination) {
+            console.warn('Shared trip data not found.');
+            return;
+        }
+
+        currentGeneratedItinerary = trip;
+        currentSavedTripId = trip.id || null;
+        plannerState.destination = trip.destination;
+        plannerState.days = trip.days || (trip.daysPlan ? trip.daysPlan.length : 3);
+        plannerState.travelers = trip.people || 2;
+        plannerState.isGenerated = true;
+
+        renderItineraryOutput(trip);
+        renderItineraryParametersBar({
+            destination: trip.destination,
+            startDate: trip.startDate || '',
+            endDate: trip.endDate || '',
+            days: trip.days || 3,
+            travelers: trip.people || 2,
+            budgetTier: trip.hotelTier || 'Moderate',
+            currency: trip.currency || 'INR',
+            transitMode: 'Mixed',
+            interests: trip.interests || []
+        });
+        recalculateAndRenderTripCost();
+        updateStepperIndicators(4);
+
+        const outSection = document.getElementById('itineraryOutputSection');
+        if (outSection) outSection.style.display = 'block';
+
+        const sharedBanner = document.getElementById('sharedTripBanner');
+        const sharedNotice = document.getElementById('sharedTripNotice');
+        if (sharedBanner) sharedBanner.style.display = 'block';
+        if (sharedNotice) sharedNotice.textContent = `Viewing "${trip.title || ('Trip to ' + trip.destination)}" shared by a fellow traveler.`;
+
+        setTimeout(() => {
+            initPlannerRouteMap(trip);
+            if (outSection) outSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 200);
+
+    } catch (e) {
+        console.error('Failed to load shared trip:', e);
+    }
+}
+
+async function shareCurrentTrip() {
+    if (!currentGeneratedItinerary) return;
+
+    if (!Auth.isAuthenticated()) {
+        if (confirm('Please log in to save and generate a public share link. Proceed to login?')) {
+            window.location.href = 'login.html?redirect=planner.html';
+        }
+        return;
+    }
+
+    const btn = document.getElementById('btnShareTrip');
+    const origText = btn ? btn.innerHTML : 'Share';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sharing…';
+    }
+
+    try {
+        if (!currentSavedTripId) {
+            await saveTripToProfile(true);
+        }
+
+        if (!currentSavedTripId) {
+            throw new Error('Please save the trip first before generating a share link.');
+        }
+
+        const res = await Api.post(`/trips/${currentSavedTripId}/share`);
+        const shareData = res.data || res;
+        const shareId = shareData.shareId;
+        const shareUrl = window.location.origin + window.location.pathname + `?share=${encodeURIComponent(shareId)}`;
+
+        const input = document.getElementById('shareTripUrlInput');
+        if (input) input.value = shareUrl;
+
+        const modal = document.getElementById('shareTripModal');
+        if (modal) modal.style.display = 'flex';
+
+    } catch (e) {
+        console.error('Failed to share trip:', e);
+        alert(e.message || 'Could not generate share link. Please try again.');
+    } finally {
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-bookmark"></i> Save Trip';
+            btn.innerHTML = origText;
+        }
+    }
+}
+
+function copyShareLink() {
+    const input = document.getElementById('shareTripUrlInput');
+    if (!input || !input.value) return;
+
+    navigator.clipboard.writeText(input.value).then(() => {
+        const feedback = document.getElementById('shareCopyFeedback');
+        if (feedback) feedback.style.display = 'block';
+        const copyBtn = document.getElementById('btnCopyShareUrl');
+        if (copyBtn) {
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => { copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy'; }, 2000);
+        }
+    }).catch(() => {
+        input.select();
+        document.execCommand('copy');
+        alert('Share link copied to clipboard!');
+    });
+}
+
+function closeShareModal() {
+    const modal = document.getElementById('shareTripModal');
+    if (modal) modal.style.display = 'none';
+    const feedback = document.getElementById('shareCopyFeedback');
+    if (feedback) feedback.style.display = 'none';
+}
+
+async function cloneSharedTripToAccount() {
+    if (!Auth.isAuthenticated()) {
+        alert('Please log in to save this shared trip to your personal dashboard.');
+        window.location.href = `login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+        return;
+    }
+
+    const btn = document.getElementById('btnCloneSharedTrip');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+    }
+
+    try {
+        await saveTripToProfile(false);
+    } catch (e) {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-bookmark"></i> Save to My Trips';
         }
     }
 }
 
 /**
- * 21. Export & Clipboard Actions
+ * 22. Export & Clipboard Actions
  */
 function copyItineraryText() {
     if (!currentGeneratedItinerary) return;
@@ -1152,4 +1418,12 @@ window.removeItineraryDay = removeItineraryDay;
 window.copyItineraryText = copyItineraryText;
 window.exportItineraryPdf = exportItineraryPdf;
 window.saveTripToProfile = saveTripToProfile;
+window.shareCurrentTrip = shareCurrentTrip;
+window.copyShareLink = copyShareLink;
+window.closeShareModal = closeShareModal;
+window.cloneSharedTripToAccount = cloneSharedTripToAccount;
+window.filterMapByDay = filterMapByDay;
+window.addActivityToDay = addActivityToDay;
+window.removeActivityFromDay = removeActivityFromDay;
+window.handleAddActKey = handleAddActKey;
 window.plannerState = plannerState;

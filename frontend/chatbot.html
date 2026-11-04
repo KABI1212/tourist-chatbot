@@ -233,10 +233,23 @@
                     <button type="button" class="btn btn-outline btn-sm" onclick="startNewChat()" title="New Chat">
                         <i class="fas fa-plus"></i> <span class="hide-mobile">New Chat</span>
                     </button>
-                    <button type="button" class="btn btn-outline btn-sm" onclick="exportChat()"
-                        title="Export current chat as text">
-                        <i class="fas fa-download"></i> <span class="hide-mobile">Export</span>
-                    </button>
+                    <div class="chat-export-wrap" style="position:relative;">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="toggleExportDropdown(event)"
+                            id="btnExportTrigger" title="Export conversation">
+                            <i class="fas fa-download"></i> <span class="hide-mobile">Export</span> <i class="fas fa-chevron-down" style="font-size:10px; margin-left:4px; opacity:0.7;"></i>
+                        </button>
+                        <div class="chat-export-dropdown" id="exportDropdown" style="display:none; position:absolute; right:0; top:calc(100% + 6px); background:var(--bg-card); border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.35); z-index:100; min-width:180px; padding:6px 0;">
+                            <button type="button" class="export-opt-btn" onclick="exportChat('md')">
+                                <i class="fas fa-file-lines" style="color:var(--accent-gold); width:16px;"></i> Markdown (.md)
+                            </button>
+                            <button type="button" class="export-opt-btn" onclick="exportChat('txt')">
+                                <i class="fas fa-file-lines" style="color:var(--accent-cyan); width:16px;"></i> Plain Text (.txt)
+                            </button>
+                            <button type="button" class="export-opt-btn" onclick="exportChat('json')">
+                                <i class="fas fa-code" style="color:var(--accent-emerald); width:16px;"></i> JSON Data (.json)
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
