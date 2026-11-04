@@ -187,53 +187,88 @@ public class PlacesProviderService {
         // Use coordinates from Wikipedia if geocoding didn't have them
         if (lat == null && wiki != null && wiki.lat != null) lat = wiki.lat;
         if (lon == null && wiki != null && wiki.lon != null) lon = wiki.lon;
-        if (lat == null) lat = 20.5937; // Center fallback
-        if (lon == null) lon = 78.9629;
+        // Never substitute inaccurate fallback coordinates; keep null if unresolved
 
-        // Step 3: Fetch real-time live weather
-        Map<String, Object> weatherData = getLiveWeather(lat, lon);
-        String weatherString = String.format("%s %s", weatherData.getOrDefault("temperature", "22°C"), weatherData.getOrDefault("condition", "Pleasant"));
+        // Step 3: Fetch real-time live weather if coordinates are verified
+        String weatherString = "Weather data not available";
+        if (lat != null && lon != null) {
+            Map<String, Object> weatherData = getLiveWeather(lat, lon);
+            if (weatherData != null && weatherData.containsKey("temperature")) {
+                weatherString = String.format("%s %s", weatherData.get("temperature"), weatherData.getOrDefault("condition", ""));
+            }
+        }
 
-        // Step 4: Fetch real nearby attractions via Wikipedia GeoSearch
-        List<NearbyPlace> nearbyList = getNearbyAttractions(lat, lon, 20000, 6);
+        // Step 4: Fetch real nearby landmarks via Wikipedia GeoSearch
+        List<NearbyPlace> nearbyList = (lat != null && lon != null)
+                ? getNearbyAttractions(lat, lon, 10000, 6)
+                : Collections.emptyList();
         List<Map<String, Object>> attractionsList = new ArrayList<>();
 
         for (NearbyPlace np : nearbyList) {
             if (np.getName().equalsIgnoreCase(cleanName)) continue;
             Map<String, Object> att = new LinkedHashMap<>();
             att.put("name", np.getName());
-            att.put("rating", 4.7);
-            att.put("reviews", "1.2K");
+            // Ratings are not tracked by Wikipedia; do not fabricate fake stars or review counts
+            att.put("rating", null);
+            att.put("reviews", null);
+            att.put("ratingDisplay", "Not available");
+            att.put("distanceKm", np.getDistanceKm());
             att.put("image", images.get(0));
-            att.put("description", String.format("Noteworthy landmark located approximately %.1f km from %s.", np.getDistanceKm(), cleanName));
+            att.put("description", String.format("Verified landmark located approximately %.1f km from %s.", np.getDistanceKm(), cleanName));
             att.put("lat", np.getLatitude());
             att.put("lng", np.getLongitude());
             attractionsList.add(att);
         }
 
-        if (attractionsList.isEmpty()) {
-            attractionsList.add(Map.of(
-                    "name", cleanName + " Viewpoint & Center",
-                    "rating", 4.8,
-                    "reviews", "1.5K",
-                    "image", images.get(0),
-                    "description", "Central exploration hub and panoramic scenic viewpoint."
-            ));
-        }
-
-        // Step 5: Heuristic best time & travel tips
+        // Step 5: Best time and travel tips based on geographic zone
         String bestTime = inferBestTimeToVisit(lat, country);
         String idealDuration = "2 - 4 Days";
 
+        // Accommodation guidance: direct users to verified providers rather than fabricating static rates
+        String searchEncoded = URLEncoder.encode(cleanName, StandardCharsets.UTF_8);
         List<Map<String, Object>> hotels = List.of(
-                Map.of("name", cleanName + " Heritage Stay", "tier", "Mid-Range", "price", "₹3,500/night", "rating", 4.5, "image", "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"),
-                Map.of("name", cleanName + " Grand Resort", "tier", "Luxury", "price", "₹8,500/night", "rating", 4.8, "image", "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800"),
-                Map.of("name", cleanName + " Backpacker Hostel", "tier", "Budget", "price", "₹1,100/night", "rating", 4.4, "image", "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800")
+                Map.of(
+                        "name", "Luxury & Boutique Stays in " + cleanName,
+                        "tier", "Luxury",
+                        "price", "Live rates on booking provider",
+                        "ratingDisplay", "Verified reviews on provider",
+                        "searchLink", "https://www.google.com/travel/hotels?q=" + searchEncoded,
+                        "image", "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"
+                ),
+                Map.of(
+                        "name", "Mid-Range Comfort Hotels in " + cleanName,
+                        "tier", "Mid-Range",
+                        "price", "Live rates on booking provider",
+                        "ratingDisplay", "Verified reviews on provider",
+                        "searchLink", "https://www.google.com/travel/hotels?q=" + searchEncoded + "+hotels",
+                        "image", "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800"
+                ),
+                Map.of(
+                        "name", "Budget Hostels & Guesthouses in " + cleanName,
+                        "tier", "Budget",
+                        "price", "Live rates on booking provider",
+                        "ratingDisplay", "Verified reviews on provider",
+                        "searchLink", "https://www.google.com/travel/hotels?q=" + searchEncoded + "+hostels",
+                        "image", "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800"
+                )
         );
 
+        // Local dining guidance
         List<Map<String, Object>> foods = List.of(
-                Map.of("name", "Local Specialty Dish", "type", "Regional Cuisine", "description", "Traditional local delicacy cooked with regional herbs and ingredients.", "price", "₹180"),
-                Map.of("name", "Traditional Street Food", "type", "Snack", "description", "Freshly prepared authentic marketplace snack.", "price", "₹80")
+                Map.of(
+                        "name", "Regional Specialties of " + cleanName,
+                        "type", "Local Cuisine",
+                        "description", "Authentic regional culinary dishes served at local establishments.",
+                        "price", "Prices vary by establishment",
+                        "searchLink", "https://www.google.com/maps/search/?api=1&query=" + searchEncoded + "+traditional+restaurants"
+                ),
+                Map.of(
+                        "name", "Local Street Food & Cafes",
+                        "type", "Marketplace Dining",
+                        "description", "Popular freshly prepared marketplace snacks and regional beverage stalls.",
+                        "price", "Prices vary by establishment",
+                        "searchLink", "https://www.google.com/maps/search/?api=1&query=" + searchEncoded + "+popular+cafes"
+                )
         );
 
         List<String> tips = List.of(
@@ -242,7 +277,9 @@ public class PlacesProviderService {
                 "Hire authorized local guides for historical monuments and natural sanctuaries."
         );
 
-        String mapsLink = String.format("https://www.google.com/maps/search/?api=1&query=%.4f,%.4f", lat, lon);
+        String mapsLink = (lat != null && lon != null)
+                ? String.format(Locale.US, "https://www.google.com/maps/search/?api=1&query=%.4f,%.4f", lat, lon)
+                : "https://www.google.com/maps/search/?api=1&query=" + searchEncoded;
 
         return Destination.builder()
                 .name(cleanName)
@@ -253,19 +290,21 @@ public class PlacesProviderService {
                 .bestTime(bestTime)
                 .weather(weatherString)
                 .idealDuration(idealDuration)
-                .rating(4.7)
-                .reviewCount(1850)
+                .rating(null) // Only verified provider ratings shown; null prevents fabricated scores
+                .reviewCount(null)
                 .latitude(lat)
                 .longitude(lon)
                 .mapsLink(mapsLink)
                 .images(images)
                 .tags(List.of(category, "Sightseeing", "Global Discovery"))
                 .officialWebsite(wiki != null ? wiki.wikiUrl : "")
-                .travelTip("Book transport and stays in advance during high season.")
+                .travelTip("Review local guidelines and book transit and accommodations in advance during peak periods.")
                 .attractions(attractionsList)
                 .hotels(hotels)
                 .localFoods(foods)
                 .travelTipsList(tips)
+                .sourceAttribution("Verified Provider Data: OpenStreetMap (Photon), Wikimedia REST API & Open-Meteo Weather")
+                .aiGenerated(false)
                 .build();
     }
 

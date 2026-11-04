@@ -617,7 +617,9 @@
             document.getElementById('destWeatherDesc').textContent = dest.weather ? dest.weather.substring(dest.weather.indexOf(' ') + 1) : 'Pleasant';
             document.getElementById('destBestTime').textContent = dest.bestTime || 'Oct - Jun';
             document.getElementById('destDescriptionText').textContent = dest.description || dest.famousFor || '';
-            document.getElementById('destRatingPill').innerHTML = `<i class="fas fa-star"></i> ${dest.rating || '4.7'} (${dest.reviewCount || '2K'} reviews)`;
+            document.getElementById('destRatingPill').innerHTML = dest.rating
+                ? `<i class="fas fa-star"></i> ${dest.rating} (${dest.reviewCount ? dest.reviewCount + ' reviews' : 'Verified reviews'})`
+                : `<i class="fas fa-certificate" style="color:var(--accent-gold);"></i> Verified Destination`;
             document.getElementById('destIdealDays').innerHTML = `<i class="fas fa-clock"></i> ${dest.idealDuration || '2 - 4 Days'}`;
 
             const bannerImg = (dest.images && dest.images[0]) || (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(dest.name) : 'assets/dash.jpg');
@@ -700,7 +702,7 @@
                     <div class="attraction-body">
                         <h4>${escapeHtml(a.name)}</h4>
                         <div style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--accent-gold); font-weight:700; margin-bottom:8px;">
-                            <i class="fas fa-star"></i> ${a.rating || '4.5'} <span style="color:var(--text-dim); font-weight:400;">(${a.reviews || '1K'})</span>
+                            ${a.rating ? `<i class="fas fa-star"></i> ${a.rating} <span style="color:var(--text-dim); font-weight:400;">(${a.reviews || 'Verified'})</span>` : `<span style="color:var(--text-muted); font-size:11.5px; font-weight:500;"><i class="fas fa-location-dot" style="color:var(--accent-gold);"></i> ${a.distanceKm ? a.distanceKm + ' km away' : 'Landmark'}</span>`}
                         </div>
                         <p>${escapeHtml(a.description || 'Scenic sightseeing location.')}</p>
                     </div>
@@ -720,10 +722,10 @@
                         <h4>${escapeHtml(h.name)}</h4>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                             <span class="badge-tag" style="background:rgba(197,164,109,0.15); color:var(--accent-gold);">${h.tier || 'Hotel'}</span>
-                            <strong style="color:var(--text-main); font-size:14px;">${h.price || '₹3,500/night'}</strong>
+                            <strong style="color:var(--text-main); font-size:13.5px;">${h.price || 'Live rates on provider'}</strong>
                         </div>
-                        <div style="font-size:12.5px; color:var(--accent-gold); font-weight:700;">
-                            <i class="fas fa-star"></i> ${h.rating || '4.5'}
+                        <div style="font-size:12px; color:var(--text-muted);">
+                            ${h.rating ? `<i class="fas fa-star" style="color:var(--accent-gold); font-weight:700;"></i> <strong style="color:var(--accent-gold);">${h.rating}</strong>` : `<i class="fas fa-arrow-up-right-from-square" style="color:var(--accent-gold); font-size:11px;"></i> <a href="${h.searchLink || '#'}" target="_blank" rel="noopener" style="color:var(--accent-gold); text-decoration:none; font-weight:600;">Check live rates</a>`}
                         </div>
                     </div>
                 </div>
@@ -789,7 +791,7 @@
                     <div class="dest-card-img-wrap">
                         <img class="dest-card-img" src="${img}" alt="${escapeHtml(d.name)}" onerror="window.handleImageError(this, '${escapeHtml(d.name)}');" loading="lazy">
                         <div class="dest-card-badge">
-                            <i class="fas fa-star" style="color:var(--accent-gold);"></i> ${d.rating || '4.7'}
+                            ${d.rating ? `<i class="fas fa-star" style="color:var(--accent-gold);"></i> ${d.rating}` : `<i class="fas fa-compass" style="color:var(--accent-gold);"></i> Explore`}
                         </div>
                     </div>
                     <div class="dest-card-body">

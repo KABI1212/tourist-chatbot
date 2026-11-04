@@ -78,4 +78,8 @@ public class Destination {
     private List<Map<String, Object>> localFoods;   // name, type, description, price
 
     private List<String> travelTipsList;
+
+    private String sourceAttribution;
+
+    private Boolean aiGenerated;
 }

@@ -112,6 +112,12 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Pre-warm backend service asynchronously (mitigates Render cold start delays while user is on form)
+            try {
+                const apiBase = (typeof Api !== 'undefined' && Api.getBaseUrl) ? Api.getBaseUrl() : '/api';
+                fetch(apiBase + '/health', { method: 'GET', cache: 'no-store' }).catch(() => {});
+            } catch (e) {}
+
             // If already logged in, redirect directly to Home Page
             if (Auth.isAuthenticated()) {
                 window.location.replace('index.html');
@@ -143,8 +149,12 @@
             }
         });
 
+        let isSubmitting = false;
+
         async function handleLoginSubmit(e) {
             if (e && e.preventDefault) e.preventDefault();
+            if (isSubmitting) return;
+
             const alertBox = document.getElementById('authAlert');
             alertBox.style.display = 'none';
 
@@ -152,11 +162,32 @@
             const p = document.getElementById('password').value;
             const btn = document.getElementById('loginSubmitBtn');
 
+            if (!u || !p) {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(244,63,94,0.15)';
+                alertBox.style.color = '#F43F5E';
+                alertBox.textContent = 'Please enter both username and password.';
+                return;
+            }
+
+            isSubmitting = true;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
 
+            // Progressive status feedback for cold start mitigation
+            let secondsElapsed = 0;
+            const statusInterval = setInterval(() => {
+                secondsElapsed++;
+                if (secondsElapsed >= 10) {
+                    btn.innerHTML = '<i class="fas fa-cloud-arrow-up fa-spin"></i> Waking cloud server (Render)…';
+                } else if (secondsElapsed >= 4) {
+                    btn.innerHTML = '<i class="fas fa-shield-halved fa-spin"></i> Authenticating with server…';
+                }
+            }, 1000);
+
             try {
                 await Auth.login(u, p);
+                clearInterval(statusInterval);
                 alertBox.style.display = 'block';
                 alertBox.style.background = 'rgba(16,185,129,0.15)';
                 alertBox.style.color = '#34D399';
@@ -175,6 +206,8 @@
                     window.location.replace(redirect);
                 }, 350);
             } catch (err) {
+                clearInterval(statusInterval);
+                isSubmitting = false;
                 alertBox.style.display = 'block';
                 alertBox.style.background = 'rgba(244,63,94,0.15)';
                 alertBox.style.color = '#F43F5E';

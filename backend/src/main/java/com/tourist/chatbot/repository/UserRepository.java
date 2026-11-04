@@ -2,6 +2,7 @@ package com.tourist.chatbot.repository;
 
 import com.tourist.chatbot.model.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -12,6 +13,9 @@ public interface UserRepository extends MongoRepository<User, String> {
     Optional<User> findByUsername(String username);
 
     Optional<User> findByEmail(String email);
+
+    @Query("{ '$or': [ { 'username': ?0 }, { 'email': ?1 } ] }")
+    Optional<User> findByUsernameOrEmail(String username, String email);
 
     boolean existsByUsername(String username);
 

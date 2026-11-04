@@ -13,6 +13,10 @@ public class AuthResponse {
 
     private String token;
 
+    private String refreshToken;
+
+    private Long expiresIn;
+
     @Builder.Default
     private String type = "Bearer";
 

@@ -30,7 +30,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await Promise.all([
         loadUserProfile(),
         loadUserTrips(),
-        loadUserFavorites()
+        loadUserFavorites(),
+        loadActiveSessions()
     ]);
 });
 
@@ -706,4 +707,107 @@ function escapeHtml(str) {
 function escapeAttr(str) {
     if (!str) return '';
     return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ── Active Sessions & Devices Management (Master Prompt Section 4) ──
+
+async function loadActiveSessions() {
+    const listEl = document.getElementById('activeSessionsList');
+    if (!listEl) return;
+
+    try {
+        const res = await Api.get('/auth/sessions');
+        const sessions = Array.isArray(res) ? res : (res.data || []);
+
+        if (sessions.length === 0) {
+            listEl.innerHTML = '<div style="font-size:13px; color:var(--text-dim); text-align:center; padding:12px;"><i class="fas fa-check-circle" style="color:var(--accent-emerald);"></i> 1 Active Session (Current Device)</div>';
+            return;
+        }
+
+        listEl.innerHTML = sessions.map(s => {
+            const isCurrent = s.isCurrent;
+            const deviceName = parseDeviceUserAgent(s.deviceInfo);
+            const deviceIcon = getDeviceIcon(s.deviceInfo);
+            const timeAgo = formatTimeAgo(s.lastUsedAt || s.createdAt);
+
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--card-surface); border:1px solid var(--border); border-radius:8px;">
+                    <div>
+                        <div style="font-size:13.5px; font-weight:600; color:var(--text-main); display:flex; align-items:center; gap:8px;">
+                            <i class="${deviceIcon}" style="color:var(--accent-gold);"></i>
+                            ${escapeHtml(deviceName)}
+                            ${isCurrent ? '<span class="badge-tag badge-upcoming" style="font-size:10px; padding:2px 6px;">Current</span>' : ''}
+                        </div>
+                        <div style="font-size:12px; color:var(--text-dim); margin-top:4px;">
+                            IP: ${escapeHtml(s.ipAddress || 'Unknown')} • Active ${timeAgo}
+                        </div>
+                    </div>
+                    ${!isCurrent ? `
+                        <button type="button" class="btn btn-outline btn-sm" onclick="revokeUserSession('${s.id}')" style="color:var(--accent-rose); border-color:rgba(244,63,94,0.3); font-size:11.5px; padding:4px 8px;">
+                            <i class="fas fa-trash"></i> Revoke
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+    } catch (e) {
+        listEl.innerHTML = '<div style="font-size:13px; color:var(--text-dim); text-align:center; padding:12px;">Active session protected.</div>';
+    }
+}
+
+async function revokeUserSession(sessionId) {
+    if (!confirm('Are you sure you want to terminate this device session?')) return;
+    try {
+        await Api.delete(`/auth/sessions/${sessionId}`);
+        await loadActiveSessions();
+    } catch (e) {
+        alert(e.message || 'Could not revoke session');
+    }
+}
+
+async function logoutAllDevices() {
+    if (!confirm('Are you sure you want to revoke all active sessions across all devices? You will be logged out of this device as well.')) return;
+    try {
+        await Api.post('/auth/logout-all');
+        Auth.logout();
+    } catch (e) {
+        alert(e.message || 'Could not revoke sessions');
+    }
+}
+
+function parseDeviceUserAgent(ua) {
+    if (!ua || ua === 'Unknown Device') return 'Web Browser';
+    if (ua.includes('iPhone')) return 'iPhone (Mobile Safari)';
+    if (ua.includes('iPad')) return 'iPad (Safari)';
+    if (ua.includes('Android')) return 'Android Device (Chrome)';
+    if (ua.includes('Windows')) return 'Windows PC';
+    if (ua.includes('Macintosh')) return 'MacBook / Mac OS';
+    if (ua.includes('Linux')) return 'Linux Desktop';
+    return 'Web Browser';
+}
+
+function getDeviceIcon(ua) {
+    if (!ua) return 'fas fa-globe';
+    if (ua.includes('iPhone') || ua.includes('Android')) return 'fas fa-mobile-screen-button';
+    if (ua.includes('iPad')) return 'fas fa-tablet-screen-button';
+    return 'fas fa-laptop';
+}
+
+function formatTimeAgo(dateStr) {
+    if (!dateStr) return 'recently';
+    try {
+        const d = new Date(dateStr);
+        const now = new Date();
+        const diffMs = now.getTime() - d.getTime();
+        const diffSecs = Math.floor(diffMs / 1000);
+        if (diffSecs < 60) return 'just now';
+        const diffMins = Math.floor(diffSecs / 60);
+        if (diffMins < 60) return `${diffMins}m ago`;
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours}h ago`;
+        const diffDays = Math.floor(diffHours / 24);
+        return `${diffDays}d ago`;
+    } catch {
+        return 'recently';
+    }
 }

@@ -45,6 +45,10 @@ var Auth = window.Auth || {
 
         if (token) {
             Api.setToken(token);
+            const refreshToken = response?.refreshToken || response?.data?.refreshToken;
+            if (refreshToken && Api.setRefreshToken) {
+                Api.setRefreshToken(refreshToken);
+            }
             this.setUser(user);
             this.updateNavbar();
             return response;
@@ -59,6 +63,10 @@ var Auth = window.Auth || {
 
         if (token) {
             Api.setToken(token);
+            const refreshToken = response?.refreshToken || response?.data?.refreshToken;
+            if (refreshToken && Api.setRefreshToken) {
+                Api.setRefreshToken(refreshToken);
+            }
             this.setUser(user);
             this.updateNavbar();
             return response;
@@ -69,13 +77,15 @@ var Auth = window.Auth || {
     async logout() {
         try {
             if (this.isAuthenticated()) {
-                await Api.post('/auth/logout', {}).catch(() => {});
+                const refreshToken = Api.getRefreshToken ? Api.getRefreshToken() : null;
+                await Api.post('/auth/logout', { refreshToken }).catch(() => {});
             }
         } catch (e) {
             console.warn('Logout notification error:', e);
         } finally {
             // Invalidate client tokens and user session data safely
             Api.setToken(null);
+            if (Api.setRefreshToken) Api.setRefreshToken(null);
             this.setUser(null);
             try {
                 sessionStorage.clear();

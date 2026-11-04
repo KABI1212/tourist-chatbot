@@ -427,7 +427,7 @@
                     <div class="dest-card-img-wrap">
                         <img src="${img}" alt="${escapeHtml(dest.name)}" class="dest-card-img" onerror="window.handleImageError(this, '${escapeHtml(dest.name)}');" loading="lazy">
                         <div class="dest-card-badge">
-                            <i class="fas fa-star" style="color:var(--accent-gold);"></i> ${dest.rating || '4.8'}
+                            ${dest.rating ? `<i class="fas fa-star" style="color:var(--accent-gold);"></i> ${dest.rating}` : `<i class="fas fa-compass" style="color:var(--accent-gold);"></i> Featured`}
                         </div>
                     </div>
                     <div class="dest-card-body">

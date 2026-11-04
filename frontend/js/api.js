@@ -74,7 +74,57 @@ var Api = window.Api || {
     },
 
     /**
-     * Common fetch wrapper
+     * Get stored refresh token
+     */
+    getRefreshToken() {
+        const token = localStorage.getItem('tourist_refresh_token');
+        if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+            return null;
+        }
+        return token;
+    },
+
+    /**
+     * Set stored refresh token
+     */
+    setRefreshToken(token) {
+        if (token && token !== 'null' && token !== 'undefined') {
+            localStorage.setItem('tourist_refresh_token', token);
+        } else {
+            localStorage.removeItem('tourist_refresh_token');
+        }
+    },
+
+    /**
+     * Attempts silent token rotation via /auth/refresh
+     */
+    async tryRefreshToken() {
+        const refreshToken = this.getRefreshToken();
+        try {
+            const res = await fetch(`${API_BASE}/auth/refresh`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ refreshToken: refreshToken || '' })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const newToken = data?.data?.token || data?.token;
+                const newRefresh = data?.data?.refreshToken || data?.refreshToken;
+                if (newToken) {
+                    this.setToken(newToken);
+                    if (newRefresh) this.setRefreshToken(newRefresh);
+                    return true;
+                }
+            }
+        } catch (e) {
+            console.warn('Silent token refresh failed:', e);
+        }
+        return false;
+    },
+
+    /**
+     * Common fetch wrapper with automatic timeout and refresh-token rotation
      */
     async request(endpoint, options = {}) {
         const url = `${API_BASE}${endpoint}`;
@@ -88,21 +138,35 @@ var Api = window.Api || {
             headers['Authorization'] = `Bearer ${token}`;
         }
 
+        // Configure AbortController timeout (30 seconds default)
+        const timeoutMs = options.timeoutMs || 30000;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
         const config = {
+            credentials: 'include',
             ...options,
-            headers
+            headers,
+            signal: options.signal || controller.signal
         };
 
         try {
             const response = await fetch(url, config);
+            clearTimeout(timeoutId);
 
-            // Handle token expiration for protected endpoints only
-            const protectedEndpoints = ['/trips', '/favorites', '/users', '/chat/history', '/chat/clear', '/auth/me'];
+            // Handle token expiration for protected endpoints with automatic refresh rotation
+            const protectedEndpoints = ['/trips', '/favorites', '/users', '/chat/history', '/chat/clear', '/auth/me', '/auth/sessions'];
             const isProtected = protectedEndpoints.some(p => endpoint.includes(p));
 
-            if ((response.status === 401 || response.status === 403) && isProtected && this.getToken()) {
+            if ((response.status === 401 || response.status === 403) && isProtected && !options._isRetry) {
+                const refreshed = await this.tryRefreshToken();
+                if (refreshed) {
+                    return this.request(endpoint, { ...options, _isRetry: true });
+                }
+
                 console.warn(`Session expired or unauthorized on protected endpoint: ${endpoint}`);
                 this.setToken(null);
+                this.setRefreshToken(null);
                 localStorage.removeItem('tourist_user');
                 if (typeof window.Auth !== 'undefined' && window.Auth.updateNavbar) {
                     window.Auth.updateNavbar();
@@ -136,6 +200,10 @@ var Api = window.Api || {
 
             return data;
         } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                throw new Error('Connection timed out (30s). The server may be waking up from standby. Please retry.');
+            }
             console.error(`API Error on [${options.method || 'GET'}] ${endpoint}:`, error);
             if (error instanceof TypeError && error.message.toLowerCase().includes('fetch')) {
                 console.warn(

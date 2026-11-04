@@ -60,6 +60,8 @@ public class SecurityConfig {
                         })
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // Protected user session & profile endpoints
+                        .requestMatchers("/api/auth/me", "/api/auth/sessions/**", "/api/auth/logout-all").authenticated()
                         // Public auth & health endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/health").permitAll()
