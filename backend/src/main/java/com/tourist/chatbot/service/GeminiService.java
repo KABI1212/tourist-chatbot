@@ -1,5 +1,6 @@
 package com.tourist.chatbot.service;
 
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tourist.chatbot.model.ChatMessage;
@@ -16,6 +17,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +41,7 @@ public class GeminiService {
                 .connectTimeout(Duration.ofSeconds(25))
                 .build();
         this.objectMapper = new ObjectMapper();
+        this.objectMapper.configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true);
     }
 
     private static final String SYSTEM_INSTRUCTION = """
@@ -476,6 +479,11 @@ public class GeminiService {
                     cleanJson = cleanJson.substring(0, cleanJson.length() - 3);
                 }
                 cleanJson = cleanJson.trim();
+                int startIdx = cleanJson.indexOf('{');
+                int endIdx = cleanJson.lastIndexOf('}');
+                if (startIdx >= 0 && endIdx > startIdx) {
+                    cleanJson = cleanJson.substring(startIdx, endIdx + 1);
+                }
 
                 JsonNode root = objectMapper.readTree(cleanJson);
                 if (root.has("daysPlan") && root.get("daysPlan").isArray()) {
@@ -703,18 +711,77 @@ public class GeminiService {
                 .build();
     }
 
+    private static final Map<String, String> DESTINATION_IMAGES = new LinkedHashMap<>();
+    static {
+        DESTINATION_IMAGES.put("ooty", "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=1200&q=80");
+        DESTINATION_IMAGES.put("kodaikanal", "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=1200&q=80");
+        DESTINATION_IMAGES.put("munnar", "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=1200&q=80");
+        DESTINATION_IMAGES.put("alleppey", "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1200&q=80");
+        DESTINATION_IMAGES.put("kerala", "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1200&q=80");
+        DESTINATION_IMAGES.put("goa", "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=1200&q=80");
+        DESTINATION_IMAGES.put("manali", "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80");
+        DESTINATION_IMAGES.put("shimla", "https://images.unsplash.com/photo-1597074866923-dc0589150358?w=1200&q=80");
+        DESTINATION_IMAGES.put("coorg", "https://images.unsplash.com/photo-1600298882283-40b4dca8b211?w=1200&q=80");
+        DESTINATION_IMAGES.put("mysore", "https://images.unsplash.com/photo-1590766940554-634a7ed41450?w=1200&q=80");
+        DESTINATION_IMAGES.put("hampi", "https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=1200&q=80");
+        DESTINATION_IMAGES.put("rishikesh", "https://images.unsplash.com/photo-1544717302-de2939b7ef71?w=1200&q=80");
+        DESTINATION_IMAGES.put("varanasi", "https://images.unsplash.com/photo-1561359313-0639aad49ca6?w=1200&q=80");
+        DESTINATION_IMAGES.put("jaipur", "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=1200&q=80");
+        DESTINATION_IMAGES.put("udaipur", "https://images.unsplash.com/photo-1595846519845-68e298c2edd8?w=1200&q=80");
+        DESTINATION_IMAGES.put("jaisalmer", "https://images.unsplash.com/photo-1572978013897-b952f4cbfb49?w=1200&q=80");
+        DESTINATION_IMAGES.put("ladakh", "https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=1200&q=80");
+        DESTINATION_IMAGES.put("leh", "https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=1200&q=80");
+        DESTINATION_IMAGES.put("srinagar", "https://images.unsplash.com/photo-1566837945700-30057527ade0?w=1200&q=80");
+        DESTINATION_IMAGES.put("gulmarg", "https://images.unsplash.com/photo-1548013146-72479768bada?w=1200&q=80");
+        DESTINATION_IMAGES.put("darjeeling", "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=1200&q=80");
+        DESTINATION_IMAGES.put("gangtok", "https://images.unsplash.com/photo-1617854818583-09e7f077a156?w=1200&q=80");
+        DESTINATION_IMAGES.put("shillong", "https://images.unsplash.com/photo-1589802829985-817e51171b92?w=1200&q=80");
+        DESTINATION_IMAGES.put("pondicherry", "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=1200&q=80");
+        DESTINATION_IMAGES.put("amritsar", "https://images.unsplash.com/photo-1589987607627-616cac5c2c5a?w=1200&q=80");
+        DESTINATION_IMAGES.put("nainital", "https://images.unsplash.com/photo-1580974852861-c381510bc98a?w=1200&q=80");
+        DESTINATION_IMAGES.put("khajuraho", "https://images.unsplash.com/photo-1600100397608-f010f443b2f8?w=1200&q=80");
+        DESTINATION_IMAGES.put("agra", "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=1200&q=80");
+        DESTINATION_IMAGES.put("taj mahal", "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=1200&q=80");
+        DESTINATION_IMAGES.put("paris", "https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=1200&q=80");
+        DESTINATION_IMAGES.put("eiffel tower", "https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=1200&q=80");
+        DESTINATION_IMAGES.put("london", "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1200&q=80");
+        DESTINATION_IMAGES.put("dubai", "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&q=80");
+        DESTINATION_IMAGES.put("tokyo", "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&q=80");
+        DESTINATION_IMAGES.put("kyoto", "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&q=80");
+        DESTINATION_IMAGES.put("bali", "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200&q=80");
+        DESTINATION_IMAGES.put("singapore", "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1200&q=80");
+        DESTINATION_IMAGES.put("bangkok", "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=1200&q=80");
+        DESTINATION_IMAGES.put("sydney", "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1200&q=80");
+        DESTINATION_IMAGES.put("colosseum", "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1200&q=80");
+        DESTINATION_IMAGES.put("rome", "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1200&q=80");
+        DESTINATION_IMAGES.put("statue of liberty", "https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=1200&q=80");
+        DESTINATION_IMAGES.put("new york", "https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=1200&q=80");
+        DESTINATION_IMAGES.put("santorini", "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=1200&q=80");
+        DESTINATION_IMAGES.put("machu picchu", "https://images.unsplash.com/photo-1526392060635-9d6019884377?w=1200&q=80");
+        DESTINATION_IMAGES.put("great wall of china", "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=1200&q=80");
+    }
+
     private String getDestinationImage(String name) {
-        String lower = name.toLowerCase();
-        if (lower.contains("manali") || lower.contains("himachal")) return "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800";
-        if (lower.contains("ooty") || lower.contains("nilgiri")) return "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800";
-        if (lower.contains("kerala") || lower.contains("alleppey") || lower.contains("munnar")) return "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800";
-        if (lower.contains("goa")) return "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800";
-        if (lower.contains("paris") || lower.contains("eiffel")) return "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800";
-        if (lower.contains("taj") || lower.contains("agra")) return "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800";
-        if (lower.contains("tokyo") || lower.contains("japan")) return "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800";
-        if (lower.contains("dubai")) return "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800";
-        if (lower.contains("bali")) return "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800";
-        return "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800";
+        if (name == null || name.isBlank()) return null;
+        String clean = name.toLowerCase().trim();
+
+        // Exact match
+        if (DESTINATION_IMAGES.containsKey(clean)) {
+            return DESTINATION_IMAGES.get(clean);
+        }
+
+        // Word-level match (avoid substring traps like 'in' matching 'india')
+        for (Map.Entry<String, String> entry : DESTINATION_IMAGES.entrySet()) {
+            if (clean.equals(entry.getKey()) ||
+                clean.startsWith(entry.getKey() + " ") ||
+                clean.endsWith(" " + entry.getKey()) ||
+                clean.contains(" " + entry.getKey() + " ")) {
+                return entry.getValue();
+            }
+        }
+
+        // Return null so frontend renders authentic neutral destination monogram/placeholder
+        return null;
     }
 
     private String capitalize(String str) {
