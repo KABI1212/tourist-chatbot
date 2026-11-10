@@ -19,4 +19,6 @@ public class ChatRequest {
 
     private String language;
     private java.util.List<java.util.Map<String, String>> history;
+    private String tripId;
+    private java.util.Map<String, Object> activeTripContext;
 }
