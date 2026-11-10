@@ -1182,16 +1182,23 @@ async function saveTripToProfile(isSilent = false) {
             endDate: plannerState.endDate,
             interests: plannerState.interests,
             status: 'upcoming',
-            imageUrl: currentGeneratedItinerary.imageUrl,
+            imageUrl: currentGeneratedItinerary.imageUrl || (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(currentGeneratedItinerary.destination) : null),
             daysPlan: currentGeneratedItinerary.daysPlan,
             budgetBreakdown: currentGeneratedItinerary.budgetBreakdown,
             travelTips: currentGeneratedItinerary.travelTips
         };
 
-        const res = await Api.post('/trips', payload);
-        const saved = res.data || res;
-        if (saved && saved.id) {
-            currentSavedTripId = saved.id;
+        let saved;
+        if (currentSavedTripId) {
+            // Update existing trip instead of creating duplicate records
+            const res = await Api.put(`/trips/${currentSavedTripId}`, payload);
+            saved = res.data || res;
+        } else {
+            const res = await Api.post('/trips', payload);
+            saved = res.data || res;
+            if (saved && saved.id) {
+                currentSavedTripId = saved.id;
+            }
         }
 
         if (btn && !isSilent) {
