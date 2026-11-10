@@ -186,11 +186,14 @@ async function handleChatSubmit(e) {
             content: m.content
         }));
 
+        const activeTripId = (new URLSearchParams(window.location.search)).get('tripId') || localStorage.getItem('tourist_active_trip_id') || null;
+
         const payload = {
             message: text,
             chatId: currentChatId,
             language: sendLang,
-            history: historyPayload
+            history: historyPayload,
+            tripId: activeTripId
         };
 
         const res = await Api.post('/chat', payload, { signal: activeAbortController.signal });
@@ -212,7 +215,8 @@ async function handleChatSubmit(e) {
             role: 'assistant',
             content: replyText,
             destination: destination,
-            language: resLanguage
+            language: resLanguage,
+            metadata: res.metadata || {}
         });
 
         renderConversation();
@@ -288,7 +292,7 @@ function renderConversation() {
             const userRow = createUserMessageElement(msg.content, index);
             box.appendChild(userRow);
         } else {
-            const aiRow = createAssistantMessageElement(msg.content, msg.destination, index, msg.language);
+            const aiRow = createAssistantMessageElement(msg.content, msg.destination, index, msg.language, msg.metadata);
             box.appendChild(aiRow);
         }
     });
@@ -327,7 +331,7 @@ function createUserMessageElement(text, index) {
     return row;
 }
 
-function createAssistantMessageElement(markdownText, destination, index, language) {
+function createAssistantMessageElement(markdownText, destination, index, language, metadata) {
     const row = document.createElement('div');
     row.className = 'msg-row assistant';
 
@@ -359,11 +363,11 @@ function createAssistantMessageElement(markdownText, destination, index, languag
     // If a destination was detected or returned, add interactive destination card
     if (destination && destination.name) {
         const destImg = (destination.images && destination.images[0]) || 
-            (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(destination.name) : 'assets/dash.jpg');
+            (typeof window.getDestinationImage === 'function' ? window.getDestinationImage(destination.name) : window.generateDestinationPlaceholder(destination.name));
 
         contentHtml += `
             <div class="chat-dest-preview-card">
-                <img src="${escapeHtml(destImg)}" alt="${escapeHtml(destination.name)}" data-dest="${escapeHtml(destination.name)}" loading="lazy">
+                <img src="${escapeHtml(destImg)}" alt="${escapeHtml(destination.name)}" data-dest="${escapeHtml(destination.name)}" onerror="window.handleImageError(this, '${escapeHtml(destination.name)}');" loading="lazy">
                 <div style="padding:14px;">
                     <h4 style="margin:0 0 6px 0; color:var(--text-main); font-size:15px; font-weight:700;">
                         <i class="fas fa-location-dot" style="color:var(--accent-gold);"></i> ${escapeHtml(destination.name)}
@@ -377,6 +381,27 @@ function createAssistantMessageElement(markdownText, destination, index, languag
                             <i class="fas fa-eye"></i> View Destination
                         </a>
                     </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Proposed trip modification action card
+    if (metadata && metadata.proposedTripUpdate) {
+        const update = metadata.proposedTripUpdate;
+        const updateJson = encodeURIComponent(JSON.stringify(update));
+        contentHtml += `
+            <div class="chat-trip-update-card" style="margin-top:14px; padding:16px 18px; background:var(--bg-card); border:1px solid var(--accent-gold); border-radius:var(--radius-sm);">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <i class="fas fa-pen-to-square" style="color:var(--accent-gold);"></i>
+                    <strong style="color:var(--text-main); font-size:14px;">Proposed Trip Adjustment</strong>
+                </div>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px; line-height:1.5;">${escapeHtml(update.summary || 'Adjust trip schedule/budget according to your request.')}</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="applyTripUpdateFromChat(decodeURIComponent('${updateJson}'), this)">
+                        <i class="fas fa-check"></i> Apply Update to Saved Trip
+                    </button>
+                    <a href="planner.html" class="btn btn-outline btn-sm">Open in Planner</a>
                 </div>
             </div>
         `;
@@ -1100,4 +1125,31 @@ window.toggleChatLangDropdown = toggleChatLangDropdown;
 window.selectChatLanguage = selectChatLanguage;
 window.openFullLangModal = openFullLangModal;
 window.updateChatLangUI = updateChatLangUI;
+
+window.applyTripUpdateFromChat = async function(updateJson, btn) {
+    try {
+        const update = typeof updateJson === 'string' ? JSON.parse(updateJson) : updateJson;
+        const tripId = update.tripId || localStorage.getItem('tourist_active_trip_id');
+        if (!tripId) {
+            alert('No active saved trip found. Open "Plan a Trip" to save this as a new trip.');
+            return;
+        }
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating…';
+        }
+        await Api.put(`/trips/${tripId}`, update);
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-check"></i> Update Applied!';
+            btn.style.background = 'var(--accent-emerald)';
+        }
+        alert('Your saved trip has been updated with the requested modifications!');
+    } catch (e) {
+        alert('Could not update trip: ' + (e.message || 'Server error'));
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Apply Update';
+        }
+    }
+};
 
