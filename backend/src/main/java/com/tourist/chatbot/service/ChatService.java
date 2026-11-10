@@ -6,9 +6,11 @@ import com.tourist.chatbot.dto.PlaceSearchResult;
 import com.tourist.chatbot.model.Chat;
 import com.tourist.chatbot.model.ChatMessage;
 import com.tourist.chatbot.model.Destination;
+import com.tourist.chatbot.model.Trip;
 import com.tourist.chatbot.model.User;
 import com.tourist.chatbot.repository.ChatMessageRepository;
 import com.tourist.chatbot.repository.ChatRepository;
+import com.tourist.chatbot.repository.TripRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,7 @@ public class ChatService {
     private final UserService userService;
     private final DestinationMatcher destinationMatcher;
     private final PlacesProviderService placesProviderService;
+    private final TripRepository tripRepository;
 
     public ChatResponse processMessage(ChatRequest request, String username) {
         User user = (username != null && !username.isBlank()) ? userService.getUserByUsername(username) : null;
@@ -107,8 +110,33 @@ public class ChatService {
             matchedDest = resolvePreviousDestinationFromHistory(conversationHistory);
         }
 
+        // Trip Context Injection if active trip or tripId is provided
+        Trip activeTrip = null;
+        if (request.getTripId() != null && !request.getTripId().isBlank()) {
+            activeTrip = tripRepository.findById(request.getTripId().trim()).orElse(null);
+        } else if (userId != null) {
+            if (message.matches("(?i).*\\b(my trip|current trip|this trip|reduce budget|change day|add to trip)\\b.*")) {
+                List<Trip> userTrips = tripRepository.findByUserId(userId, Sort.by(Sort.Direction.DESC, "createdAt"));
+                if (!userTrips.isEmpty()) {
+                    activeTrip = userTrips.get(0);
+                }
+            }
+        }
+
         // 5. Intent Detection & Factual Grounding (Weather, Nearby, Transit, Budget, Itinerary)
         StringBuilder contextBuilder = new StringBuilder();
+
+        if (activeTrip != null) {
+            contextBuilder.append(String.format(
+                    "[Active Saved Trip Context: TripID=\"%s\", Title=\"%s\", Destination=\"%s\", Days=%d, Travelers=%d, HotelTier=\"%s\", EstimatedBudget=\"%s %.0f\", Dates=\"%s to %s\"]\n",
+                    activeTrip.getId(), activeTrip.getTitle(), activeTrip.getDestination(), activeTrip.getDays(), activeTrip.getPeople(),
+                    activeTrip.getHotelTier() != null ? activeTrip.getHotelTier() : "Moderate",
+                    activeTrip.getCurrency() != null ? activeTrip.getCurrency() : "INR",
+                    activeTrip.getEstimatedBudget() != null ? activeTrip.getEstimatedBudget() : 0.0,
+                    activeTrip.getStartDate() != null ? activeTrip.getStartDate() : "Upcoming",
+                    activeTrip.getEndDate() != null ? activeTrip.getEndDate() : "Upcoming"
+            ));
+        }
 
         if (matchedDest.isPresent()) {
             Destination d = matchedDest.get();
@@ -201,6 +229,21 @@ public class ChatService {
         responseMetadata.put("language", effectiveLanguage);
         if (matchedDest.isPresent()) {
             responseMetadata.put("destinationName", matchedDest.get().getName());
+        }
+
+        // Detect trip adjustment request and generate proposedTripUpdate in metadata
+        if (activeTrip != null) {
+            java.util.regex.Matcher bMatcher = java.util.regex.Pattern.compile("(?:₹|rs\\.?|inr|usd|eur|\\$)?\\s*([0-9]{1,3}(?:,[0-9]{3})+|[0-9]{4,7})", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(message);
+            if (bMatcher.find() && message.matches("(?i).*\\b(budget|kam|reduce|make it|cut|cost|limit|total)\\b.*")) {
+                try {
+                    double newBudget = Double.parseDouble(bMatcher.group(1).replace(",", ""));
+                    Map<String, Object> update = new java.util.HashMap<>();
+                    update.put("tripId", activeTrip.getId());
+                    update.put("estimatedBudget", newBudget);
+                    update.put("summary", String.format("Adjust estimated budget to %s %,.0f for %s", activeTrip.getCurrency() != null ? activeTrip.getCurrency() : "INR", newBudget, activeTrip.getDestination()));
+                    responseMetadata.put("proposedTripUpdate", update);
+                } catch (Exception ignored) {}
+            }
         }
 
         // 7. Persist Assistant Message if authenticated
