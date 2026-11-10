@@ -1,5 +1,6 @@
 package com.tourist.chatbot.service;
 
+import com.tourist.chatbot.dto.ExpenseRequest;
 import com.tourist.chatbot.dto.ItineraryGenerateRequest;
 import com.tourist.chatbot.dto.ItineraryResponse;
 import com.tourist.chatbot.dto.TripRequest;
@@ -67,28 +68,65 @@ public class TripService {
         tripRepository.deleteByIdAndUserId(id, userId);
     }
 
+    public Trip updateTrip(String tripId, TripRequest request, String userId) {
+        Trip trip = getTripById(tripId, userId);
+        if (request.getTitle() != null && !request.getTitle().isBlank()) {
+            trip.setTitle(request.getTitle().trim());
+        }
+        if (request.getOrigin() != null) trip.setOrigin(request.getOrigin().trim());
+        if (request.getDestination() != null && !request.getDestination().isBlank()) {
+            trip.setDestination(request.getDestination().trim());
+        }
+        if (request.getDays() > 0) trip.setDays(request.getDays());
+        if (request.getPeople() > 0) trip.setPeople(request.getPeople());
+        if (request.getHotelTier() != null) trip.setHotelTier(request.getHotelTier());
+        if (request.getEstimatedBudget() != null && request.getEstimatedBudget() >= 0) {
+            trip.setEstimatedBudget(request.getEstimatedBudget());
+        }
+        if (request.getCurrency() != null && !request.getCurrency().isBlank()) {
+            trip.setCurrency(request.getCurrency().trim());
+        }
+        if (request.getBudgetBreakdown() != null) trip.setBudgetBreakdown(request.getBudgetBreakdown());
+        if (request.getItinerary() != null) trip.setItinerary(request.getItinerary());
+        if (request.getStartDate() != null) trip.setStartDate(request.getStartDate());
+        if (request.getEndDate() != null) trip.setEndDate(request.getEndDate());
+        if (request.getInterests() != null) trip.setInterests(request.getInterests());
+        if (request.getStatus() != null && !request.getStatus().isBlank()) {
+            trip.setStatus(request.getStatus().trim());
+        }
+        if (request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
+            trip.setImageUrl(request.getImageUrl().trim());
+        }
+        if (request.getDaysPlan() != null) trip.setDaysPlan(request.getDaysPlan());
+        if (request.getTravelTips() != null) trip.setTravelTips(request.getTravelTips());
+        return tripRepository.save(trip);
+    }
+
     // ── Expense Management (Section 11) ──
 
-    public Map<String, Object> addExpense(String tripId, String userId, Map<String, Object> expenseData) {
+    public Map<String, Object> addExpense(String tripId, String userId, ExpenseRequest request) {
+        if (request == null) {
+            throw new BadRequestException("Expense data is required");
+        }
+        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+            throw new BadRequestException("Expense title is required");
+        }
+        if (request.getAmount() == null || request.getAmount() <= 0) {
+            throw new BadRequestException("Expense amount must be strictly greater than zero");
+        }
+
         Trip trip = getTripById(tripId, userId);
         List<Map<String, Object>> expenses = trip.getExpenses() != null ? new ArrayList<>(trip.getExpenses()) : new ArrayList<>();
 
         String expenseId = UUID.randomUUID().toString().substring(0, 8);
-        double amount = 0.0;
-        if (expenseData.get("amount") != null) {
-            try {
-                amount = Double.parseDouble(expenseData.get("amount").toString());
-            } catch (NumberFormatException ignored) {}
-        }
-
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("id", expenseId);
-        entry.put("title", expenseData.getOrDefault("title", "Expense"));
-        entry.put("category", expenseData.getOrDefault("category", "miscellaneous"));
-        entry.put("amount", amount);
-        entry.put("date", expenseData.getOrDefault("date", java.time.LocalDate.now().toString()));
-        entry.put("paidBy", expenseData.getOrDefault("paidBy", "Me"));
-        entry.put("notes", expenseData.getOrDefault("notes", ""));
+        entry.put("title", request.getTitle().trim());
+        entry.put("category", request.getCategory() != null && !request.getCategory().isBlank() ? request.getCategory().trim().toLowerCase() : "miscellaneous");
+        entry.put("amount", Math.round(request.getAmount() * 100.0) / 100.0);
+        entry.put("date", request.getDate() != null && !request.getDate().isBlank() ? request.getDate().trim() : java.time.LocalDate.now().toString());
+        entry.put("paidBy", request.getPaidBy() != null && !request.getPaidBy().isBlank() ? request.getPaidBy().trim() : "Me");
+        entry.put("notes", request.getNotes() != null ? request.getNotes().trim() : "");
 
         expenses.add(entry);
         trip.setExpenses(expenses);
@@ -103,6 +141,47 @@ public class TripService {
 
         tripRepository.save(trip);
         return getTripExpenses(tripId, userId);
+    }
+
+    public Map<String, Object> addExpense(String tripId, String userId, Map<String, Object> expenseData) {
+        if (expenseData == null || !expenseData.containsKey("amount")) {
+            throw new BadRequestException("Expense amount is required");
+        }
+        double amount;
+        try {
+            amount = Double.parseDouble(expenseData.get("amount").toString());
+        } catch (Exception ex) {
+            throw new BadRequestException("Invalid expense amount format");
+        }
+        if (amount <= 0) {
+            throw new BadRequestException("Expense amount must be strictly greater than zero");
+        }
+
+        String title = expenseData.containsKey("title") && expenseData.get("title") != null
+                ? expenseData.get("title").toString()
+                : "Expense";
+        String category = expenseData.containsKey("category") && expenseData.get("category") != null
+                ? expenseData.get("category").toString()
+                : "miscellaneous";
+        String date = expenseData.containsKey("date") && expenseData.get("date") != null
+                ? expenseData.get("date").toString()
+                : java.time.LocalDate.now().toString();
+        String paidBy = expenseData.containsKey("paidBy") && expenseData.get("paidBy") != null
+                ? expenseData.get("paidBy").toString()
+                : "Me";
+        String notes = expenseData.containsKey("notes") && expenseData.get("notes") != null
+                ? expenseData.get("notes").toString()
+                : "";
+
+        ExpenseRequest req = ExpenseRequest.builder()
+                .title(title)
+                .category(category)
+                .amount(amount)
+                .date(date)
+                .paidBy(paidBy)
+                .notes(notes)
+                .build();
+        return addExpense(tripId, userId, req);
     }
 
     public Map<String, Object> deleteExpense(String tripId, String userId, String expenseId) {
