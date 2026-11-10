@@ -32,7 +32,9 @@ public class DataInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         try {
             if (destinationRepository.count() > 0) {
-                log.info("Destination catalog already initialized with {} destinations.", destinationRepository.count());
+                log.info("Destination catalog already initialized with {} destinations. Synchronizing verified unique images...", destinationRepository.count());
+                syncVerifiedDestinationImages();
+                seedFeaturedDestinations();
                 return;
             }
 
@@ -40,6 +42,38 @@ public class DataInitializer implements ApplicationRunner {
             loadAndSeedDestinations();
         } catch (Exception e) {
             log.warn("MongoDB Atlas connection could not be established on startup (verify your network or MONGODB_URI): {}", e.getMessage());
+        }
+    }
+
+    private void syncVerifiedDestinationImages() {
+        try {
+            ClassPathResource resource = new ClassPathResource("data/destinations.json");
+            if (resource.exists()) {
+                try (InputStream is = resource.getInputStream()) {
+                    JsonNode root = objectMapper.readTree(is);
+                    Iterator<Map.Entry<String, JsonNode>> fields = root.fields();
+                    while (fields.hasNext()) {
+                        Map.Entry<String, JsonNode> entry = fields.next();
+                        String placeKey = entry.getKey();
+                        JsonNode node = entry.getValue();
+
+                        String formattedName = capitalizeWords(placeKey);
+                        List<String> images = new ArrayList<>();
+                        if (node.has("images") && node.get("images").isArray()) {
+                            node.get("images").forEach(img -> images.add(img.asText()));
+                        }
+
+                        if (!images.isEmpty()) {
+                            destinationRepository.findByNameIgnoreCase(formattedName).ifPresent(d -> {
+                                d.setImages(images);
+                                destinationRepository.save(d);
+                            });
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Image synchronization skipped: {}", e.getMessage());
         }
     }
 
@@ -118,18 +152,18 @@ public class DataInitializer implements ApplicationRunner {
                         .longitude(76.6950)
                         .mapsLink("https://www.google.com/maps/search/?api=1&query=11.4102,76.6950")
                         .images(List.of(
-                                "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800",
-                                "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800",
-                                "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800"
+                                "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=1200&q=80",
+                                "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=1200&q=80",
+                                "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=1200&q=80"
                         ))
                         .tags(List.of("Hill Station", "Nature", "Tea Gardens", "Couples", "Family"))
                         .officialWebsite("https://www.tamilnadutourism.tn.gov.in/")
                         .travelTip("Book the Nilgiri toy train tickets weeks in advance. Carry warm clothes for chilly evenings.")
                         .attractions(List.of(
                                 Map.of("name", "Ooty Lake", "rating", 4.5, "reviews", "2.3K", "image", "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800", "description", "Picturesque artificial lake offering pedal boating and tranquil eucalyptus walks."),
-                                Map.of("name", "Doddabetta Peak", "rating", 4.6, "reviews", "1.8K", "image", "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800", "description", "Highest peak in the Nilgiris with telescope house panoramic view."),
-                                Map.of("name", "Botanical Garden", "rating", 4.4, "reviews", "2.1K", "image", "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800", "description", "Sprawling 55-acre heritage garden with exotic flora and fossil tree trunk."),
-                                Map.of("name", "Rose Garden", "rating", 4.3, "reviews", "1.9K", "image", "https://images.unsplash.com/photo-1496062031456-07b8f162a322?w=800", "description", "Terraced garden cultivating thousands of exquisite rose species.")
+                                Map.of("name", "Doddabetta Peak", "rating", 4.6, "reviews", "1.8K", "image", "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800", "description", "Highest peak in the Nilgiris with telescope house panoramic view."),
+                                Map.of("name", "Botanical Garden", "rating", 4.4, "reviews", "2.1K", "image", "https://images.unsplash.com/photo-1496062031456-07b8f162a322?w=800", "description", "Sprawling 55-acre heritage garden with exotic flora and fossil tree trunk."),
+                                Map.of("name", "Rose Garden", "rating", 4.3, "reviews", "1.9K", "image", "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=800", "description", "Terraced garden cultivating thousands of exquisite rose species.")
                         ))
                         .hotels(List.of(
                                 Map.of("name", "Savoy - IHCL SeleQtions", "tier", "Luxury", "price", "₹12,500/night", "rating", 4.7, "image", "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"),
@@ -166,17 +200,17 @@ public class DataInitializer implements ApplicationRunner {
                         .longitude(77.1892)
                         .mapsLink("https://www.google.com/maps/search/?api=1&query=32.2432,77.1892")
                         .images(List.of(
-                                "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800",
-                                "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800"
+                                "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80",
+                                "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=1200&q=80"
                         ))
                         .tags(List.of("Himalayas", "Snow", "Adventure", "Hill Station", "Trekking"))
                         .officialWebsite("https://himachaltourism.gov.in/")
                         .travelTip("Rohtang Pass permits must be booked in advance online. Carry thermal layers.")
                         .attractions(List.of(
                                 Map.of("name", "Solang Valley", "rating", 4.7, "reviews", "3.2K", "image", "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800", "description", "Adrenaline hub for paragliding, skiing, zorbing and snow quad biking."),
-                                Map.of("name", "Rohtang Pass", "rating", 4.8, "reviews", "4.1K", "image", "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800", "description", "Breathtaking mountain pass connecting Kullu with Lahaul and Spiti Valleys."),
-                                Map.of("name", "Hadimba Temple", "rating", 4.6, "reviews", "2.8K", "image", "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800", "description", "Ancient pagoda-style wooden temple nestled in towering cedar forests."),
-                                Map.of("name", "Mall Road", "rating", 4.4, "reviews", "2.5K", "image", "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800", "description", "Vibrant pedestrian promenade with cafes, woolens, and handicrafts.")
+                                Map.of("name", "Rohtang Pass", "rating", 4.8, "reviews", "4.1K", "image", "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800", "description", "Breathtaking mountain pass connecting Kullu with Lahaul and Spiti Valleys."),
+                                Map.of("name", "Hadimba Temple", "rating", 4.6, "reviews", "2.8K", "image", "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=800", "description", "Ancient pagoda-style wooden temple nestled in towering cedar forests."),
+                                Map.of("name", "Mall Road", "rating", 4.4, "reviews", "2.5K", "image", "https://images.unsplash.com/photo-1597074866923-dc0589150358?w=800", "description", "Vibrant pedestrian promenade with cafes, woolens, and handicrafts.")
                         ))
                         .hotels(List.of(
                                 Map.of("name", "The Himalayan Resort", "tier", "Luxury", "price", "₹14,000/night", "rating", 4.8, "image", "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"),
@@ -211,17 +245,17 @@ public class DataInitializer implements ApplicationRunner {
                         .longitude(76.3388)
                         .mapsLink("https://www.google.com/maps/search/?api=1&query=9.4981,76.3388")
                         .images(List.of(
-                                "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800",
-                                "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=800"
+                                "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1200&q=80",
+                                "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=1200&q=80"
                         ))
                         .tags(List.of("Backwaters", "Nature", "Beaches", "Ayurveda", "Houseboats"))
                         .officialWebsite("https://www.keralatourism.org/")
                         .travelTip("Spend at least one overnight journey on a traditional Alleppey kettuvallam houseboat.")
                         .attractions(List.of(
                                 Map.of("name", "Alleppey Backwaters", "rating", 4.9, "reviews", "4.5K", "image", "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800", "description", "Tranquil maze of canals and lagoons navigated by traditional thatched houseboats."),
-                                Map.of("name", "Munnar Tea Estates", "rating", 4.8, "reviews", "3.9K", "image", "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=800", "description", "Rolling verdant tea hills, misty waterfalls and Anamudi mountain peak."),
-                                Map.of("name", "Periyar Wildlife Sanctuary", "rating", 4.5, "reviews", "2.1K", "image", "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800", "description", "Elephant and tiger reserve surrounding a serene lake in Thekkady."),
-                                Map.of("name", "Fort Kochi", "rating", 4.6, "reviews", "2.7K", "image", "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800", "description", "Colonial seaside heritage hub with cantilevered Chinese fishing nets.")
+                                Map.of("name", "Munnar Tea Estates", "rating", 4.8, "reviews", "3.9K", "image", "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=800", "description", "Rolling verdant tea hills, misty waterfalls and Anamudi mountain peak."),
+                                Map.of("name", "Periyar Wildlife Sanctuary", "rating", 4.5, "reviews", "2.1K", "image", "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?w=800", "description", "Elephant and tiger reserve surrounding a serene lake in Thekkady."),
+                                Map.of("name", "Fort Kochi", "rating", 4.6, "reviews", "2.7K", "image", "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800", "description", "Colonial seaside heritage hub with cantilevered Chinese fishing nets.")
                         ))
                         .build(),
 
@@ -240,8 +274,8 @@ public class DataInitializer implements ApplicationRunner {
                         .longitude(74.1240)
                         .mapsLink("https://www.google.com/maps/search/?api=1&query=15.2993,74.1240")
                         .images(List.of(
-                                "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800",
-                                "https://images.unsplash.com/photo-1614082242765-7c98ca0f3df3?w=800"
+                                "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=1200&q=80",
+                                "https://images.unsplash.com/photo-1587922546307-776227941871?w=1200&q=80"
                         ))
                         .tags(List.of("Beach", "Nightlife", "Water Sports", "Relaxation", "Seafood"))
                         .officialWebsite("https://goatourism.gov.in/")
@@ -249,7 +283,7 @@ public class DataInitializer implements ApplicationRunner {
                         .attractions(List.of(
                                 Map.of("name", "Baga Beach", "rating", 4.5, "reviews", "3.8K", "image", "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800", "description", "Lively shoreline packed with water sports, beach shacks and sunset vibes."),
                                 Map.of("name", "Basilica of Bom Jesus", "rating", 4.8, "reviews", "2.9K", "image", "https://images.unsplash.com/photo-1614082242765-7c98ca0f3df3?w=800", "description", "UNESCO heritage Baroque church holding the mortal remains of St. Francis Xavier."),
-                                Map.of("name", "Dudhsagar Falls", "rating", 4.7, "reviews", "2.4K", "image", "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800", "description", "Four-tiered milky cascade nestled deep in the Western Ghats jungle."),
+                                Map.of("name", "Dudhsagar Falls", "rating", 4.7, "reviews", "2.4K", "image", "https://images.unsplash.com/photo-1546776310-eef45dd6d63c?w=800", "description", "Four-tiered milky cascade nestled deep in the Western Ghats jungle."),
                                 Map.of("name", "Palolem Beach", "rating", 4.7, "reviews", "2.1K", "image", "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800", "description", "Scenic crescent bay in South Goa with calm swimming waters and silent discos.")
                         ))
                         .build(),
@@ -269,17 +303,17 @@ public class DataInitializer implements ApplicationRunner {
                         .longitude(2.3522)
                         .mapsLink("https://www.google.com/maps/search/?api=1&query=48.8566,2.3522")
                         .images(List.of(
-                                "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800",
-                                "https://images.unsplash.com/photo-1511739001486-6bfe10cec9e4?w=800"
+                                "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&q=80",
+                                "https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=1200&q=80"
                         ))
                         .tags(List.of("Romance", "Museums", "Culinary", "Fashion", "Culture"))
                         .officialWebsite("https://en.parisinfo.com/")
                         .travelTip("Book Louvre tickets in advance online and use the Metro for speedy citywide transit.")
                         .attractions(List.of(
-                                Map.of("name", "Eiffel Tower", "rating", 4.8, "reviews", "7.5K", "image", "https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=800", "description", "Iconic 330m wrought-iron lattice tower on the Champ de Mars."),
-                                Map.of("name", "Louvre Museum", "rating", 4.8, "reviews", "6.1K", "image", "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800", "description", "World's largest art museum housing Leonardo's Mona Lisa and Venus de Milo."),
-                                Map.of("name", "Arc de Triomphe", "rating", 4.7, "reviews", "3.4K", "image", "https://images.unsplash.com/photo-1511739001486-6bfe10cec9e4?w=800", "description", "Heroic triumphal arch honoring French military victories at the Champs-Élysées."),
-                                Map.of("name", "Sacré-Cœur", "rating", 4.7, "reviews", "3.1K", "image", "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800", "description", "White domed basilica atop the hill of Montmartre with sweeping city panoramas.")
+                                Map.of("name", "Eiffel Tower", "rating", 4.8, "reviews", "7.5K", "image", "https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=800", "description", "Iconic 330m wrought-iron lattice tower on the Champ de Mars."),
+                                Map.of("name", "Louvre Museum", "rating", 4.8, "reviews", "6.1K", "image", "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800", "description", "World's largest art museum housing Leonardo's Mona Lisa and Venus de Milo."),
+                                Map.of("name", "Arc de Triomphe", "rating", 4.7, "reviews", "3.4K", "image", "https://images.unsplash.com/photo-1509299349698-dd22323b5963?w=800", "description", "Heroic triumphal arch honoring French military victories at the Champs-Élysées."),
+                                Map.of("name", "Sacré-Cœur", "rating", 4.7, "reviews", "3.1K", "image", "https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=800", "description", "White domed basilica atop the hill of Montmartre with sweeping city panoramas.")
                         ))
                         .build()
         );
