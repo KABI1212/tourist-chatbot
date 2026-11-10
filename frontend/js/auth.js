@@ -159,33 +159,14 @@ var Auth = window.Auth || {
 
         let html = `
             <a href="index.html" class="nav-link ${isHome ? 'active' : ''}" data-i18n="nav_home">Home</a>
-            <a href="destinations.html" class="nav-link ${isDest ? 'active' : ''}" data-i18n="nav_destinations">Destinations</a>
-            <a href="planner.html" class="nav-link ${isPlanner ? 'active' : ''}" data-i18n="nav_planner">Plan Trip</a>
-            <a href="chatbot.html" class="nav-link ${isChat ? 'active' : ''}"><i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Chat</span></a>
-        `;
-
-        if (this.isAuthenticated()) {
-            html += `
-                <a href="dashboard.html" class="nav-link ${isDash ? 'active' : ''}"><i class="fas fa-compass" style="color:var(--accent-gold);"></i> <span>Dashboard</span></a>
-            `;
-        }
-
-        html += `
-            <button type="button" class="lang-selector-trigger" id="langSelectorBtn" onclick="typeof I18n !== 'undefined' && I18n.openModal()" title="Change Language">
-                <span class="lang-selector-flag" id="currentLangFlag">${langFlag}</span>
-                <span id="currentLangLabel">${langLabel}</span>
-                <i class="fas fa-chevron-down" style="font-size:10px; opacity:0.7;"></i>
-            </button>
+            <a href="destinations.html" class="nav-link ${isDest ? 'active' : ''}" data-i18n="nav_destinations">Explore</a>
+            <a href="planner.html" class="nav-link ${isPlanner ? 'active' : ''}" data-i18n="nav_planner">Plan a Trip</a>
+            <a href="chatbot.html" class="nav-link ${isChat ? 'active' : ''}"><i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Assistant</span></a>
+            <a href="dashboard.html" class="nav-link ${isDash ? 'active' : ''}"><i class="fas fa-suitcase-rolling" style="font-size:13px; opacity:0.85;"></i> <span data-i18n="nav_dashboard">My Trips</span></a>
         `;
 
         const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
         const themeIcon = currentTheme === 'dark' ? 'fa-sun' : 'fa-moon';
-
-        html += `
-            <button type="button" class="theme-toggle-btn" onclick="window.toggleTheme && window.toggleTheme()" title="Toggle Theme" aria-label="Toggle Theme">
-                <i class="fas ${themeIcon}"></i>
-            </button>
-        `;
 
         if (this.isAuthenticated()) {
             const user = this.getUser();
@@ -204,17 +185,24 @@ var Auth = window.Auth || {
                             <div class="dropdown-user-name">${displayName}</div>
                             <div class="dropdown-user-handle">@${(user && user.username) || 'traveler'}</div>
                         </div>
-                        <a href="dashboard.html?tab=overview" class="dropdown-item">
-                            <i class="fas fa-chart-pie"></i> <span>Dashboard Overview</span>
-                        </a>
                         <a href="dashboard.html?tab=trips" class="dropdown-item">
-                            <i class="fas fa-suitcase-rolling"></i> <span>My Saved Trips</span>
+                            <i class="fas fa-suitcase-rolling"></i> <span>My Trips</span>
                         </a>
                         <a href="dashboard.html?tab=places" class="dropdown-item">
                             <i class="fas fa-heart"></i> <span>Saved Places</span>
                         </a>
+                        <a href="dashboard.html?tab=overview" class="dropdown-item">
+                            <i class="fas fa-chart-pie"></i> <span>Analytics &amp; Expenses</span>
+                        </a>
                         <a href="dashboard.html?tab=profile" class="dropdown-item">
                             <i class="fas fa-user-gear"></i> <span>Profile &amp; Settings</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="javascript:void(0)" onclick="typeof I18n !== 'undefined' && I18n.openModal()" class="dropdown-item">
+                            <span class="lang-selector-flag">${langFlag}</span> <span>Language (${langLabel})</span>
+                        </a>
+                        <a href="javascript:void(0)" onclick="window.toggleTheme && window.toggleTheme()" class="dropdown-item">
+                            <i class="fas ${themeIcon}"></i> <span>Theme (${currentTheme === 'dark' ? 'Dark' : 'Light'})</span>
                         </a>
                         <div class="dropdown-divider"></div>
                         <a href="javascript:void(0)" onclick="Auth.logout()" class="dropdown-item text-danger">
@@ -225,6 +213,14 @@ var Auth = window.Auth || {
             `;
         } else {
             html += `
+                <button type="button" class="lang-selector-trigger" id="langSelectorBtn" onclick="typeof I18n !== 'undefined' && I18n.openModal()" title="Change Language">
+                    <span class="lang-selector-flag" id="currentLangFlag">${langFlag}</span>
+                    <span id="currentLangLabel">${langLabel}</span>
+                    <i class="fas fa-chevron-down" style="font-size:10px; opacity:0.7;"></i>
+                </button>
+                <button type="button" class="theme-toggle-btn" onclick="window.toggleTheme && window.toggleTheme()" title="Toggle Theme" aria-label="Toggle Theme">
+                    <i class="fas ${themeIcon}"></i>
+                </button>
                 <a href="login.html" class="nav-btn-login ${isLogin ? 'active' : ''}" data-i18n="nav_login">Login</a>
                 <a href="register.html" class="nav-link ${isRegister ? 'active' : ''}" style="font-weight:600; color:var(--accent-gold);">Sign Up</a>
             `;
