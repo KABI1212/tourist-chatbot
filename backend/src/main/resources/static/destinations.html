@@ -52,10 +52,10 @@
 
             <div class="nav-links" id="navAuthLinks">
                 <a href="index.html" class="nav-link" data-i18n="nav_home">Home</a>
-                <a href="destinations.html" class="nav-link active" data-i18n="nav_destinations">Destinations</a>
-                <a href="planner.html" class="nav-link" data-i18n="nav_planner">Plan Trip</a>
-                <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles"
-                        style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Chat</span></a>
+                <a href="destinations.html" class="nav-link active" data-i18n="nav_destinations">Explore</a>
+                <a href="planner.html" class="nav-link" data-i18n="nav_planner">Plan a Trip</a>
+                <a href="chatbot.html" class="nav-link"><i class="fas fa-sparkles" style="color:var(--accent-gold);"></i> <span data-i18n="nav_chatbot">AI Assistant</span></a>
+                <a href="dashboard.html" class="nav-link"><i class="fas fa-suitcase-rolling" style="font-size:13px; opacity:0.85;"></i> <span data-i18n="nav_dashboard">My Trips</span></a>
 
                 <!-- Language Selector -->
                 <button type="button" class="lang-selector-trigger" id="langSelectorBtn" title="Change Language">
@@ -631,11 +631,11 @@
             document.getElementById('btnBookingDirect').href = `https://www.booking.com/searchresults.html?ss=${queryName}`;
             document.getElementById('btnMmtDirect').href = `https://www.makemytrip.com/hotels/hotel-listing/?city=${queryName}`;
 
-            renderAttractions(dest.attractions || defaultDestData.attractions);
-            renderHotels(dest.hotels || defaultDestData.hotels);
-            renderFoods(dest.localFoods || defaultDestData.localFoods);
-            renderTips(dest.travelTipsList || defaultDestData.travelTipsList);
-            renderPhotos(dest.images || [bannerImg]);
+            renderAttractions(dest.attractions, dest.name);
+            renderHotels(dest.hotels, dest.name);
+            renderFoods(dest.localFoods, dest.name);
+            renderTips(dest.travelTipsList, dest.name);
+            renderPhotos(dest.images && dest.images.length > 0 ? dest.images : [bannerImg]);
 
             // Dynamically discover nearby attractions
             loadDynamicNearbyPlaces(dest);
@@ -693,66 +693,155 @@
             }
         }
 
-        function renderAttractions(list) {
+        function renderAttractions(list, destName) {
             const topEl = document.getElementById('topAttractionsGrid');
             const allEl = document.getElementById('allPlacesGrid');
-            const html = (list || []).map(a => `
-                <div class="attraction-card">
-                    <img class="attraction-img" src="${a.image || window.getDestinationImage(a.name)}" alt="${escapeHtml(a.name)}" onerror="window.handleImageError(this, '${escapeHtml(a.name)}');" loading="lazy">
-                    <div class="attraction-body">
-                        <h4>${escapeHtml(a.name)}</h4>
-                        <div style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--accent-gold); font-weight:700; margin-bottom:8px;">
-                            ${a.rating ? `<i class="fas fa-star"></i> ${a.rating} <span style="color:var(--text-dim); font-weight:400;">(${a.reviews || 'Verified'})</span>` : `<span style="color:var(--text-muted); font-size:11.5px; font-weight:500;"><i class="fas fa-location-dot" style="color:var(--accent-gold);"></i> ${a.distanceKm ? a.distanceKm + ' km away' : 'Landmark'}</span>`}
+            const name = destName || (currentDest ? currentDest.name : 'Destination');
+
+            if (list && list.length > 0) {
+                const html = list.map(a => `
+                    <div class="attraction-card">
+                        <img class="attraction-img" src="${a.image || window.getDestinationImage(a.name)}" alt="${escapeHtml(a.name)}" onerror="window.handleImageError(this, '${escapeHtml(a.name)}');" loading="lazy">
+                        <div class="attraction-body">
+                            <h4>${escapeHtml(a.name)}</h4>
+                            <div style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--accent-gold); font-weight:700; margin-bottom:8px;">
+                                ${a.rating ? `<i class="fas fa-star"></i> ${a.rating} <span style="color:var(--text-dim); font-weight:400;">(${a.reviews || 'Verified'})</span>` : `<span style="color:var(--text-muted); font-size:11.5px; font-weight:500;"><i class="fas fa-location-dot" style="color:var(--accent-gold);"></i> ${a.distanceKm ? a.distanceKm + ' km away' : 'Key Landmark'}</span>`}
+                            </div>
+                            <p>${escapeHtml(a.description || 'Scenic sightseeing location.')}</p>
                         </div>
-                        <p>${escapeHtml(a.description || 'Scenic sightseeing location.')}</p>
                     </div>
-                </div>
-            `).join('');
-            if (topEl) topEl.innerHTML = html;
-            if (allEl) allEl.innerHTML = html;
+                `).join('');
+                if (topEl) topEl.innerHTML = html;
+                if (allEl) allEl.innerHTML = html;
+            } else {
+                const fallbackHtml = `
+                    <div style="grid-column:1/-1; padding:24px; text-align:center; background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-sm);">
+                        <p style="color:var(--text-muted); margin-bottom:14px;"><i class="fas fa-compass" style="color:var(--accent-gold); margin-right:6px;"></i> Verified landmarks &amp; attractions for ${escapeHtml(name)}</p>
+                        <a href="https://www.google.com/maps/search/attractions+in+${encodeURIComponent(name)}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">
+                            <i class="fas fa-map-location-dot"></i> Explore ${escapeHtml(name)} Landmarks on Map
+                        </a>
+                    </div>
+                `;
+                if (topEl) topEl.innerHTML = fallbackHtml;
+                if (allEl) allEl.innerHTML = fallbackHtml;
+            }
         }
 
-        function renderHotels(list) {
+        function renderHotels(list, destName) {
             const el = document.getElementById('hotelsGrid');
             if (!el) return;
-            el.innerHTML = (list || []).map(h => `
-                <div class="attraction-card">
-                    <img class="attraction-img" src="${h.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'}" alt="${escapeHtml(h.name)}" onerror="window.handleImageError(this, '${escapeHtml(currentDest ? currentDest.name : 'hotel')}');" loading="lazy">
-                    <div class="attraction-body">
-                        <h4>${escapeHtml(h.name)}</h4>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span class="badge-tag" style="background:rgba(197,164,109,0.15); color:var(--accent-gold);">${h.tier || 'Hotel'}</span>
-                            <strong style="color:var(--text-main); font-size:13.5px;">${h.price || 'Live rates on provider'}</strong>
-                        </div>
-                        <div style="font-size:12px; color:var(--text-muted);">
-                            ${h.rating ? `<i class="fas fa-star" style="color:var(--accent-gold); font-weight:700;"></i> <strong style="color:var(--accent-gold);">${h.rating}</strong>` : `<i class="fas fa-arrow-up-right-from-square" style="color:var(--accent-gold); font-size:11px;"></i> <a href="${h.searchLink || '#'}" target="_blank" rel="noopener" style="color:var(--accent-gold); text-decoration:none; font-weight:600;">Check live rates</a>`}
+            const name = destName || (currentDest ? currentDest.name : 'Destination');
+            const queryName = encodeURIComponent(name);
+
+            if (list && list.length > 0) {
+                el.innerHTML = list.map(h => `
+                    <div class="attraction-card">
+                        <img class="attraction-img" src="${h.image || window.getDestinationImage(name)}" alt="${escapeHtml(h.name)}" onerror="window.handleImageError(this, '${escapeHtml(name)}');" loading="lazy">
+                        <div class="attraction-body">
+                            <h4>${escapeHtml(h.name)}</h4>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <span class="badge-tag" style="background:rgba(197,164,109,0.15); color:var(--accent-gold);">${h.tier || 'Hotel'}</span>
+                                <strong style="color:var(--text-main); font-size:13.5px;">${h.price || 'Check live rates'}</strong>
+                            </div>
+                            <div style="font-size:12px; color:var(--text-muted);">
+                                <a href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(h.name + ' ' + name)}" target="_blank" rel="noopener" style="color:var(--accent-gold); text-decoration:none; font-weight:600;"><i class="fas fa-arrow-up-right-from-square" style="font-size:11px;"></i> Check availability</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('');
+            } else {
+                el.innerHTML = `
+                    <div class="attraction-card">
+                        <div class="attraction-body" style="padding:24px;">
+                            <span class="badge-tag" style="background:rgba(197,164,109,0.15); color:var(--accent-gold); font-size:11px; margin-bottom:8px;">Luxury &amp; Boutique</span>
+                            <h4 style="margin-bottom:8px;">Luxury Hotels &amp; Resorts in ${escapeHtml(name)}</h4>
+                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">5-star retreats, heritage palaces, and scenic villas in ${escapeHtml(name)}.</p>
+                            <a href="https://www.booking.com/searchresults.html?ss=${queryName}&nflt=class%3D5" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="width:100%; justify-content:center;">
+                                <i class="fas fa-hotel"></i> Explore Luxury Stays
+                            </a>
+                        </div>
+                    </div>
+                    <div class="attraction-card">
+                        <div class="attraction-body" style="padding:24px;">
+                            <span class="badge-tag" style="background:rgba(56,189,248,0.15); color:var(--accent-cyan); font-size:11px; margin-bottom:8px;">Curated Mid-Range</span>
+                            <h4 style="margin-bottom:8px;">Best Value Stays in ${escapeHtml(name)}</h4>
+                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Comfortable, centrally located hotels with top traveler reviews.</p>
+                            <a href="https://www.booking.com/searchresults.html?ss=${queryName}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="width:100%; justify-content:center;">
+                                <i class="fas fa-magnifying-glass"></i> Compare Hotel Rates
+                            </a>
+                        </div>
+                    </div>
+                    <div class="attraction-card">
+                        <div class="attraction-body" style="padding:24px;">
+                            <span class="badge-tag" style="background:rgba(34,197,94,0.15); color:var(--success); font-size:11px; margin-bottom:8px;">Budget &amp; Hostels</span>
+                            <h4 style="margin-bottom:8px;">Budget Hostels in ${escapeHtml(name)}</h4>
+                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Backpacker hostels, local homestays, and guesthouses.</p>
+                            <a href="https://www.hostelworld.com/s?q=${queryName}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="width:100%; justify-content:center;">
+                                <i class="fas fa-bed"></i> Browse Budget Hostels
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
-        function renderFoods(list) {
+        function renderFoods(list, destName) {
             const el = document.getElementById('foodGrid');
             if (!el) return;
-            el.innerHTML = (list || []).map(f => `
-                <div class="attraction-card">
-                    <div class="attraction-body" style="padding:22px;">
-                        <span class="badge-tag" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); margin-bottom:8px;">${f.type || 'Regional Dish'}</span>
-                        <h4>${escapeHtml(f.name)}</h4>
-                        <p>${escapeHtml(f.description || 'Signature specialty dish.')}</p>
-                        <strong style="color:var(--accent-gold); font-size:14px;">${f.price || '₹150'}</strong>
+            const name = destName || (currentDest ? currentDest.name : 'Destination');
+
+            if (list && list.length > 0) {
+                el.innerHTML = list.map(f => `
+                    <div class="attraction-card">
+                        <div class="attraction-body" style="padding:22px;">
+                            <span class="badge-tag" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); margin-bottom:8px;">${f.type || 'Regional Dish'}</span>
+                            <h4>${escapeHtml(f.name)}</h4>
+                            <p>${escapeHtml(f.description || 'Signature specialty dish.')}</p>
+                            <strong style="color:var(--accent-gold); font-size:14px;">${f.price || 'Authentic local recipe'}</strong>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('');
+            } else {
+                el.innerHTML = `
+                    <div class="attraction-card">
+                        <div class="attraction-body" style="padding:24px;">
+                            <span class="badge-tag" style="background:rgba(197,164,109,0.15); color:var(--accent-gold); font-size:11px; margin-bottom:8px;">Regional Gastronomy</span>
+                            <h4 style="margin-bottom:8px;">Local Food Culture of ${escapeHtml(name)}</h4>
+                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Explore iconic regional dishes, street food night markets, and authentic dining spots in ${escapeHtml(name)}.</p>
+                            <a href="https://www.google.com/maps/search/best+local+restaurants+in+${encodeURIComponent(name)}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="width:100%; justify-content:center;">
+                                <i class="fas fa-utensils"></i> Top Rated Restaurants
+                            </a>
+                        </div>
+                    </div>
+                    <div class="attraction-card">
+                        <div class="attraction-body" style="padding:24px;">
+                            <span class="badge-tag" style="background:rgba(56,189,248,0.15); color:var(--accent-cyan); font-size:11px; margin-bottom:8px;">AI Dining Recommendations</span>
+                            <h4 style="margin-bottom:8px;">Ask AI Guide for ${escapeHtml(name)} Food</h4>
+                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Discover must-try dishes, dietary preferences (vegetarian/vegan/halal), and local food streets.</p>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="askAiAboutDestination('${escapeHtml(name)}', 'What are the best traditional foods and top local food streets in ${escapeHtml(name)}?')" style="width:100%; justify-content:center;">
+                                <i class="fas fa-sparkles"></i> Ask AI Food Guide
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
-        function renderTips(list) {
+        function renderTips(list, destName) {
             const el = document.getElementById('tipsListContainer');
             if (!el) return;
+            const name = destName || (currentDest ? currentDest.name : 'Destination');
+
+            const tips = (list && list.length > 0) ? list : [
+                `Check seasonal weather patterns and local festival dates in ${name} before finalizing dates.`,
+                `Pre-book express transit tickets and prime heritage landmark admissions to save waiting time.`,
+                `Keep digital copies of tickets/identification and carry modest local cash for bazaar shopping.`,
+                `Respect local cultural customs and dress codes at sacred monuments and places of worship.`
+            ];
+
             el.innerHTML = `
                 <ul class="req-list" style="font-size:14.5px; gap:12px;">
-                    ${(list || []).map(t => `<li><i class="fas fa-check-circle" style="color:var(--accent-emerald);"></i> ${escapeHtml(t)}</li>`).join('')}
+                    ${tips.map(t => `<li><i class="fas fa-check-circle" style="color:var(--accent-emerald);"></i> ${escapeHtml(t)}</li>`).join('')}
                 </ul>
             `;
         }
