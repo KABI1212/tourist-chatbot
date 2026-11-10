@@ -96,31 +96,40 @@ var Api = window.Api || {
     },
 
     /**
-     * Attempts silent token rotation via /auth/refresh
+     * Attempts silent token rotation via /auth/refresh with single-in-flight mutex promise
      */
-    async tryRefreshToken() {
-        const refreshToken = this.getRefreshToken();
-        try {
-            const res = await fetch(`${API_BASE}/auth/refresh`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ refreshToken: refreshToken || '' })
-            });
-            if (res.ok) {
-                const data = await res.json();
-                const newToken = data?.data?.token || data?.token;
-                const newRefresh = data?.data?.refreshToken || data?.refreshToken;
-                if (newToken) {
-                    this.setToken(newToken);
-                    if (newRefresh) this.setRefreshToken(newRefresh);
-                    return true;
-                }
-            }
-        } catch (e) {
-            console.warn('Silent token refresh failed:', e);
+    tryRefreshToken() {
+        if (window._touristRefreshTokenPromise) {
+            return window._touristRefreshTokenPromise;
         }
-        return false;
+        window._touristRefreshTokenPromise = (async () => {
+            const refreshToken = this.getRefreshToken();
+            if (!refreshToken) return false;
+            try {
+                const res = await fetch(`${API_BASE}/auth/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ refreshToken: refreshToken || '' })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const newToken = data?.data?.token || data?.token;
+                    const newRefresh = data?.data?.refreshToken || data?.refreshToken;
+                    if (newToken) {
+                        this.setToken(newToken);
+                        if (newRefresh) this.setRefreshToken(newRefresh);
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn('Silent token refresh failed:', e);
+            } finally {
+                window._touristRefreshTokenPromise = null;
+            }
+            return false;
+        })();
+        return window._touristRefreshTokenPromise;
     },
 
     /**
@@ -399,98 +408,128 @@ window.setupGlobalAutocomplete = function(inputEl, dropdownEl, onSelect) {
 // Global Escape HTML Helper
 window.escapeHtml = window.escapeHtml || function(str) {
     if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    if (typeof document !== 'undefined') {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 };
 
-// Verified, Accessible Destination Images Catalog
+// Verified, Distinct, High-Resolution Destination Photography Catalog (Zero duplicates)
 window.DESTINATION_IMAGE_CATALOG = {
-    'ooty': 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800',
-    'manali': 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800',
-    'kerala': 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800',
-    'kerala backwaters': 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800',
-    'goa': 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800',
-    'paris': 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800',
-    'eiffel tower': 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800',
-    'taj mahal': 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800',
-    'agra': 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800',
-    'colosseum': 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800',
-    'statue of liberty': 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800',
-    'new york': 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800',
-    'machu picchu': 'https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=800',
-    'great wall of china': 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800',
-    'santorini': 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800',
-    'jaipur': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800',
-    'ladakh': 'https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=800',
-    'leh': 'https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=800',
-    'varanasi': 'https://images.unsplash.com/photo-1561359313-0639aad49ca6?w=800',
-    'shimla': 'https://images.unsplash.com/photo-1597074866923-dc0589150358?w=800',
-    'darjeeling': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800',
-    'munnar': 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=800',
-    'mysore': 'https://images.unsplash.com/photo-1590766940554-634a7ed41450?w=800',
-    'pondicherry': 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800',
-    'rishikesh': 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800',
-    'hampi': 'https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=800',
-    'coorg': 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=800',
-    'nainital': 'https://images.unsplash.com/photo-1597074866923-dc0589150358?w=800',
-    'udaipur': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800',
-    'alleppey': 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800',
-    'kodaikanal': 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=800',
-    'jaisalmer': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800',
-    'gulmarg': 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800',
-    'srinagar': 'https://images.unsplash.com/photo-1597074866923-dc0589150358?w=800',
-    'amritsar': 'https://images.unsplash.com/photo-1589987607627-616cac5c2c5a?w=800',
-    'khajuraho': 'https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=800',
-    'shillong': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800',
-    'gangtok': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800',
-    'dubai': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800',
-    'london': 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800',
-    'bali': 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800',
-    'tokyo': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800',
-    'kyoto': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800',
-    'sydney': 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800',
-    'singapore': 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800',
-    'bangkok': 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=800'
+    'ooty': 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=1200&q=80',
+    'kodaikanal': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=1200&q=80',
+    'munnar': 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=1200&q=80',
+    'alleppey': 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1200&q=80',
+    'kerala': 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1200&q=80',
+    'kerala backwaters': 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=1200&q=80',
+    'goa': 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=1200&q=80',
+    'manali': 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80',
+    'shimla': 'https://images.unsplash.com/photo-1597074866923-dc0589150358?w=1200&q=80',
+    'coorg': 'https://images.unsplash.com/photo-1600298882283-40b4dca8b211?w=1200&q=80',
+    'mysore': 'https://images.unsplash.com/photo-1590766940554-634a7ed41450?w=1200&q=80',
+    'hampi': 'https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=1200&q=80',
+    'rishikesh': 'https://images.unsplash.com/photo-1544717302-de2939b7ef71?w=1200&q=80',
+    'varanasi': 'https://images.unsplash.com/photo-1561359313-0639aad49ca6?w=1200&q=80',
+    'jaipur': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=1200&q=80',
+    'udaipur': 'https://images.unsplash.com/photo-1595846519845-68e298c2edd8?w=1200&q=80',
+    'jaisalmer': 'https://images.unsplash.com/photo-1572978013897-b952f4cbfb49?w=1200&q=80',
+    'ladakh': 'https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=1200&q=80',
+    'leh': 'https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=1200&q=80',
+    'srinagar': 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=1200&q=80',
+    'gulmarg': 'https://images.unsplash.com/photo-1548013146-72479768bada?w=1200&q=80',
+    'darjeeling': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=1200&q=80',
+    'gangtok': 'https://images.unsplash.com/photo-1617854818583-09e7f077a156?w=1200&q=80',
+    'shillong': 'https://images.unsplash.com/photo-1589802829985-817e51171b92?w=1200&q=80',
+    'pondicherry': 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=1200&q=80',
+    'amritsar': 'https://images.unsplash.com/photo-1589987607627-616cac5c2c5a?w=1200&q=80',
+    'nainital': 'https://images.unsplash.com/photo-1580974852861-c381510bc98a?w=1200&q=80',
+    'khajuraho': 'https://images.unsplash.com/photo-1600100397608-f010f443b2f8?w=1200&q=80',
+    'agra': 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=1200&q=80',
+    'taj mahal': 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=1200&q=80',
+    'paris': 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=1200&q=80',
+    'eiffel tower': 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=1200&q=80',
+    'london': 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1200&q=80',
+    'dubai': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&q=80',
+    'tokyo': 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&q=80',
+    'kyoto': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&q=80',
+    'bali': 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200&q=80',
+    'singapore': 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1200&q=80',
+    'bangkok': 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=1200&q=80',
+    'sydney': 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1200&q=80',
+    'colosseum': 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1200&q=80',
+    'rome': 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1200&q=80',
+    'statue of liberty': 'https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=1200&q=80',
+    'new york': 'https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=1200&q=80',
+    'santorini': 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=1200&q=80',
+    'machu picchu': 'https://images.unsplash.com/photo-1526392060635-9d6019884377?w=1200&q=80',
+    'great wall of china': 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=1200&q=80'
+};
+
+// Neutral Luxury Destination Monogram Generator (Never displays an unrelated photo or mountain road)
+window.generateDestinationPlaceholder = function(destName) {
+    const raw = (destName || 'Destination').trim();
+    const displayName = raw.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    const words = displayName.split(/\s+/);
+    const initials = words.length > 1
+        ? (words[0].charAt(0) + words[1].charAt(0)).toUpperCase()
+        : displayName.slice(0, 2).toUpperCase();
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#0B132B" />
+          <stop offset="50%" stop-color="#1C2541" />
+          <stop offset="100%" stop-color="#0B132B" />
+        </linearGradient>
+        <radialGradient id="glow" cx="50%" cy="40%" r="50%">
+          <stop offset="0%" stop-color="#C5A880" stop-opacity="0.22" />
+          <stop offset="100%" stop-color="#C5A880" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="800" height="500" fill="url(#bg)"/>
+      <rect width="800" height="500" fill="url(#glow)"/>
+      <rect x="24" y="24" width="752" height="452" rx="14" fill="none" stroke="#C5A880" stroke-opacity="0.3" stroke-width="1.5" stroke-dasharray="6 6"/>
+      <circle cx="400" cy="180" r="56" fill="#1C2541" stroke="#C5A880" stroke-width="2"/>
+      <text x="400" y="196" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="38" font-weight="700" fill="#E6C79C" letter-spacing="2">${initials}</text>
+      <text x="400" y="290" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="32" font-weight="600" fill="#FFFFFF" letter-spacing="1">${window.escapeHtml(displayName)}</text>
+      <rect x="310" y="320" width="180" height="26" rx="13" fill="#C5A880" fill-opacity="0.15" stroke="#C5A880" stroke-opacity="0.4" stroke-width="1"/>
+      <text x="400" y="337" text-anchor="middle" font-family="'DM Sans', -apple-system, sans-serif" font-size="11" font-weight="600" fill="#E6C79C" letter-spacing="2">VERIFIED DESTINATION</text>
+    </svg>`;
+
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 };
 
 window.getDestinationImage = function(destName) {
-    if (!destName || typeof destName !== 'string') return 'assets/dash.jpg';
+    if (!destName || typeof destName !== 'string') return window.generateDestinationPlaceholder('Destination');
     const key = destName.toLowerCase().trim();
+
+    // 1. Direct exact catalog match
     if (window.DESTINATION_IMAGE_CATALOG[key]) {
         return window.DESTINATION_IMAGE_CATALOG[key];
     }
+
+    // 2. Exact word boundary match
     for (const [k, url] of Object.entries(window.DESTINATION_IMAGE_CATALOG)) {
-        if (key.includes(k) || k.includes(key)) return url;
+        if (key === k || key.startsWith(k + ' ') || key.endsWith(' ' + k) || key.includes(' ' + k + ' ')) {
+            return url;
+        }
     }
-    if (key.includes('beach') || key.includes('island') || key.includes('coast')) {
-        return 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800';
-    }
-    if (key.includes('snow') || key.includes('mountain') || key.includes('hill') || key.includes('peak')) {
-        return 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800';
-    }
-    if (key.includes('temple') || key.includes('heritage') || key.includes('palace') || key.includes('fort')) {
-        return 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800';
-    }
-    if (key.includes('lake') || key.includes('waterfall') || key.includes('backwater') || key.includes('river')) {
-        return 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800';
-    }
-    return 'assets/dash.jpg';
+
+    // 3. Fall back to destination-specific neutral SVG placeholder (never display an unrelated photo)
+    return window.generateDestinationPlaceholder(destName);
 };
 
 window.handleImageError = function(imgEl, destName) {
-    if (!imgEl) return;
-    const stage = parseInt(imgEl.dataset.fallbackStage || '0', 10);
-    if (stage >= 2) {
-        imgEl.onerror = null;
-        imgEl.src = 'assets/dash.jpg';
-        return;
-    }
-    if (stage === 1) {
-        imgEl.dataset.fallbackStage = '2';
-        imgEl.src = 'assets/dash.jpg';
-        return;
-    }
-    imgEl.dataset.fallbackStage = '1';
-    imgEl.src = window.getDestinationImage(destName);
+    if (!imgEl || imgEl.dataset.fallbackApplied === 'true') return;
+    imgEl.dataset.fallbackApplied = 'true';
+    imgEl.onerror = null;
+    const name = destName || imgEl.getAttribute('data-dest-name') || imgEl.alt || 'Destination';
+    imgEl.src = window.generateDestinationPlaceholder(name);
 };
