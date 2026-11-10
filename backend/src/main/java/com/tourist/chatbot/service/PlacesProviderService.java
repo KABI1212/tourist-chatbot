@@ -37,7 +37,8 @@ public class PlacesProviderService {
     private static final String USER_AGENT = "TouristChatbot/2.0 (TravelDiscovery; info@touristchatbot.com)";
     private static final String PHOTON_API_URL = "https://photon.komoot.io/api/?q=%s&limit=%d";
     private static final String WIKI_SUMMARY_URL = "https://en.wikipedia.org/api/rest_v1/page/summary/%s";
-    private static final String WIKI_GEOSEARCH_URL = "https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=%s%%7C%s&gsradius=%d&gslimit=%d&format=json";
+    private static final String WIKI_OPENSEARCH_URL = "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s&limit=3&format=json";
+    private static final String WIKI_GEOSEARCH_URL = "https://en.wikipedia.org/w/api.php?action=query&generator=geosearch&ggscoord=%s%%7C%s&ggsradius=%d&ggslimit=%d&prop=pageimages|coordinates|description&piprop=thumbnail&pithumbsize=600&format=json";
     private static final String OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto";
 
     private final Map<String, CachedWeather> weatherCache = new ConcurrentHashMap<>();
@@ -183,11 +184,8 @@ public class PlacesProviderService {
             images.add(wiki.thumbnailUrl);
         }
 
-        // Fallback default image catalog if Wikipedia has no photos
-        if (images.isEmpty()) {
-            images.add("https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1600&q=80");
-            images.add("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800");
-        }
+        // If Wikipedia summary has no photos, do not inject unrelated photos of foreign locations
+        // Keeping images empty enables the frontend to display authentic neutral destination monograms
 
         // Use coordinates from Wikipedia if geocoding didn't have them
         if (lat == null && wiki != null && wiki.lat != null) lat = wiki.lat;
@@ -218,7 +216,7 @@ public class PlacesProviderService {
             att.put("reviews", null);
             att.put("ratingDisplay", "Not available");
             att.put("distanceKm", np.getDistanceKm());
-            att.put("image", images.get(0));
+            att.put("image", np.getImageUrl());
             att.put("description", String.format("Verified landmark located approximately %.1f km from %s.", np.getDistanceKm(), cleanName));
             att.put("lat", np.getLatitude());
             att.put("lng", np.getLongitude());
@@ -333,22 +331,31 @@ public class PlacesProviderService {
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-            log.info("Wiki geosearch URL: [{}], status: [{}], body: [{}]", url, response.statusCode(), response.body());
 
             if (response.statusCode() == 200) {
                 JsonNode root = objectMapper.readTree(response.body());
-                JsonNode items = root.path("query").path("geosearch");
+                JsonNode pages = root.path("query").path("pages");
 
-                if (items.isArray()) {
-                    for (JsonNode item : items) {
-                        String title = item.path("title").asText("");
+                if (pages.isObject()) {
+                    Iterator<JsonNode> it = pages.elements();
+                    while (it.hasNext()) {
+                        JsonNode page = it.next();
+                        String title = page.path("title").asText("");
                         if (title.isBlank()) continue;
 
-                        Double itemLat = item.path("lat").asDouble();
-                        Double itemLon = item.path("lon").asDouble();
-                        double distMeters = item.path("dist").asDouble(0);
-                        double distKm = Math.round((distMeters / 1000.0) * 10.0) / 10.0;
+                        Double itemLat = null;
+                        Double itemLon = null;
+                        JsonNode coords = page.path("coordinates");
+                        if (coords.isArray() && coords.size() > 0) {
+                            itemLat = coords.get(0).path("lat").asDouble();
+                            itemLon = coords.get(0).path("lon").asDouble();
+                        }
+                        if (itemLat == null) itemLat = lat;
+                        if (itemLon == null) itemLon = lon;
 
+                        double distKm = calculateDistanceKm(lat, lon, itemLat, itemLon);
+                        String thumb = page.path("thumbnail").path("source").asText(null);
+                        String desc = page.path("description").asText(String.format("Prominent regional attraction situated %.1f km away.", distKm));
                         String mapsLink = String.format(Locale.US, "https://www.google.com/maps/search/?api=1&query=%.4f,%.4f", itemLat, itemLon);
 
                         nearby.add(NearbyPlace.builder()
@@ -357,7 +364,8 @@ public class PlacesProviderService {
                                 .latitude(itemLat)
                                 .longitude(itemLon)
                                 .category("Attraction")
-                                .description(String.format("Prominent regional attraction situated %.1f km away.", distKm))
+                                .description(desc)
+                                .imageUrl(thumb)
                                 .mapsLink(mapsLink)
                                 .build());
                     }
@@ -368,6 +376,16 @@ public class PlacesProviderService {
         }
 
         return nearby;
+    }
+
+    private double calculateDistanceKm(double lat1, double lon1, double lat2, double lon2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return Math.round(6371 * c * 10.0) / 10.0;
     }
 
     /**
@@ -465,6 +483,47 @@ public class PlacesProviderService {
     }
 
     private WikiSummary fetchWikipediaSummary(String title) {
+        WikiSummary summary = fetchDirectWikiSummary(title);
+        if ((summary == null || summary.imageUrl == null) && !title.contains(",")) {
+            String qualified = searchWikipediaOpensearch(title);
+            if (qualified != null && !qualified.equalsIgnoreCase(title)) {
+                WikiSummary qualifiedSummary = fetchDirectWikiSummary(qualified);
+                if (qualifiedSummary != null && qualifiedSummary.imageUrl != null) {
+                    return qualifiedSummary;
+                }
+            }
+        }
+        return summary;
+    }
+
+    private String searchWikipediaOpensearch(String query) {
+        try {
+            String encoded = URLEncoder.encode(query, StandardCharsets.UTF_8);
+            String url = String.format(WIKI_OPENSEARCH_URL, encoded);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("User-Agent", USER_AGENT)
+                    .timeout(Duration.ofSeconds(4))
+                    .GET()
+                    .build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() == 200) {
+                JsonNode arr = objectMapper.readTree(response.body());
+                if (arr.isArray() && arr.size() >= 2 && arr.get(1).isArray()) {
+                    JsonNode titles = arr.get(1);
+                    for (JsonNode t : titles) {
+                        String match = t.asText("");
+                        if (!match.isBlank()) return match;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Wikipedia opensearch lookup failed for '{}': {}", query, e.getMessage());
+        }
+        return null;
+    }
+
+    private WikiSummary fetchDirectWikiSummary(String title) {
         try {
             String encoded = URLEncoder.encode(title.replace(" ", "_"), StandardCharsets.UTF_8);
             String url = String.format(WIKI_SUMMARY_URL, encoded);
