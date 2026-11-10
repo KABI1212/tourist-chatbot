@@ -1,6 +1,7 @@
 package com.tourist.chatbot.controller;
 
 import com.tourist.chatbot.dto.ApiResponse;
+import com.tourist.chatbot.dto.ExpenseRequest;
 import com.tourist.chatbot.dto.ItineraryGenerateRequest;
 import com.tourist.chatbot.dto.ItineraryResponse;
 import com.tourist.chatbot.dto.TripRequest;
@@ -63,6 +64,17 @@ public class TripController {
         return ResponseEntity.ok(ApiResponse.success(trip));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<Trip>> updateTrip(
+            @PathVariable("id") String id,
+            @Valid @RequestBody TripRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        User user = userService.getUserByUsername(userDetails.getUsername());
+        Trip updated = tripService.updateTrip(id, request, user.getId());
+        return ResponseEntity.ok(ApiResponse.success("Trip updated successfully", updated));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Map<String, String>>> deleteTrip(
             @PathVariable("id") String id,
@@ -88,11 +100,11 @@ public class TripController {
     @PostMapping("/{id}/expenses")
     public ResponseEntity<ApiResponse<Map<String, Object>>> addExpense(
             @PathVariable("id") String id,
-            @RequestBody Map<String, Object> expenseData,
+            @Valid @RequestBody ExpenseRequest request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         User user = userService.getUserByUsername(userDetails.getUsername());
-        Map<String, Object> summary = tripService.addExpense(id, user.getId(), expenseData);
+        Map<String, Object> summary = tripService.addExpense(id, user.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("Expense recorded successfully", summary));
     }
 
